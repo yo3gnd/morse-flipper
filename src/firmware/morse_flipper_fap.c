@@ -11,11 +11,9 @@
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
 #define MORSE_FLIPPER_CONFIG_VERSION 1
 
-static const GpioPin* morse_flipper_key_pins[] = {
-    &gpio_ext_pa6,
-    &gpio_ext_pb3,
-    &gpio_ext_pc3,
-};
+static const GpioPin* morse_flipper_straight_pin = &gpio_ext_pa6;
+static const GpioPin* morse_flipper_dit_pin = &gpio_ext_pb3;
+static const GpioPin* morse_flipper_dah_pin = &gpio_ext_pc3;
 
 typedef struct {
     const char* name;
@@ -131,34 +129,28 @@ static void morse_flipper_save_config(MorseFlipperApp* app) {
 }
 
 static void morse_flipper_gpio_init(void) {
-    for(size_t i = 0; i < COUNT_OF(morse_flipper_key_pins); i++) {
-        furi_hal_gpio_init(
-            morse_flipper_key_pins[i], GpioModeInput, GpioPullUp, GpioSpeedLow);
-    }
+    furi_hal_gpio_init(morse_flipper_straight_pin, GpioModeInput, GpioPullUp, GpioSpeedLow);
+    furi_hal_gpio_init(morse_flipper_dit_pin, GpioModeInput, GpioPullUp, GpioSpeedLow);
+    furi_hal_gpio_init(morse_flipper_dah_pin, GpioModeInput, GpioPullUp, GpioSpeedLow);
 }
 
 static void morse_flipper_gpio_deinit(void) {
-    for(size_t i = 0; i < COUNT_OF(morse_flipper_key_pins); i++) {
-        furi_hal_gpio_init(
-            morse_flipper_key_pins[i], GpioModeAnalog, GpioPullNo, GpioSpeedLow);
-    }
+    furi_hal_gpio_init(morse_flipper_straight_pin, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
+    furi_hal_gpio_init(morse_flipper_dit_pin, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
+    furi_hal_gpio_init(morse_flipper_dah_pin, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
 }
 
-static bool morse_flipper_gpio_down(void) {
-    for(size_t i = 0; i < COUNT_OF(morse_flipper_key_pins); i++) {
-        if(!furi_hal_gpio_read(morse_flipper_key_pins[i])) return true;
-    }
-
-    return false;
+static bool morse_flipper_straight_down(void) {
+    return !furi_hal_gpio_read(morse_flipper_straight_pin);
 }
 
 static uint8_t morse_flipper_read_input_mask(MorseFlipperApp* app) {
     uint8_t mask = 0;
 
     if(app->ok_down) mask |= 1 << 0;
-    if(!furi_hal_gpio_read(&gpio_ext_pa6)) mask |= 1 << 1;
-    if(!furi_hal_gpio_read(&gpio_ext_pb3)) mask |= 1 << 2;
-    if(!furi_hal_gpio_read(&gpio_ext_pc3)) mask |= 1 << 3;
+    if(!furi_hal_gpio_read(morse_flipper_straight_pin)) mask |= 1 << 1;
+    if(!furi_hal_gpio_read(morse_flipper_dit_pin)) mask |= 1 << 2;
+    if(!furi_hal_gpio_read(morse_flipper_dah_pin)) mask |= 1 << 3;
 
     return mask;
 }
@@ -232,7 +224,7 @@ static void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir) {
 }
 
 static void morse_flipper_sync_tone(MorseFlipperApp* app) {
-    bool want_tone = app->ok_down || morse_flipper_gpio_down() || (app->preview_ticks > 0);
+    bool want_tone = app->ok_down || morse_flipper_straight_down() || (app->preview_ticks > 0);
     bool old_tone = app->tone_on;
     bool old_busy = app->speaker_busy;
     uint8_t old_mask = app->input_mask;
