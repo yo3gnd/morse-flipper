@@ -24,6 +24,11 @@ typedef enum {
     MorseFlipperModeStraight = 1,
 } MorseFlipperMode;
 
+typedef enum {
+    MorseFlipperHandednessNormal = 0,
+    MorseFlipperHandednessSwapped = 1,
+} MorseFlipperHandedness;
+
 typedef struct {
     uint32_t version;
     uint8_t tone_idx;
@@ -75,6 +80,7 @@ typedef struct {
     bool speaker_owned;
     bool speaker_busy;
     bool ok_down;
+    uint8_t handedness;
     uint8_t keyer_mode;
     uint8_t tone_idx;
     uint8_t preview_ticks;
@@ -83,6 +89,14 @@ typedef struct {
 
 static const MorseFlipperTone* morse_flipper_current_tone(MorseFlipperApp* app) {
     return &morse_flipper_tones[app->tone_idx];
+}
+
+static const char* morse_flipper_handedness_line(MorseFlipperApp* app) {
+    if(app->handedness == MorseFlipperHandednessSwapped) {
+        return "p5 dah p7 dit";
+    }
+
+    return "p5 dit p7 dah";
 }
 
 static void morse_flipper_load_config(MorseFlipperApp* app) {
@@ -266,7 +280,11 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 8, 30, app->tone_on ? "tone on" : "tone off");
     canvas_draw_str(canvas, 8, 42, tone_line);
     canvas_draw_str(canvas, 8, 52, morse_flipper_input_line(app, input_line, sizeof(input_line)));
-    canvas_draw_str(canvas, 8, 62, app->speaker_busy ? "speaker busy" : "p5 dit p7 dah");
+    canvas_draw_str(
+        canvas,
+        8,
+        62,
+        app->speaker_busy ? "speaker busy" : morse_flipper_handedness_line(app));
 }
 
 static void morse_flipper_input(InputEvent* input_event, void* ctx) {
@@ -300,6 +318,7 @@ int32_t morse_flipper_fap(void* p) {
         .speaker_owned = false,
         .speaker_busy = false,
         .ok_down = false,
+        .handedness = MorseFlipperHandednessNormal,
         .keyer_mode = MorseFlipperModeStraight,
         .tone_idx = 0,
         .preview_ticks = 0,
@@ -327,6 +346,16 @@ int32_t morse_flipper_fap(void* p) {
             if(event.type == InputTypePress) {
                 if(event.key == InputKeyLeft) morse_flipper_tone_nudge(&app, -1);
                 else if(event.key == InputKeyRight) morse_flipper_tone_nudge(&app, 1);
+            }
+
+            if(event.key == InputKeyDown && event.type == InputTypeShort) {
+                if(app.handedness == MorseFlipperHandednessNormal) {
+                    app.handedness = MorseFlipperHandednessSwapped;
+                } else {
+                    app.handedness = MorseFlipperHandednessNormal;
+                }
+
+                view_port_update(app.view_port);
             }
 
             if(event.key == InputKeyBack) {
