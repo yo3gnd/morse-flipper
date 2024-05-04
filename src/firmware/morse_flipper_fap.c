@@ -176,9 +176,36 @@ static bool morse_flipper_dah_down(void) {
     return !furi_hal_gpio_read(morse_flipper_dah_pin);
 }
 
-static bool morse_flipper_paddles_down(MorseFlipperApp* app) {
-    UNUSED(app);
-    return morse_flipper_dit_down() || morse_flipper_dah_down();
+static bool morse_flipper_manual_down(MorseFlipperApp* app) {
+    return app->ok_down || morse_flipper_straight_down();
+}
+
+static bool morse_flipper_logical_dit_down(MorseFlipperApp* app) {
+    if(app->handedness == MorseFlipperHandednessSwapped) {
+        return morse_flipper_dah_down();
+    }
+
+    return morse_flipper_dit_down();
+}
+
+static bool morse_flipper_logical_dah_down(MorseFlipperApp* app) {
+    if(app->handedness == MorseFlipperHandednessSwapped) {
+        return morse_flipper_dit_down();
+    }
+
+    return morse_flipper_dah_down();
+}
+
+static bool morse_flipper_selected_input_down(MorseFlipperApp* app) {
+    if(morse_flipper_manual_down(app)) {
+        return true;
+    }
+
+    if(app->input_source == MorseFlipperInputSourcePaddle) {
+        return morse_flipper_logical_dit_down(app) || morse_flipper_logical_dah_down(app);
+    }
+
+    return false;
 }
 
 static uint8_t morse_flipper_read_input_mask(MorseFlipperApp* app) {
@@ -261,14 +288,10 @@ static void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir) {
 }
 
 static void morse_flipper_sync_tone(MorseFlipperApp* app) {
-    bool want_tone = app->ok_down || morse_flipper_straight_down() || (app->preview_ticks > 0);
+    bool want_tone = morse_flipper_selected_input_down(app) || (app->preview_ticks > 0);
     bool old_tone = app->tone_on;
     bool old_busy = app->speaker_busy;
     uint8_t old_mask = app->input_mask;
-
-    if(app->input_source == MorseFlipperInputSourcePaddle && morse_flipper_paddles_down(app)) {
-        want_tone = true;
-    }
 
     app->input_mask = morse_flipper_read_input_mask(app);
 
@@ -370,6 +393,7 @@ int32_t morse_flipper_fap(void* p) {
                     app.input_source = MorseFlipperInputSourceStraight;
                 }
 
+                morse_flipper_sync_tone(&app);
                 view_port_update(app.view_port);
             }
 
@@ -380,6 +404,7 @@ int32_t morse_flipper_fap(void* p) {
                     app.handedness = MorseFlipperHandednessNormal;
                 }
 
+                morse_flipper_sync_tone(&app);
                 view_port_update(app.view_port);
             }
 
