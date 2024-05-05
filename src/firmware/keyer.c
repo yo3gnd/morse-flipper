@@ -107,8 +107,56 @@ static void morse_keyer_tick_bug(MorseKeyer* keyer) {
     }
 }
 
+static void morse_keyer_tick_elbug(MorseKeyer* keyer) {
+    if(keyer->phase == MorseKeyerPhaseMark) {
+        morse_keyer_tick_mark(keyer);
+        return;
+    }
+
+    if(keyer->phase == MorseKeyerPhaseGap) {
+        morse_keyer_tick_gap(keyer);
+        return;
+    }
+
+    if(keyer->dit_down) {
+        morse_keyer_start_element(keyer, MorseKeyerElementDit);
+    } else if(keyer->dah_down) {
+        morse_keyer_start_element(keyer, MorseKeyerElementDah);
+    } else {
+        keyer->tone_on = false;
+    }
+}
+
+static void morse_keyer_tick_single_dot(MorseKeyer* keyer) {
+    bool dit_press = keyer->dit_down && !keyer->prev_dit_down;
+
+    if(keyer->phase == MorseKeyerPhaseMark) {
+        morse_keyer_tick_mark(keyer);
+        return;
+    }
+
+    if(keyer->phase == MorseKeyerPhaseGap) {
+        morse_keyer_tick_gap(keyer);
+        return;
+    }
+
+    if(dit_press) {
+        morse_keyer_start_element(keyer, MorseKeyerElementDit);
+    } else if(keyer->dah_down) {
+        keyer->tone_on = true;
+    } else {
+        keyer->tone_on = false;
+    }
+}
+
 void morse_keyer_tick(MorseKeyer* keyer) {
     switch(keyer->mode) {
+    case MorseKeyerModeSingleDot:
+        morse_keyer_tick_single_dot(keyer);
+        break;
+    case MorseKeyerModeElBug:
+        morse_keyer_tick_elbug(keyer);
+        break;
     case MorseKeyerModeBug:
         morse_keyer_tick_bug(keyer);
         break;
@@ -131,6 +179,10 @@ bool morse_keyer_tone(const MorseKeyer* keyer) {
 
 const char* morse_keyer_mode_name(uint8_t mode) {
     switch(mode) {
+    case MorseKeyerModeSingleDot:
+        return "s-dot";
+    case MorseKeyerModeElBug:
+        return "elbug";
     case MorseKeyerModeBug:
         return "bug";
     case MorseKeyerModeStraight:
