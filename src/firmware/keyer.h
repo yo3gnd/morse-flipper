@@ -24,6 +24,8 @@ typedef struct {
     bool tone_on;
     uint8_t phase;
     uint8_t current_element;
+    uint8_t last_element;
+    uint8_t last_press;
     uint8_t ticks_left;
 } MorseKeyer;
 

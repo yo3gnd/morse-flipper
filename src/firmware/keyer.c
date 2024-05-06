@@ -19,6 +19,7 @@ typedef enum {
 static void morse_keyer_start_element(MorseKeyer* keyer, uint8_t element) {
     keyer->phase = MorseKeyerPhaseMark;
     keyer->current_element = element;
+    keyer->last_element = element;
     keyer->tone_on = true;
 
     if(element == MorseKeyerElementDah) {
@@ -60,6 +61,8 @@ void morse_keyer_init(MorseKeyer* keyer) {
     keyer->tone_on = false;
     keyer->phase = MorseKeyerPhaseIdle;
     keyer->current_element = MorseKeyerElementNone;
+    keyer->last_element = MorseKeyerElementNone;
+    keyer->last_press = MorseKeyerElementNone;
     keyer->ticks_left = 0;
 }
 
@@ -71,6 +74,8 @@ void morse_keyer_reset(MorseKeyer* keyer) {
     keyer->tone_on = false;
     keyer->phase = MorseKeyerPhaseIdle;
     keyer->current_element = MorseKeyerElementNone;
+    keyer->last_element = MorseKeyerElementNone;
+    keyer->last_press = MorseKeyerElementNone;
     keyer->ticks_left = 0;
 }
 
@@ -149,8 +154,57 @@ static void morse_keyer_tick_single_dot(MorseKeyer* keyer) {
     }
 }
 
+static uint8_t morse_keyer_pick_iambic_element(MorseKeyer* keyer) {
+    if(keyer->dit_down && keyer->dah_down) {
+        if(keyer->last_element == MorseKeyerElementDit) {
+            return MorseKeyerElementDah;
+        } else if(keyer->last_element == MorseKeyerElementDah) {
+            return MorseKeyerElementDit;
+        } else if(keyer->last_press == MorseKeyerElementDah) {
+            return MorseKeyerElementDah;
+        } else {
+            return MorseKeyerElementDit;
+        }
+    }
+
+    if(keyer->dit_down) return MorseKeyerElementDit;
+    if(keyer->dah_down) return MorseKeyerElementDah;
+    return MorseKeyerElementNone;
+}
+
+static void morse_keyer_tick_plain_iambic(MorseKeyer* keyer) {
+    if(keyer->phase == MorseKeyerPhaseMark) {
+        morse_keyer_tick_mark(keyer);
+        return;
+    }
+
+    if(keyer->phase == MorseKeyerPhaseGap) {
+        morse_keyer_tick_gap(keyer);
+        return;
+    }
+
+    uint8_t element = morse_keyer_pick_iambic_element(keyer);
+
+    if(element != MorseKeyerElementNone) {
+        morse_keyer_start_element(keyer, element);
+    } else {
+        keyer->tone_on = false;
+    }
+}
+
 void morse_keyer_tick(MorseKeyer* keyer) {
+    if(keyer->dit_down && !keyer->prev_dit_down) {
+        keyer->last_press = MorseKeyerElementDit;
+    }
+
+    if(keyer->dah_down && !keyer->prev_dah_down) {
+        keyer->last_press = MorseKeyerElementDah;
+    }
+
     switch(keyer->mode) {
+    case MorseKeyerModePlainIambic:
+        morse_keyer_tick_plain_iambic(keyer);
+        break;
     case MorseKeyerModeSingleDot:
         morse_keyer_tick_single_dot(keyer);
         break;
@@ -183,6 +237,8 @@ const char* morse_keyer_mode_name(uint8_t mode) {
         return "s-dot";
     case MorseKeyerModeElBug:
         return "elbug";
+    case MorseKeyerModePlainIambic:
+        return "plain";
     case MorseKeyerModeBug:
         return "bug";
     case MorseKeyerModeStraight:
@@ -196,6 +252,8 @@ uint8_t morse_keyer_next_ui_mode(uint8_t mode) {
     case MorseKeyerModeStraight:
         return MorseKeyerModeBug;
     case MorseKeyerModeBug:
+        return MorseKeyerModePlainIambic;
+    case MorseKeyerModePlainIambic:
     default:
         return MorseKeyerModeStraight;
     }
