@@ -22,6 +22,7 @@ typedef struct {
     bool prev_dit_down;
     bool prev_dah_down;
     bool tone_on;
+    bool queued_extra;
     uint8_t phase;
     uint8_t current_element;
     uint8_t last_element;
