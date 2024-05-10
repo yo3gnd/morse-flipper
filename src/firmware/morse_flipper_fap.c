@@ -8,10 +8,11 @@
 #include "keyer.h"
 
 #define MORSE_FLIPPER_VOLUME 0.7f
-#define MORSE_FLIPPER_POLL_MS 20
+#define MORSE_FLIPPER_POLL_MS 5
 #define MORSE_FLIPPER_PREVIEW_TICKS 8
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
 #define MORSE_FLIPPER_CONFIG_VERSION 1
+#define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 
 static const GpioPin* morse_flipper_straight_pin = &gpio_ext_pa6;
 static const GpioPin* morse_flipper_dit_pin = &gpio_ext_pc3;
@@ -84,6 +85,8 @@ typedef struct {
     bool speaker_owned;
     bool speaker_busy;
     bool ok_down;
+    bool prev_dit_down;
+    bool prev_dah_down;
     uint8_t handedness;
     uint8_t input_source;
     uint8_t keyer_mode;
@@ -201,7 +204,7 @@ static bool morse_flipper_logical_dah_down(MorseFlipperApp* app) {
     return morse_flipper_dah_down();
 }
 
-static void morse_flipper_keyer_sync(MorseFlipperApp* app) {
+static void morse_flipper_keyer_sync(MorseFlipperApp* app, uint32_t now_ms) {
     bool dit_down = false;
     bool dah_down = false;
 
@@ -210,9 +213,17 @@ static void morse_flipper_keyer_sync(MorseFlipperApp* app) {
         dah_down = morse_flipper_logical_dah_down(app);
     }
 
-    morse_keyer_set_mode(&app->keyer, app->keyer_mode);
-    morse_keyer_set_paddles(&app->keyer, dit_down, dah_down);
-    morse_keyer_tick(&app->keyer);
+    if(dit_down != app->prev_dit_down) {
+        morse_keyer_paddle_event(&app->keyer, MorseKeyerPaddleDit, dit_down, now_ms);
+        app->prev_dit_down = dit_down;
+    }
+
+    if(dah_down != app->prev_dah_down) {
+        morse_keyer_paddle_event(&app->keyer, MorseKeyerPaddleDah, dah_down, now_ms);
+        app->prev_dah_down = dah_down;
+    }
+
+    morse_keyer_tick(&app->keyer, now_ms);
 }
 
 static uint8_t morse_flipper_read_input_mask(MorseFlipperApp* app) {
@@ -295,15 +306,17 @@ static void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir) {
 }
 
 static void morse_flipper_sync_tone(MorseFlipperApp* app) {
+    uint32_t now_ms = furi_get_tick();
     bool want_tone = morse_flipper_manual_down(app) || (app->preview_ticks > 0);
     bool old_tone = app->tone_on;
     bool old_busy = app->speaker_busy;
     uint8_t old_mask = app->input_mask;
 
     app->input_mask = morse_flipper_read_input_mask(app);
-    morse_flipper_keyer_sync(app);
+    morse_flipper_keyer_sync(app, now_ms);
 
-    if(morse_keyer_tone(&app->keyer)) {
+    if(morse_keyer_output_active(&app->keyer, MorseKeyerPaddleDit) ||
+       morse_keyer_output_active(&app->keyer, MorseKeyerPaddleDah)) {
         want_tone = true;
     }
 
@@ -372,6 +385,8 @@ int32_t morse_flipper_fap(void* p) {
         .speaker_owned = false,
         .speaker_busy = false,
         .ok_down = false,
+        .prev_dit_down = false,
+        .prev_dah_down = false,
         .handedness = MorseFlipperHandednessNormal,
         .input_source = MorseFlipperInputSourceStraight,
         .keyer_mode = MorseKeyerModeStraight,
@@ -382,7 +397,7 @@ int32_t morse_flipper_fap(void* p) {
     };
 
     morse_flipper_load_config(&app);
-    morse_keyer_init(&app.keyer);
+    morse_keyer_init(&app.keyer, app.keyer_mode, MORSE_FLIPPER_DEFAULT_DIT_MS);
     morse_flipper_gpio_init();
     furi_thread_set_signal_callback(
         furi_thread_get_current(), morse_flipper_signal_callback, &app);
@@ -412,12 +427,16 @@ int32_t morse_flipper_fap(void* p) {
                     app.input_source = MorseFlipperInputSourceStraight;
                 }
 
+                morse_keyer_reset(&app.keyer);
+                app.prev_dit_down = false;
+                app.prev_dah_down = false;
                 morse_flipper_sync_tone(&app);
                 view_port_update(app.view_port);
             }
 
             if(event.key == InputKeyDown && event.type == InputTypeShort) {
                 app.keyer_mode = morse_keyer_next_ui_mode(app.keyer_mode);
+                morse_keyer_set_mode(&app.keyer, app.keyer_mode);
                 morse_flipper_save_config(&app);
                 view_port_update(app.view_port);
             }
@@ -429,6 +448,9 @@ int32_t morse_flipper_fap(void* p) {
                     app.handedness = MorseFlipperHandednessNormal;
                 }
 
+                morse_keyer_reset(&app.keyer);
+                app.prev_dit_down = false;
+                app.prev_dah_down = false;
                 morse_flipper_sync_tone(&app);
                 view_port_update(app.view_port);
             }
