@@ -509,7 +509,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         canvas_draw_str(canvas, 8, 28, run_line);
         canvas_draw_str(canvas, 8, 40, "L dit  B dah  O str");
         canvas_draw_str(canvas, 8, 52, morse_flipper_input_line(app, input_line, sizeof(input_line)));
-        canvas_draw_str(canvas, 8, 62, "back is dah");
+        canvas_draw_str(canvas, 8, 62, "R exits");
         return;
     }
 
@@ -550,7 +550,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         canvas_draw_str(canvas, 2, 30, trace_line2);
         canvas_draw_str(canvas, 2, 40, trace_line3);
         canvas_draw_str(canvas, 2, 50, trace_line4);
-        canvas_draw_str(canvas, 2, 60, "back home");
+        canvas_draw_str(canvas, 2, 60, "R home");
         return;
     }
 
@@ -676,6 +676,13 @@ int32_t morse_flipper_fap(void* p) {
                             now_ms);
                     }
                 }
+
+                if(event.key == InputKeyRight &&
+                   (event.type == InputTypeShort || event.type == InputTypeLong)) {
+                    morse_flipper_clear_button_keying(&app, now_ms);
+                    app.screen = MorseFlipperScreenHome;
+                    view_port_update(app.view_port);
+                }
                 continue;
             }
 
@@ -723,6 +730,12 @@ int32_t morse_flipper_fap(void* p) {
                 }
 
                 if(event.key == InputKeyBack &&
+                   (event.type == InputTypeShort || event.type == InputTypeLong)) {
+                    app.screen = MorseFlipperScreenHome;
+                    view_port_update(app.view_port);
+                }
+
+                if(event.key == InputKeyRight &&
                    (event.type == InputTypeShort || event.type == InputTypeLong)) {
                     app.screen = MorseFlipperScreenHome;
                     view_port_update(app.view_port);
