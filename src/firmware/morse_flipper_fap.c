@@ -161,6 +161,16 @@ static uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app) {
     return MORSE_FLIPPER_DEFAULT_DIT_MS;
 }
 
+static uint8_t morse_flipper_current_wpm(const MorseFlipperApp* app) {
+    uint16_t dit_ms = morse_flipper_current_dit_ms(app);
+
+    if(dit_ms == 0U) {
+        return 0U;
+    }
+
+    return (uint8_t)((1200U + (dit_ms / 2U)) / dit_ms);
+}
+
 static const MorseFlipperTone* morse_flipper_current_tone(const MorseFlipperApp* app) {
     if(app->vail_tone_active) {
         return &morse_flipper_tones[app->vail_tone_idx];
@@ -245,22 +255,6 @@ static uint16_t morse_flipper_keyboard_key_for_note(uint8_t note) {
     }
 }
 
-static uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note) {
-    uint8_t best_idx = 0U;
-    uint8_t best_delta = 0xFFU;
-
-    for(uint8_t i = 0; i < COUNT_OF(morse_flipper_tones); i++) {
-        uint8_t tone_note = morse_flipper_tones[i].midi_note;
-        uint8_t delta = (tone_note > midi_note) ? (tone_note - midi_note) : (midi_note - tone_note);
-        if(delta < best_delta) {
-            best_delta = delta;
-            best_idx = i;
-        }
-    }
-
-    return best_idx;
-}
-
 static void morse_flipper_send_midi_note(uint8_t note, bool active) {
     uint8_t packet[4];
 
@@ -303,6 +297,32 @@ static void morse_flipper_clear_vail_overrides(MorseFlipperApp* app) {
     app->vail_mode_active = false;
     app->vail_speed_active = false;
     app->vail_tone_active = false;
+}
+
+static void morse_flipper_apply_vail_speed(MorseFlipperApp* app, uint8_t value) {
+    uint16_t dit_ms = (value == 0U) ? 1U : ((uint16_t)value * 2U);
+
+    if(app->vail_speed_active && app->vail_dit_ms == dit_ms) {
+        return;
+    }
+
+    app->vail_speed_active = true;
+    app->vail_dit_ms = dit_ms;
+    morse_flipper_refresh_keyer(app, furi_get_tick());
+    view_port_update(app->view_port);
+}
+
+static void morse_flipper_apply_vail_mode(MorseFlipperApp* app, uint8_t program) {
+    uint8_t mode = morse_keyer_mode_valid(program) ? program : MorseKeyerModePassthrough;
+
+    if(app->vail_mode_active && app->vail_keyer_mode == mode) {
+        return;
+    }
+
+    app->vail_mode_active = true;
+    app->vail_keyer_mode = mode;
+    morse_flipper_refresh_keyer(app, furi_get_tick());
+    view_port_update(app->view_port);
 }
 
 static void morse_flipper_resync_transport_notes(MorseFlipperApp* app) {
@@ -717,23 +737,10 @@ static void morse_flipper_handle_midi_rx(MorseFlipperApp* app) {
             uint8_t value = buffer[offset + 3U];
 
             if(control == 1U) {
-                app->vail_speed_active = true;
-                app->vail_dit_ms = (value == 0U) ? 1U : ((uint16_t)value * 2U);
-                morse_flipper_refresh_keyer(app, furi_get_tick());
-                view_port_update(app->view_port);
-            } else if(control == 2U) {
-                app->vail_tone_active = true;
-                app->vail_tone_idx = morse_flipper_nearest_tone_idx_for_midi(value);
-                morse_flipper_update_sidetone(app);
-                view_port_update(app->view_port);
+                morse_flipper_apply_vail_speed(app, value);
             }
         } else if(status == 0xC0U) {
-            uint8_t program = buffer[offset + 2U];
-            app->vail_mode_active = true;
-            app->vail_keyer_mode =
-                morse_keyer_mode_valid(program) ? program : MorseKeyerModePassthrough;
-            morse_flipper_refresh_keyer(app, furi_get_tick());
-            view_port_update(app->view_port);
+            morse_flipper_apply_vail_mode(app, buffer[offset + 2U]);
         }
     }
 }
@@ -887,7 +894,14 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 20, 30, pc_line);
         canvas_draw_str(canvas, 8, 44, morse_flipper_pc_state_name(app));
-        canvas_draw_str(canvas, 8, 56, "L/R choose  OK home");
+        snprintf(
+            tone_line,
+            sizeof(tone_line),
+            "wpm %u %s",
+            morse_flipper_current_wpm(app),
+            morse_keyer_mode_name(morse_flipper_current_keyer_mode(app)));
+        canvas_draw_str(canvas, 8, 54, tone_line);
+        canvas_draw_str(canvas, 8, 63, "L/R choose  OK home");
         return;
     }
 
