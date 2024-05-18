@@ -144,6 +144,7 @@ static void morse_flipper_poll(MorseFlipperApp* app);
 static void morse_flipper_release_all_notes(MorseFlipperApp* app);
 static void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
 static void morse_flipper_handle_midi_rx(MorseFlipperApp* app);
+static void morse_flipper_update_sidetone(MorseFlipperApp* app);
 
 static uint8_t morse_flipper_current_keyer_mode(const MorseFlipperApp* app) {
     if(app->vail_mode_active) {
@@ -230,6 +231,22 @@ static const char* morse_flipper_pc_state_name(const MorseFlipperApp* app) {
     return "usb local off";
 }
 
+static uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note) {
+    uint8_t best_idx = 0U;
+    uint8_t best_delta = 0xFFU;
+
+    for(uint8_t i = 0; i < COUNT_OF(morse_flipper_tones); i++) {
+        uint8_t tone_note = morse_flipper_tones[i].midi_note;
+        uint8_t delta = (tone_note > midi_note) ? (tone_note - midi_note) : (midi_note - tone_note);
+        if(delta < best_delta) {
+            best_delta = delta;
+            best_idx = i;
+        }
+    }
+
+    return best_idx;
+}
+
 static bool morse_flipper_transport_connected(const MorseFlipperApp* app) {
     if(app->pc_mode == MorseFlipperPcModeMidi) {
         return morse_usb_midi_is_connected();
@@ -294,9 +311,15 @@ static void morse_flipper_send_transport_note(MorseFlipperApp* app, uint8_t note
 }
 
 static void morse_flipper_clear_vail_overrides(MorseFlipperApp* app) {
+    bool had_tone_override = app->vail_tone_active;
+
     app->vail_mode_active = false;
     app->vail_speed_active = false;
     app->vail_tone_active = false;
+
+    if(had_tone_override && app->tone_on && app->speaker_owned && furi_hal_speaker_is_mine()) {
+        furi_hal_speaker_start(morse_flipper_current_tone(app)->hz, MORSE_FLIPPER_VOLUME);
+    }
 }
 
 static void morse_flipper_apply_vail_speed(MorseFlipperApp* app, uint8_t value) {
@@ -322,6 +345,25 @@ static void morse_flipper_apply_vail_mode(MorseFlipperApp* app, uint8_t program)
     app->vail_mode_active = true;
     app->vail_keyer_mode = mode;
     morse_flipper_refresh_keyer(app, furi_get_tick());
+    view_port_update(app->view_port);
+}
+
+static void morse_flipper_apply_vail_tone(MorseFlipperApp* app, uint8_t midi_note) {
+    uint8_t tone_idx = morse_flipper_nearest_tone_idx_for_midi(midi_note);
+
+    if(app->vail_tone_active && app->vail_tone_idx == tone_idx) {
+        return;
+    }
+
+    app->vail_tone_active = true;
+    app->vail_tone_idx = tone_idx;
+
+    if(app->tone_on && app->speaker_owned && furi_hal_speaker_is_mine()) {
+        furi_hal_speaker_start(morse_flipper_current_tone(app)->hz, MORSE_FLIPPER_VOLUME);
+    } else {
+        morse_flipper_update_sidetone(app);
+    }
+
     view_port_update(app->view_port);
 }
 
@@ -738,6 +780,8 @@ static void morse_flipper_handle_midi_rx(MorseFlipperApp* app) {
 
             if(control == 1U) {
                 morse_flipper_apply_vail_speed(app, value);
+            } else if(control == 2U) {
+                morse_flipper_apply_vail_tone(app, value);
             }
         } else if(status == 0xC0U) {
             morse_flipper_apply_vail_mode(app, buffer[offset + 2U]);
