@@ -71,6 +71,44 @@ uint8_t morse_trainer_lesson(const MorseTrainer* trainer) {
     return trainer->lesson;
 }
 
+void morse_trainer_set_group_size(MorseTrainer* trainer, uint8_t group_size) {
+    if(trainer == NULL) {
+        return;
+    }
+
+    if(group_size < 1U) {
+        group_size = 1U;
+    }
+    if(group_size > MORSE_TRAINER_GROUP_CAP - 1U) {
+        group_size = MORSE_TRAINER_GROUP_CAP - 1U;
+    }
+
+    trainer->group_size = group_size;
+}
+
+uint8_t morse_trainer_group_size(const MorseTrainer* trainer) {
+    return trainer ? trainer->group_size : 5U;
+}
+
+void morse_trainer_set_session_groups(MorseTrainer* trainer, uint8_t session_groups) {
+    if(trainer == NULL) {
+        return;
+    }
+
+    if(session_groups < 1U) {
+        session_groups = 1U;
+    }
+    if(session_groups > 40U) {
+        session_groups = 40U;
+    }
+
+    trainer->session_groups = session_groups;
+}
+
+uint8_t morse_trainer_session_groups(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_groups : 10U;
+}
+
 const char* morse_trainer_charset(const MorseTrainer* trainer) {
     static char buf[MORSE_TRAINER_CHARSET_CAP];
     size_t lesson;
