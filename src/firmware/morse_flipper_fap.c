@@ -1184,6 +1184,11 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
         morse_flipper_handle_midi_rx(app);
     }
 
+    if(app->screen == MorseFlipperScreenTrainer &&
+       strcmp(morse_trainer_phase_name(&app->trainer), "repeat") == 0) {
+        morse_trainer_tick(&app->trainer, MORSE_FLIPPER_POLL_MS);
+    }
+
     app->transport_connected = morse_flipper_transport_connected(app);
     if(!old_transport && app->transport_connected) {
         morse_flipper_resync_transport_notes(app);
@@ -1328,8 +1333,14 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         canvas_set_font(canvas, FontSecondary);
         if(strcmp(morse_trainer_phase_name(&app->trainer), "repeat") == 0 ||
            strcmp(morse_trainer_phase_name(&app->trainer), "done") == 0) {
-            snprintf(trainer_line, sizeof(trainer_line), "ans %s", morse_trainer_answer(&app->trainer));
-            canvas_draw_str(canvas, 8, 64, trainer_line);
+            snprintf(
+                trainer_line,
+                sizeof(trainer_line),
+                "ans %s %d%s",
+                morse_trainer_answer(&app->trainer),
+                (int)morse_trainer_last_score(&app->trainer),
+                morse_trainer_last_failed(&app->trainer) ? " fail" : "");
+            canvas_draw_str(canvas, 2, 64, trainer_line);
         } else {
             canvas_draw_str(
                 canvas,
@@ -1555,7 +1566,7 @@ int32_t morse_flipper_fap(void* p) {
 
                     if(event.key == InputKeyRight && event.type == InputTypeShort) {
                         morse_flipper_clear_button_keying(&app, furi_get_tick());
-                        morse_trainer_finish_repeat(&app.trainer);
+                        morse_trainer_score_repeat(&app.trainer);
                         view_port_update(app.view_port);
                     }
 

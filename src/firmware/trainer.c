@@ -230,6 +230,49 @@ void morse_trainer_feed_element(MorseTrainer* trainer, char elem) {
     trainer->answer[len + 1U] = '\0';
 }
 
+void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms) {
+    if(trainer == NULL || trainer->phase != MorseTrainerPhaseRepeat) {
+        return;
+    }
+
+    if(trainer->answer[0] != '\0') {
+        return;
+    }
+
+    trainer->wait_ms += ms;
+    if(trainer->wait_ms < 6000U) {
+        return;
+    }
+
+    trainer->last_score = 0;
+    trainer->last_failed = true;
+    trainer->phase = MorseTrainerPhaseDone;
+}
+
+int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
+    size_t expected_len;
+    size_t answer_len;
+    size_t matched = 0U;
+
+    if(trainer == NULL) {
+        return -1;
+    }
+
+    expected_len = strlen(trainer->expected);
+    answer_len = strlen(trainer->answer);
+
+    while(matched < expected_len && matched < answer_len &&
+          trainer->expected[matched] == trainer->answer[matched]) {
+        matched++;
+    }
+
+    trainer->last_score =
+        expected_len == 0U ? 0 : (int16_t)(((int32_t)matched * 100) / (int32_t)expected_len);
+    trainer->last_failed = trainer->last_score != 100 || trainer->answer[0] == '\0';
+    trainer->phase = MorseTrainerPhaseDone;
+    return trainer->last_score;
+}
+
 const char* morse_trainer_answer(const MorseTrainer* trainer) {
     return trainer ? trainer->answer : "";
 }
@@ -249,4 +292,12 @@ const char* morse_trainer_phase_name(const MorseTrainer* trainer) {
     default:
         return "idle";
     }
+}
+
+int16_t morse_trainer_last_score(const MorseTrainer* trainer) {
+    return trainer ? trainer->last_score : -1;
+}
+
+bool morse_trainer_last_failed(const MorseTrainer* trainer) {
+    return trainer ? trainer->last_failed : true;
 }
