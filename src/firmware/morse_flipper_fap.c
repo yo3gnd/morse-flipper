@@ -15,7 +15,7 @@
 #define MORSE_FLIPPER_POLL_MS 5
 #define MORSE_FLIPPER_PREVIEW_TICKS 8
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
-#define MORSE_FLIPPER_CONFIG_VERSION 1
+#define MORSE_FLIPPER_CONFIG_VERSION 2
 #define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 
 #define MORSE_SOURCE_STRAIGHT_GPIO (1UL << 0)
@@ -68,9 +68,21 @@ typedef struct {
     uint32_t version;
     uint8_t tone_idx;
     uint8_t keyer_mode;
+    uint8_t handedness;
+    uint8_t trainer_lesson;
+    uint8_t trainer_group_size;
+    uint8_t trainer_session_groups;
+    uint8_t spare0;
+    uint16_t local_dit_ms;
+} MorseFlipperConfig;
+
+typedef struct {
+    uint32_t version;
+    uint8_t tone_idx;
+    uint8_t keyer_mode;
     uint8_t spare0;
     uint8_t spare1;
-} MorseFlipperConfig;
+} MorseFlipperConfigV1;
 
 static const MorseFlipperTone morse_flipper_tones[] = {
     {"G2", 98.00f, 43U},
@@ -184,7 +196,7 @@ static uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app) {
         return app->vail_dit_ms;
     }
 
-    return MORSE_FLIPPER_DEFAULT_DIT_MS;
+    return app->trainer.local_dit_ms ? app->trainer.local_dit_ms : MORSE_FLIPPER_DEFAULT_DIT_MS;
 }
 
 static uint8_t morse_flipper_current_wpm(const MorseFlipperApp* app) {
@@ -477,10 +489,12 @@ static void morse_flipper_load_config(MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config;
+    MorseFlipperConfigV1 config_v1;
+    uint16_t got = 0U;
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        if(storage_file_read(file, &config, sizeof(config)) == sizeof(config) &&
-           config.version == MORSE_FLIPPER_CONFIG_VERSION) {
+        got = storage_file_read(file, &config, sizeof(config));
+        if(got == sizeof(config) && config.version == MORSE_FLIPPER_CONFIG_VERSION) {
             if(config.tone_idx < COUNT_OF(morse_flipper_tones)) {
                 app->tone_idx = config.tone_idx;
             }
@@ -488,6 +502,29 @@ static void morse_flipper_load_config(MorseFlipperApp* app) {
             if(config.keyer_mode >= MorseKeyerModeStraight &&
                config.keyer_mode <= MorseKeyerModeKeyahead) {
                 app->keyer_mode = config.keyer_mode;
+            }
+
+            if(config.handedness <= MorseFlipperHandednessSwapped) {
+                app->handedness = config.handedness;
+            }
+
+            morse_trainer_set_lesson(&app->trainer, config.trainer_lesson);
+            morse_trainer_set_group_size(&app->trainer, config.trainer_group_size);
+            morse_trainer_set_session_groups(&app->trainer, config.trainer_session_groups);
+            if(config.local_dit_ms != 0U) {
+                app->trainer.local_dit_ms = config.local_dit_ms;
+            }
+        } else if(got == sizeof(config_v1)) {
+            memcpy(&config_v1, &config, sizeof(config_v1));
+            if(config_v1.version == 1U) {
+                if(config_v1.tone_idx < COUNT_OF(morse_flipper_tones)) {
+                    app->tone_idx = config_v1.tone_idx;
+                }
+
+                if(config_v1.keyer_mode >= MorseKeyerModeStraight &&
+                   config_v1.keyer_mode <= MorseKeyerModeKeyahead) {
+                    app->keyer_mode = config_v1.keyer_mode;
+                }
             }
         }
     }
@@ -504,8 +541,12 @@ static void morse_flipper_save_config(const MorseFlipperApp* app) {
         .version = MORSE_FLIPPER_CONFIG_VERSION,
         .tone_idx = app->tone_idx,
         .keyer_mode = app->keyer_mode,
+        .handedness = app->handedness,
+        .trainer_lesson = morse_trainer_lesson(&app->trainer),
+        .trainer_group_size = morse_trainer_group_size(&app->trainer),
+        .trainer_session_groups = morse_trainer_session_groups(&app->trainer),
         .spare0 = 0U,
-        .spare1 = 0U,
+        .local_dit_ms = app->trainer.local_dit_ms,
     };
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
@@ -1483,9 +1524,9 @@ int32_t morse_flipper_fap(void* p) {
         .trainer = {0},
     };
 
-    morse_flipper_load_config(&app);
-    morse_keyer_init(&app.keyer, app.keyer_mode, MORSE_FLIPPER_DEFAULT_DIT_MS);
     morse_trainer_init(&app.trainer);
+    morse_flipper_load_config(&app);
+    morse_keyer_init(&app.keyer, app.keyer_mode, morse_flipper_current_dit_ms(&app));
     morse_flipper_gpio_init();
     furi_thread_set_signal_callback(
         furi_thread_get_current(), morse_flipper_signal_callback, &app);
