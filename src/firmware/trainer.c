@@ -273,6 +273,34 @@ int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
     return trainer->last_score;
 }
 
+void morse_trainer_start_session(MorseTrainer* trainer) {
+    if(trainer == NULL) {
+        return;
+    }
+
+    trainer->session_active = true;
+    trainer->session_aborted = false;
+    trainer->session_index = 1U;
+    trainer->session_fail_count = 0U;
+    trainer->session_consecutive_missed = 0U;
+    morse_trainer_start_repeat(trainer);
+}
+
+bool morse_trainer_next_session_group(MorseTrainer* trainer) {
+    if(trainer == NULL || !trainer->session_active) {
+        return false;
+    }
+
+    if(trainer->session_index >= trainer->session_groups) {
+        trainer->session_active = false;
+        return false;
+    }
+
+    trainer->session_index++;
+    morse_trainer_start_repeat(trainer);
+    return true;
+}
+
 const char* morse_trainer_answer(const MorseTrainer* trainer) {
     return trainer ? trainer->answer : "";
 }
@@ -300,4 +328,16 @@ int16_t morse_trainer_last_score(const MorseTrainer* trainer) {
 
 bool morse_trainer_last_failed(const MorseTrainer* trainer) {
     return trainer ? trainer->last_failed : true;
+}
+
+bool morse_trainer_session_active(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_active : false;
+}
+
+uint8_t morse_trainer_session_index(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_index : 0U;
+}
+
+uint8_t morse_trainer_session_total(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_groups : 0U;
 }
