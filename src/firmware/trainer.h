@@ -61,3 +61,6 @@ bool morse_trainer_last_failed(const MorseTrainer* trainer);
 bool morse_trainer_session_active(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_index(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_total(const MorseTrainer* trainer);
+bool morse_trainer_session_aborted(const MorseTrainer* trainer);
+uint8_t morse_trainer_session_fail_count(const MorseTrainer* trainer);
+uint8_t morse_trainer_session_consecutive_missed(const MorseTrainer* trainer);

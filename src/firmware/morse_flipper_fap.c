@@ -1477,8 +1477,10 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         snprintf(
             trainer_line3,
             sizeof(trainer_line3),
-            "chars %s",
-            app->trainer.custom_set_idx == 0U ? "lesson" : app->trainer.custom_name);
+            "fail %u miss %u%s",
+            (unsigned)morse_trainer_session_fail_count(&app->trainer),
+            (unsigned)morse_trainer_session_consecutive_missed(&app->trainer),
+            morse_trainer_session_aborted(&app->trainer) ? " abort" : "");
         canvas_draw_str(canvas, 8, 10, trainer_line);
         canvas_draw_str(canvas, 8, 22, trainer_line2);
         canvas_draw_str(canvas, 8, 34, trainer_line3);

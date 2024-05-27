@@ -12,6 +12,27 @@ enum {
     MorseTrainerPhaseDone = 3,
 };
 
+static void morse_trainer_note_session_result(MorseTrainer* trainer, bool missed) {
+    if(trainer == NULL || !trainer->session_active) {
+        return;
+    }
+
+    if(trainer->last_failed) {
+        trainer->session_fail_count++;
+    }
+
+    if(missed) {
+        trainer->session_consecutive_missed++;
+    } else {
+        trainer->session_consecutive_missed = 0U;
+    }
+
+    if(trainer->session_consecutive_missed >= 4U) {
+        trainer->session_aborted = true;
+        trainer->session_active = false;
+    }
+}
+
 static uint32_t morse_trainer_rand(MorseTrainer* trainer) {
     trainer->rng_state = trainer->rng_state * 1664525U + 1013904223U;
     return trainer->rng_state;
@@ -247,6 +268,7 @@ void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms) {
     trainer->last_score = 0;
     trainer->last_failed = true;
     trainer->phase = MorseTrainerPhaseDone;
+    morse_trainer_note_session_result(trainer, true);
 }
 
 int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
@@ -270,6 +292,7 @@ int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
         expected_len == 0U ? 0 : (int16_t)(((int32_t)matched * 100) / (int32_t)expected_len);
     trainer->last_failed = trainer->last_score != 100 || trainer->answer[0] == '\0';
     trainer->phase = MorseTrainerPhaseDone;
+    morse_trainer_note_session_result(trainer, trainer->answer[0] == '\0');
     return trainer->last_score;
 }
 
@@ -340,4 +363,16 @@ uint8_t morse_trainer_session_index(const MorseTrainer* trainer) {
 
 uint8_t morse_trainer_session_total(const MorseTrainer* trainer) {
     return trainer ? trainer->session_groups : 0U;
+}
+
+bool morse_trainer_session_aborted(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_aborted : false;
+}
+
+uint8_t morse_trainer_session_fail_count(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_fail_count : 0U;
+}
+
+uint8_t morse_trainer_session_consecutive_missed(const MorseTrainer* trainer) {
+    return trainer ? trainer->session_consecutive_missed : 0U;
 }
