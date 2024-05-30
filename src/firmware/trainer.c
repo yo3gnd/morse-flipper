@@ -74,7 +74,7 @@ void morse_trainer_init(MorseTrainer* trainer) {
 }
 
 size_t morse_trainer_lesson_count(void) {
-    return sizeof(morse_trainer_koch_order) - 1U;
+    return (sizeof(morse_trainer_koch_order) - 2U);
 }
 
 void morse_trainer_set_lesson(MorseTrainer* trainer, uint8_t lesson) {
@@ -142,19 +142,15 @@ uint8_t morse_trainer_session_groups(const MorseTrainer* trainer) {
 
 const char* morse_trainer_charset(const MorseTrainer* trainer) {
     static char buf[MORSE_TRAINER_CHARSET_CAP];
-    size_t lesson;
+    size_t n;
 
-    if(trainer != NULL && trainer->charset_override[0] != '\0') {
-        return trainer->charset_override;
-    }
+    if(trainer != NULL && trainer->charset_override[0] != '\0') return trainer->charset_override;
 
-    lesson = trainer ? morse_trainer_lesson(trainer) : 1U;
-    if(lesson >= sizeof(buf)) {
-        lesson = sizeof(buf) - 1U;
-    }
+    n = trainer ? ((size_t)morse_trainer_lesson(trainer) + 1U) : 2U;
+    if(n >= sizeof(buf)) n = sizeof(buf) - 1U;
 
-    memcpy(buf, morse_trainer_koch_order, lesson);
-    buf[lesson] = '\0';
+    memcpy(buf, morse_trainer_koch_order, n);
+    buf[n] = '\0';
     return buf;
 }
 
@@ -168,29 +164,43 @@ const char* morse_trainer_expected(const MorseTrainer* trainer) {
 
 const char* morse_trainer_next_group(MorseTrainer* trainer) {
     const char* charset;
-    size_t charset_len = 0U;
+    char prev[MORSE_TRAINER_GROUP_CAP];
+    size_t clen = 0U;
     size_t wi = 0U;
     size_t i;
+    uint8_t tries;
 
-    if(trainer == NULL) {
-        return "";
-    }
+    if(trainer == NULL) return "";
 
     charset = morse_trainer_charset(trainer);
-    while(charset[charset_len] != '\0') {
-        charset_len++;
-    }
+    strncpy(prev, trainer->last_group, sizeof(prev) - 1U);
+    prev[sizeof(prev) - 1U] = '\0';
+    while(charset[clen] != '\0') clen++;
 
-    if(charset_len == 0U) {
+    if(clen == 0U) {
         trainer->last_group[0] = '\0';
         trainer->expected[0] = '\0';
         return trainer->last_group;
     }
 
-    for(i = 0; i + 1U < sizeof(trainer->last_group) && i < trainer->group_size; i++) {
-        trainer->last_group[i] = charset[morse_trainer_rand(trainer) % charset_len];
+    tries = 0U;
+    do {
+        for(i = 0; i + 1U < sizeof(trainer->last_group) && i < trainer->group_size; i++) {
+            trainer->last_group[i] = charset[morse_trainer_rand(trainer) % clen];
+        }
+        trainer->last_group[i] = '\0';
+        tries++;
+    } while(clen > 1U && prev[0] != '\0' && strcmp(prev, trainer->last_group) == 0 && tries < 8U);
+
+    if(clen > 1U && prev[0] != '\0' && strcmp(prev, trainer->last_group) == 0) {
+        size_t last = strlen(trainer->last_group);
+        char pick = charset[morse_trainer_rand(trainer) % clen];
+
+        if(last != 0U) {
+            if(pick == trainer->last_group[last - 1U]) pick = charset[(morse_trainer_rand(trainer) + 1U) % clen];
+            trainer->last_group[last - 1U] = pick;
+        }
     }
-    trainer->last_group[i] = '\0';
 
     for(i = 0; trainer->last_group[i] != '\0' && wi + 1U < sizeof(trainer->expected); i++) {
         const char* morse = morse_trainer_char_morse(trainer->last_group[i]);
@@ -299,18 +309,35 @@ int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
     return trainer->last_score;
 }
 
+void morse_trainer_reset_session(MorseTrainer* trainer) {
+    if(trainer == NULL) return;
+
+    trainer->wait_ms = 0U;
+    trainer->phase = MorseTrainerPhaseIdle;
+    trainer->last_score = -1;
+    trainer->last_failed = false;
+    trainer->session_active = false;
+    trainer->session_aborted = false;
+    trainer->session_index = 0U;
+    trainer->session_fail_count = 0U;
+    trainer->session_consecutive_missed = 0U;
+    trainer->session_score_sum = 0U;
+    trainer->session_scored_groups = 0U;
+
+    trainer->last_group[0] = '\0';
+    trainer->expected[0] = '\0';
+    trainer->answer[0] = '\0';
+    trainer->reveal[0] = '\0';
+}
+
 void morse_trainer_start_session(MorseTrainer* trainer) {
     if(trainer == NULL) {
         return;
     }
 
+    morse_trainer_reset_session(trainer);
     trainer->session_active = true;
-    trainer->session_aborted = false;
     trainer->session_index = 1U;
-    trainer->session_fail_count = 0U;
-    trainer->session_consecutive_missed = 0U;
-    trainer->session_score_sum = 0U;
-    trainer->session_scored_groups = 0U;
     morse_trainer_start_repeat(trainer);
 }
 
@@ -388,4 +415,11 @@ uint8_t morse_trainer_session_average_score(const MorseTrainer* trainer) {
     }
 
     return (uint8_t)(trainer->session_score_sum / trainer->session_scored_groups);
+}
+
+bool morse_trainer_session_completed(const MorseTrainer* trainer) {
+    if(trainer == NULL) return false;
+    return !trainer->session_active && !trainer->session_aborted && trainer->phase == MorseTrainerPhaseDone &&
+           trainer->session_index >= trainer->session_groups &&
+           trainer->session_scored_groups >= trainer->session_groups;
 }
