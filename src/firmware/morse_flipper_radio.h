@@ -9,6 +9,7 @@ typedef struct
     bool ready;
     bool tx_on;
     bool rx_on;
+    bool tx_level;
     uint32_t freq_hz;
     void (*rx_cb)(void* ctx, bool level, uint16_t duration_ms);
     void* rx_ctx;

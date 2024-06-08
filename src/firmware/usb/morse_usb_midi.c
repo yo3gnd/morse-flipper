@@ -384,7 +384,7 @@ size_t morse_usb_midi_tx(const uint8_t* buffer, size_t size) {
         return 0U;
     }
 
-    if(furi_semaphore_acquire(morse_usb_midi_state.tx_sem, 0U) != FuriStatusOk) {
+    if(furi_semaphore_acquire(morse_usb_midi_state.tx_sem, 50U) != FuriStatusOk) {
         return 0U;
     }
 

@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define MORSE_FLIPPER_RADIO_RX_RING 64u
+#define MORSE_FLIPPER_RADIO_RX_DRAIN_MAX 8u
 
 #ifdef MORSE_FLIPPER_FAP
 #include <furi_hal.h>
@@ -56,6 +57,7 @@ static bool radio_prepare_tx(MorseFlipperRadio* radio)
     radio_apply_frequency(radio);
     furi_hal_gpio_init(data_gpio, GpioModeOutputPushPull, GpioPullNo, GpioSpeedLow);
     furi_hal_gpio_write(data_gpio, false);
+    radio->tx_level = false;
     return furi_hal_subghz_tx();
 }
 #endif
@@ -83,6 +85,7 @@ static void radio_stop_tx(MorseFlipperRadio* radio)
 #endif
 
     radio->tx_on = false;
+    radio->tx_level = false;
 }
 
 void morse_flipper_radio_init(MorseFlipperRadio* radio)
@@ -174,22 +177,27 @@ void morse_flipper_radio_sync_live(
 
 void morse_flipper_radio_drain_rx(MorseFlipperRadio* radio)
 {
+    uint8_t n = 0;
+
     if(!radio || !radio->rx_cb) return;
 
-    while(radio->rx_rd != radio->rx_wr)
+    while(radio->rx_rd != radio->rx_wr && n < MORSE_FLIPPER_RADIO_RX_DRAIN_MAX)
     {
         radio->rx_cb(radio->rx_ctx, radio->rx_mark[radio->rx_rd], radio->rx_ms[radio->rx_rd]);
         radio->rx_rd = (uint8_t)((radio->rx_rd + 1u) % MORSE_FLIPPER_RADIO_RX_RING);
+        n++;
     }
 }
 
 void morse_flipper_radio_set_tx_level(MorseFlipperRadio* radio, bool level)
 {
     if(!radio || !radio->tx_on) return;
+    if(radio->tx_level == level) return;
 
 #ifdef MORSE_FLIPPER_FAP
     furi_hal_gpio_write(furi_hal_subghz_get_data_gpio(), level);
 #else
     (void)level;
 #endif
+    radio->tx_level = level;
 }
