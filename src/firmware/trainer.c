@@ -1,6 +1,7 @@
 #include "trainer.h"
 #include "cw.h"
 
+#include <stdio.h>
 #include <string.h>
 
 static const char morse_trainer_koch_order[] = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X";
@@ -75,6 +76,28 @@ void morse_trainer_init(MorseTrainer* trainer) {
 
 size_t morse_trainer_lesson_count(void) {
     return (sizeof(morse_trainer_koch_order) - 2U);
+}
+
+void morse_trainer_lesson_label(uint8_t lesson, char* buf, size_t buf_sz) {
+    uint8_t max_lesson;
+
+    if(buf == NULL || buf_sz < 2U) {
+        return;
+    }
+
+    max_lesson = (uint8_t)morse_trainer_lesson_count();
+    if(lesson < 1U) {
+        lesson = 1U;
+    } else if(lesson > max_lesson) {
+        lesson = max_lesson;
+    }
+
+    if(lesson == 1U) {
+        snprintf(buf, buf_sz, "1 - %c %c", morse_trainer_koch_order[0], morse_trainer_koch_order[1]);
+        return;
+    }
+
+    snprintf(buf, buf_sz, "%u - %c", (unsigned)lesson, morse_trainer_koch_order[lesson]);
 }
 
 void morse_trainer_set_lesson(MorseTrainer* trainer, uint8_t lesson) {

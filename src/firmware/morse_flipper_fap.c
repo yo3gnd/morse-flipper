@@ -27,7 +27,7 @@
 #define MORSE_FLIPPER_POLL_MS 5
 #define MORSE_FLIPPER_PREVIEW_TICKS 8
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
-#define MORSE_FLIPPER_CONFIG_VERSION 3
+#define MORSE_FLIPPER_CONFIG_VERSION 4
 #define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 #define MORSE_FLIPPER_SESSION_SETTLE_MS 700U
 #define MORSE_FLIPPER_SESSION_RESULT_MS 160U
@@ -134,6 +134,13 @@ typedef enum {
 } MorseFlipperGpioSettingIndex;
 
 typedef enum {
+    MorseFlipperTrainerSettingLesson = 0,
+    MorseFlipperTrainerSettingGroupSize,
+    MorseFlipperTrainerSettingGroups,
+    MorseFlipperTrainerSettingChars,
+} MorseFlipperTrainerSettingIndex;
+
+typedef enum {
     MorseFlipperPcModeOff = 0,
     MorseFlipperPcModeMidi = 1,
     MorseFlipperPcModeKeyboard = 2,
@@ -175,6 +182,7 @@ typedef struct {
     uint8_t gpio_dit_idx;
     uint8_t gpio_dah_idx;
     uint8_t gpio_ground_idx;
+    uint8_t trainer_custom_set_idx;
 } MorseFlipperConfig;
 
 typedef struct {
@@ -188,6 +196,22 @@ typedef struct {
     uint8_t spare0;
     uint16_t local_dit_ms;
 } MorseFlipperConfigV2;
+
+typedef struct {
+    uint32_t version;
+    uint8_t tone_idx;
+    uint8_t keyer_mode;
+    uint8_t handedness;
+    uint8_t trainer_lesson;
+    uint8_t trainer_group_size;
+    uint8_t trainer_session_groups;
+    uint8_t spare0;
+    uint16_t local_dit_ms;
+    uint8_t gpio_straight_idx;
+    uint8_t gpio_dit_idx;
+    uint8_t gpio_dah_idx;
+    uint8_t gpio_ground_idx;
+} MorseFlipperConfigV3;
 
 typedef struct {
     uint32_t version;
@@ -415,6 +439,7 @@ static const char* morse_flipper_straight_wait_hint(
     const MorseFlipperApp* app,
     char* buf,
     size_t buf_sz);
+static void morse_flipper_settings_noop_enter(void* context, uint32_t index);
 static void morse_flipper_settings_enter_callback(void* context, uint32_t index);
 static void morse_flipper_settings_wpm_changed(VariableItem* item);
 static void morse_flipper_settings_input_changed(VariableItem* item);
@@ -425,6 +450,10 @@ static void morse_flipper_settings_gpio_straight_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_dit_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_dah_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_ground_changed(VariableItem* item);
+static void morse_flipper_trainer_lesson_changed(VariableItem* item);
+static void morse_flipper_trainer_group_size_changed(VariableItem* item);
+static void morse_flipper_trainer_groups_changed(VariableItem* item);
+static void morse_flipper_trainer_chars_changed(VariableItem* item);
 
 static void morse_flipper_view_dirty(MorseFlipperApp* app) {
     if(app == NULL || app->live_view == NULL) return;
@@ -1033,6 +1062,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config;
+    MorseFlipperConfigV3 config_v3;
     MorseFlipperConfigV2 config_v2;
     MorseFlipperConfigV1 config_v1;
     uint16_t got = 0U;
@@ -1072,6 +1102,46 @@ static void morse_flipper_load_config(MorseFlipperApp* app) {
                 app->gpio_dit_idx = config.gpio_dit_idx;
                 app->gpio_dah_idx = config.gpio_dah_idx;
                 app->gpio_ground_idx = config.gpio_ground_idx;
+            }
+            if(config.trainer_custom_set_idx <= app->custom_sets.count) {
+                app->trainer.custom_set_idx = config.trainer_custom_set_idx;
+            }
+        } else if(got == sizeof(config_v3)) {
+            memcpy(&config_v3, &config, sizeof(config_v3));
+            if(config_v3.version == 3U) {
+                if(config_v3.tone_idx < COUNT_OF(morse_flipper_tones)) {
+                    app->tone_idx = config_v3.tone_idx;
+                }
+
+                if(config_v3.keyer_mode >= MorseKeyerModeStraight &&
+                   config_v3.keyer_mode <= MorseKeyerModeKeyahead) {
+                    app->keyer_mode = config_v3.keyer_mode;
+                }
+
+                if(config_v3.handedness <= MorseFlipperHandednessSwapped) {
+                    app->handedness = config_v3.handedness;
+                }
+
+                if(config_v3.spare0 <= MorseFlipperInputSourceButtons) {
+                    app->input_source = config_v3.spare0;
+                }
+
+                morse_trainer_set_lesson(&app->trainer, config_v3.trainer_lesson);
+                morse_trainer_set_group_size(&app->trainer, config_v3.trainer_group_size);
+                morse_trainer_set_session_groups(&app->trainer, config_v3.trainer_session_groups);
+                if(config_v3.local_dit_ms != 0U) {
+                    app->trainer.local_dit_ms = config_v3.local_dit_ms;
+                }
+                if(morse_flipper_gpio_validate(
+                       config_v3.gpio_straight_idx,
+                       config_v3.gpio_dit_idx,
+                       config_v3.gpio_dah_idx,
+                       config_v3.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
+                    app->gpio_straight_idx = config_v3.gpio_straight_idx;
+                    app->gpio_dit_idx = config_v3.gpio_dit_idx;
+                    app->gpio_dah_idx = config_v3.gpio_dah_idx;
+                    app->gpio_ground_idx = config_v3.gpio_ground_idx;
+                }
             }
         } else if(got == sizeof(config_v2)) {
             memcpy(&config_v2, &config, sizeof(config_v2));
@@ -1137,6 +1207,7 @@ static void morse_flipper_save_config(const MorseFlipperApp* app) {
         .gpio_dit_idx = app->gpio_dit_idx,
         .gpio_dah_idx = app->gpio_dah_idx,
         .gpio_ground_idx = app->gpio_ground_idx,
+        .trainer_custom_set_idx = app->trainer.custom_set_idx,
     };
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
@@ -2030,6 +2101,11 @@ static void morse_flipper_settings_enter_callback(void* context, uint32_t index)
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
+static void morse_flipper_settings_noop_enter(void* context, uint32_t index) {
+    UNUSED(context);
+    UNUSED(index);
+}
+
 static void morse_flipper_settings_wpm_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
@@ -2131,6 +2207,50 @@ static void morse_flipper_settings_gpio_ground_changed(VariableItem* item) {
 
     app->gpio_edit_ground_idx = idx;
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(idx));
+}
+
+static void morse_flipper_trainer_lesson_changed(VariableItem* item) {
+    MorseFlipperApp* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    char buf[16];
+
+    morse_trainer_set_lesson(&app->trainer, (uint8_t)(idx + 1U));
+    morse_trainer_lesson_label(morse_trainer_lesson(&app->trainer), buf, sizeof(buf));
+    variable_item_set_current_value_text(item, buf);
+    morse_flipper_save_config(app);
+}
+
+static void morse_flipper_trainer_group_size_changed(VariableItem* item) {
+    MorseFlipperApp* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    char txt[4];
+
+    morse_trainer_set_group_size(&app->trainer, (uint8_t)(idx + 1U));
+    snprintf(txt, sizeof(txt), "%u", (unsigned)morse_trainer_group_size(&app->trainer));
+    variable_item_set_current_value_text(item, txt);
+    morse_flipper_save_config(app);
+}
+
+static void morse_flipper_trainer_groups_changed(VariableItem* item) {
+    MorseFlipperApp* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    char tmp[4];
+
+    morse_trainer_set_session_groups(&app->trainer, (uint8_t)(idx + 3U));
+    snprintf(tmp, sizeof(tmp), "%u", (unsigned)morse_trainer_session_groups(&app->trainer));
+    variable_item_set_current_value_text(item, tmp);
+    morse_flipper_save_config(app);
+}
+
+static void morse_flipper_trainer_chars_changed(VariableItem* item) {
+    MorseFlipperApp* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+
+    app->trainer.custom_set_idx = idx;
+    morse_flipper_apply_trainer_charset_choice(app);
+    variable_item_set_current_value_text(
+        item, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+    morse_flipper_save_config(app);
 }
 
 static void morse_flipper_clear_button_paddles(MorseFlipperApp* app, uint32_t now_ms) {
@@ -3659,6 +3779,8 @@ static void morse_flipper_scene_gpio_on_enter(void* context) {
 
     morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
     variable_item_list_reset(app->settings_list);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
     app->gpio_edit_straight_idx = app->gpio_straight_idx;
     app->gpio_edit_dit_idx = app->gpio_dit_idx;
     app->gpio_edit_dah_idx = app->gpio_dah_idx;
@@ -3780,7 +3902,86 @@ static void morse_flipper_scene_browse_on_enter(void* context) {
 
 static void morse_flipper_scene_trainer_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenTrainer);
+    VariableItem* item;
+    uint8_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneTrainer);
+    uint8_t idx;
+    uint8_t lesson;
+    uint8_t gs;
+    uint8_t groups;
+    bool dirty = false;
+    char label[16];
+    char num[4];
+
+    lesson = morse_trainer_lesson(&app->trainer);
+    gs = morse_trainer_group_size(&app->trainer);
+    groups = morse_trainer_session_groups(&app->trainer);
+
+    if(gs > 9U) {
+        morse_trainer_set_group_size(&app->trainer, 9U);
+        dirty = true;
+    }
+    if(groups < 3U) {
+        morse_trainer_set_session_groups(&app->trainer, 3U);
+        dirty = true;
+    } else if(groups > 30U) {
+        morse_trainer_set_session_groups(&app->trainer, 30U);
+        dirty = true;
+    }
+    if(app->trainer.custom_set_idx > app->custom_sets.count) {
+        app->trainer.custom_set_idx = 0U;
+        morse_flipper_apply_trainer_charset_choice(app);
+        dirty = true;
+    }
+    if(dirty) {
+        morse_flipper_save_config(app);
+    }
+
+    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    variable_item_list_reset(app->settings_list);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
+
+    item = variable_item_list_add(
+        app->settings_list,
+        "Lesson",
+        (uint8_t)morse_trainer_lesson_count(),
+        morse_flipper_trainer_lesson_changed,
+        app);
+    idx = lesson > 0U ? (uint8_t)(lesson - 1U) : 0U;
+    morse_trainer_lesson_label((uint8_t)(idx + 1U), label, sizeof(label));
+    variable_item_set_current_value_index(item, idx);
+    variable_item_set_current_value_text(item, label);
+
+    item = variable_item_list_add(
+        app->settings_list, "Group size", 9U, morse_flipper_trainer_group_size_changed, app);
+    idx = (uint8_t)(morse_trainer_group_size(&app->trainer) - 1U);
+    snprintf(num, sizeof(num), "%u", (unsigned)(idx + 1U));
+    variable_item_set_current_value_index(item, idx);
+    variable_item_set_current_value_text(item, num);
+
+    item = variable_item_list_add(
+        app->settings_list, "Groups", 28U, morse_flipper_trainer_groups_changed, app);
+    idx = (uint8_t)(morse_trainer_session_groups(&app->trainer) - 3U);
+    snprintf(num, sizeof(num), "%u", (unsigned)(idx + 3U));
+    variable_item_set_current_value_index(item, idx);
+    variable_item_set_current_value_text(item, num);
+
+    item = variable_item_list_add(
+        app->settings_list,
+        "Chars",
+        (uint8_t)(app->custom_sets.count + 1U),
+        morse_flipper_trainer_chars_changed,
+        app);
+    idx = app->trainer.custom_set_idx;
+    variable_item_set_current_value_index(item, idx);
+    variable_item_set_current_value_text(
+        item, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+
+    if(sel > MorseFlipperTrainerSettingChars) {
+        sel = MorseFlipperTrainerSettingLesson;
+    }
+    variable_item_list_set_selected_item(app->settings_list, sel);
+    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewSettings);
 }
 
 static void morse_flipper_scene_pc_on_enter(void* context) {
@@ -3796,6 +3997,15 @@ static void morse_flipper_scene_pc_keys_on_enter(void* context) {
 static void morse_flipper_scene_trace_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_show_live(app, MorseFlipperScreenTrace);
+}
+
+static void morse_flipper_scene_trainer_on_exit(void* context) {
+    MorseFlipperApp* app = context;
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperSceneTrainer,
+        variable_item_list_get_selected_item_index(app->settings_list));
+    variable_item_list_reset(app->settings_list);
 }
 
 static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[MorseFlipperSceneNum] = {
@@ -3842,7 +4052,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_home_on_exit,
-    morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_trainer_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
@@ -3977,9 +4187,10 @@ int32_t morse_flipper_fap(void* p) {
     morse_flipper_straight_trainer_init(&app.straight_trainer);
     morse_trainer_load_custom_sets(&app.custom_sets);
     morse_trainer_load_session_lines(&app.session_lines);
-    morse_trainer_load_straight_stats(&app.straight_stats);
+   morse_trainer_load_straight_stats(&app.straight_stats);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_load_config(&app);
+    morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_cw_decoder_init(&app.rf_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_cw_decoder_init(&app.tx_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_cw_decoder_init(&app.gpio_decoder, morse_flipper_current_dit_ms(&app));

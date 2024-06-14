@@ -37,6 +37,7 @@ typedef struct {
 void morse_trainer_init(MorseTrainer* trainer);
 
 size_t morse_trainer_lesson_count(void);
+void morse_trainer_lesson_label(uint8_t lesson, char* buf, size_t buf_sz);
 void morse_trainer_set_lesson(MorseTrainer* trainer, uint8_t lesson);
 uint8_t morse_trainer_lesson(const MorseTrainer* trainer);
 void morse_trainer_set_group_size(MorseTrainer* trainer, uint8_t group_size);
