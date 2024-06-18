@@ -299,3 +299,8 @@ bool morse_flipper_cw_decoder_timing_reset(const MorseFlipperCwDecoder* decoder)
     return decoder ? decoder->timing_reset : false;
 }
 
+char morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
+{
+    if(!decoder || !decoder->symbol_count) return 0;
+    return decoder_lookup(decoder->symbol_code);
+}

@@ -287,7 +287,7 @@ void morse_trainer_feed_element(MorseTrainer* trainer, char elem) {
     trainer->answer[len + 1U] = '\0';
 }
 
-void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms) {
+void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms, uint32_t timeout_ms) {
     if(trainer == NULL || trainer->phase != MorseTrainerPhaseRepeat) {
         return;
     }
@@ -297,7 +297,8 @@ void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms) {
     }
 
     trainer->wait_ms += ms;
-    if(trainer->wait_ms < 6000U) {
+    if(timeout_ms == 0U) timeout_ms = 6000U;
+    if(trainer->wait_ms < timeout_ms) {
         return;
     }
 

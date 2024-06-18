@@ -53,7 +53,7 @@ void morse_trainer_start_repeat(MorseTrainer* trainer);
 void morse_trainer_finish_listen(MorseTrainer* trainer);
 void morse_trainer_finish_repeat(MorseTrainer* trainer);
 void morse_trainer_feed_element(MorseTrainer* trainer, char elem);
-void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms);
+void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms, uint32_t timeout_ms);
 int16_t morse_trainer_score_repeat(MorseTrainer* trainer);
 void morse_trainer_reset_session(MorseTrainer* trainer);
 void morse_trainer_start_session(MorseTrainer* trainer);
