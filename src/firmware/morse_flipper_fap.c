@@ -4277,11 +4277,13 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
             if(event->key == InputKeyBack && app->input_source == MorseFlipperInputSourceButtons) {
                 if(morse_flipper_button_paddle_keying_active(app)) {
                     morse_flipper_handle_active_keying_event(app, event);
+                    return true;
                 }
-                return true;
             }
 
-            if(event->key == InputKeyBack) {
+            if(event->key == InputKeyBack &&
+               (event->type == InputTypeShort || event->type == InputTypeLong)) {
+                morse_flipper_leave_session(app, now_ms);
                 return true;
             }
 
@@ -4302,11 +4304,13 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
             if(event->key == InputKeyBack && app->input_source == MorseFlipperInputSourceButtons) {
                 if(morse_flipper_button_paddle_keying_active(app)) {
                     morse_flipper_handle_active_keying_event(app, event);
+                    return true;
                 }
-                return true;
             }
 
-            if(event->key == InputKeyBack) {
+            if(event->key == InputKeyBack &&
+               (event->type == InputTypeShort || event->type == InputTypeLong)) {
+                morse_flipper_leave_session(app, now_ms);
                 return true;
             }
 
