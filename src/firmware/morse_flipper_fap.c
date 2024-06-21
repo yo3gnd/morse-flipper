@@ -1064,38 +1064,51 @@ static bool morse_flipper_straight_like_mode(const MorseFlipperApp* app) {
     return mode == MorseKeyerModePassthrough || mode == MorseKeyerModeStraight;
 }
 
-static bool morse_flipper_live_keyer_phase(const MorseFlipperApp* app) {
-    if(app == NULL) {
-        return false;
-    }
+static bool morse_flipper_session_running_view(const MorseFlipperApp* app);
+
+typedef struct {
+    bool live;
+    bool btn;
+    bool btn_str;
+    bool btn_pad;
+    bool back_key;
+    bool back_exit;
+    bool left_hint;
+} MorseFlipperInputGate;
+
+static MorseFlipperInputGate morse_flipper_input_gate(const MorseFlipperApp* app) {
+    MorseFlipperInputGate g = {0};
+
+    if(app == NULL) return g;
 
     if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenTrace ||
        app->screen == MorseFlipperScreenPc) {
-        return true;
+        g.live = true;
+    } else if(app->screen == MorseFlipperScreenSession) {
+        g.live = morse_flipper_session_repeat_active(app) || morse_flipper_session_running_view(app);
+    } else if(app->screen == MorseFlipperScreenRf) {
+        g.live = app->rf_live_active;
+    } else if(app->screen == MorseFlipperScreenStraight) {
+        g.live = app->straight_wait_answer;
     }
 
-    if(app->screen == MorseFlipperScreenSession) {
-        return morse_flipper_session_repeat_active(app);
+    if(!g.live || app->input_source != MorseFlipperInputSourceButtons) {
+        g.back_exit = g.live;
+        return g;
     }
 
-    if(app->screen == MorseFlipperScreenRf) {
-        return app->rf_live_active;
-    }
+    g.btn = true;
+    if(morse_flipper_straight_like_mode(app)) g.btn_str = true;
+    else g.btn_pad = true;
 
-    return false;
-}
-
-static bool morse_flipper_button_source_active(const MorseFlipperApp* app) {
-    return app != NULL && app->input_source == MorseFlipperInputSourceButtons &&
-           morse_flipper_live_keyer_phase(app);
+    g.back_key = g.btn_pad;
+    g.back_exit = !g.back_key;
+    g.left_hint = g.back_key;
+    return g;
 }
 
 static bool morse_flipper_button_paddle_keying_active(const MorseFlipperApp* app) {
-    return morse_flipper_button_source_active(app) && !morse_flipper_straight_like_mode(app);
-}
-
-static bool morse_flipper_button_straight_keying_active(const MorseFlipperApp* app) {
-    return morse_flipper_button_source_active(app) && morse_flipper_straight_like_mode(app);
+    return morse_flipper_input_gate(app).btn_pad;
 }
 
 static const char* morse_flipper_status_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
@@ -1277,7 +1290,7 @@ static const char* morse_flipper_source_short_name(
 }
 
 static bool morse_flipper_session_left_exit_active(const MorseFlipperApp* app) {
-    return morse_flipper_button_paddle_keying_active(app);
+    return morse_flipper_input_gate(app).left_hint;
 }
 
 static bool morse_flipper_session_running_view(const MorseFlipperApp* app) {
@@ -3357,9 +3370,10 @@ static void morse_flipper_handle_active_keying_event(
     MorseFlipperApp* app,
     const InputEvent* event) {
     uint32_t now_ms = furi_get_tick();
-    bool btn_src = morse_flipper_button_source_active(app);
-    bool btn_str = morse_flipper_button_straight_keying_active(app);
-    bool btn_pad = morse_flipper_button_paddle_keying_active(app);
+    MorseFlipperInputGate g = morse_flipper_input_gate(app);
+    bool btn_src = g.btn;
+    bool btn_str = g.btn_str;
+    bool btn_pad = g.btn_pad;
 
     if(btn_src && event->key == InputKeyLeft) {
         if(event->type == InputTypePress) {
@@ -3402,7 +3416,7 @@ static void morse_flipper_handle_active_keying_event(
         return;
     }
 
-    if(event->key == InputKeyBack &&
+    if(g.back_exit && event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         morse_flipper_leave_live_screen(app, now_ms);
         return;
@@ -4258,6 +4272,8 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenSession) {
+        MorseFlipperInputGate g = morse_flipper_input_gate(app);
+
         if(morse_flipper_session_repeat_active(app)) {
             if(event->key == InputKeyLeft && event->type == InputTypeLong) {
                 morse_flipper_leave_session(app, now_ms);
@@ -4269,19 +4285,17 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
                 return true;
             }
 
-            if(event->key == InputKeyOk && morse_flipper_button_source_active(app)) {
+            if(event->key == InputKeyOk && g.btn) {
                 morse_flipper_handle_active_keying_event(app, event);
                 return true;
             }
 
-            if(event->key == InputKeyBack && app->input_source == MorseFlipperInputSourceButtons) {
-                if(morse_flipper_button_paddle_keying_active(app)) {
-                    morse_flipper_handle_active_keying_event(app, event);
-                    return true;
-                }
+            if(event->key == InputKeyBack && g.back_key) {
+                morse_flipper_handle_active_keying_event(app, event);
+                return true;
             }
 
-            if(event->key == InputKeyBack &&
+            if(g.back_exit && event->key == InputKeyBack &&
                (event->type == InputTypeShort || event->type == InputTypeLong)) {
                 morse_flipper_leave_session(app, now_ms);
                 return true;
@@ -4301,20 +4315,18 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
                 return true;
             }
 
-            if(event->key == InputKeyBack && app->input_source == MorseFlipperInputSourceButtons) {
-                if(morse_flipper_button_paddle_keying_active(app)) {
-                    morse_flipper_handle_active_keying_event(app, event);
-                    return true;
-                }
+            if(event->key == InputKeyBack && g.back_key) {
+                morse_flipper_handle_active_keying_event(app, event);
+                return true;
             }
 
-            if(event->key == InputKeyBack &&
+            if(g.back_exit && event->key == InputKeyBack &&
                (event->type == InputTypeShort || event->type == InputTypeLong)) {
                 morse_flipper_leave_session(app, now_ms);
                 return true;
             }
 
-            if(event->key == InputKeyOk && app->input_source == MorseFlipperInputSourceButtons) {
+            if(event->key == InputKeyOk && g.btn) {
                 return true;
             }
         }
