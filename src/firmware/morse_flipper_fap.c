@@ -2587,15 +2587,15 @@ static bool morse_flipper_session_repeat_active(const MorseFlipperApp* app) {
 }
 
 static bool morse_flipper_session_idle_view(const MorseFlipperApp* app) {
-    const char* ph;
+    MorseTrainerPhase ph;
 
     if(!app || app->screen != MorseFlipperScreenSession) return false;
 
-    ph = morse_trainer_phase_name(&app->trainer);
+    ph = morse_trainer_phase(&app->trainer);
     return !app->session_started || (!app->trainer_playback_active && !app->session_round_pending &&
            !app->session_result_hold && !app->session_result_tone &&
            app->session_next_group_at == 0U && !morse_trainer_session_active(&app->trainer) &&
-           strcmp(ph, "repeat") != 0);
+           ph != MorseTrainerPhaseRepeat);
 }
 
 static bool morse_flipper_session_live_keying(const MorseFlipperApp* app) {
@@ -3654,7 +3654,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
 
     if(app->screen == MorseFlipperScreenSession && app->session_started && app->session_log_pending &&
        !morse_trainer_session_active(&app->trainer) &&
-       strcmp(morse_trainer_phase_name(&app->trainer), "done") == 0) {
+       morse_trainer_phase(&app->trainer) == MorseTrainerPhaseDone) {
         if(morse_trainer_session_completed(&app->trainer)) {
             morse_trainer_append_session_log(&app->trainer);
             morse_trainer_load_session_lines(&app->session_lines);
@@ -3665,7 +3665,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
     }
 
     if(app->screen == MorseFlipperScreenSession && app->session_started &&
-       strcmp(morse_trainer_phase_name(&app->trainer), "repeat") == 0) {
+       morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
         morse_trainer_tick(
             &app->trainer,
             MORSE_FLIPPER_POLL_MS,
