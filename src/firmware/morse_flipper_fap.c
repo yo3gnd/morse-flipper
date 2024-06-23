@@ -3605,9 +3605,46 @@ static void morse_flipper_scene_menu_pick(void* ctx, uint32_t idx) {
     view_dispatcher_send_custom_event(app->view_dispatcher, idx);
 }
 
-static void morse_flipper_scene_show_live(MorseFlipperApp* app, uint8_t screen) {
-    morse_flipper_enter_screen(app, screen, furi_get_tick());
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewLive);
+static uint8_t morse_flipper_scene_screen(uint32_t scene) {
+    switch(scene) {
+    case MorseFlipperSceneRun:
+        return MorseFlipperScreenRun;
+    case MorseFlipperSceneRf:
+        return MorseFlipperScreenRf;
+    case MorseFlipperSceneSession:
+        return MorseFlipperScreenSession;
+    case MorseFlipperSceneStraight:
+        return MorseFlipperScreenStraight;
+    case MorseFlipperSceneBrowse:
+        return MorseFlipperScreenBrowse;
+    case MorseFlipperScenePcKeys:
+        return MorseFlipperScreenPcKeys;
+    case MorseFlipperSceneTrace:
+        return MorseFlipperScreenTrace;
+    default:
+        return MorseFlipperScreenMenu;
+    }
+}
+
+static uint8_t morse_flipper_scene_view(uint32_t scene) {
+    switch(scene) {
+    case MorseFlipperSceneHome:
+    case MorseFlipperSceneTrainer:
+    case MorseFlipperScenePc:
+    case MorseFlipperSceneGpio:
+        return MorseFlipperViewSettings;
+    case MorseFlipperSceneMenuMain:
+    case MorseFlipperSceneMenuTraining:
+    case MorseFlipperSceneMenuSettings:
+        return MorseFlipperViewMenu;
+    default:
+        return MorseFlipperViewLive;
+    }
+}
+
+static void morse_flipper_scene_enter_now(MorseFlipperApp* app, uint32_t scene) {
+    morse_flipper_enter_screen(app, morse_flipper_scene_screen(scene), furi_get_tick());
+    view_dispatcher_switch_to_view(app->view_dispatcher, morse_flipper_scene_view(scene));
 }
 
 static bool morse_flipper_live_input(InputEvent* event, void* ctx) {
@@ -4062,7 +4099,7 @@ static void morse_flipper_scene_menu_main_on_enter(void* context) {
     MorseFlipperApp* app = context;
     uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuMain);
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuMain);
     submenu_set_header(app->submenu, "Morse Flipper");
     submenu_add_item(app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Radio TX & RX", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
@@ -4072,7 +4109,6 @@ static void morse_flipper_scene_menu_main_on_enter(void* context) {
        sel != MorseFlipperSceneMenuTraining && sel != MorseFlipperSceneMenuSettings)
         sel = MorseFlipperSceneRun;
     submenu_set_selected_item(app->submenu, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewMenu);
 }
 
 static bool morse_flipper_scene_menu_main_on_event(void* context, SceneManagerEvent event) {
@@ -4102,7 +4138,7 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
     MorseFlipperApp* app = context;
     uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuTraining);
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuTraining);
     submenu_set_header(app->submenu, "Training");
     submenu_add_item(app->submenu, "Koch - LCWO groups", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Straight Key trainer", MorseFlipperSceneStraight, morse_flipper_scene_menu_pick, app);
@@ -4110,7 +4146,6 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
     if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight && sel != MorseFlipperSceneBrowse)
         sel = MorseFlipperSceneSession;
     submenu_set_selected_item(app->submenu, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewMenu);
 }
 
 static bool morse_flipper_scene_menu_training_on_event(void* context, SceneManagerEvent event) {
@@ -4139,7 +4174,7 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
     MorseFlipperApp* app = context;
     uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuSettings);
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuSettings);
     submenu_set_header(app->submenu, "Settings");
     submenu_add_item(app->submenu, "Main settings", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Koch - LCWO", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
@@ -4149,7 +4184,6 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
        sel != MorseFlipperSceneTrace)
         sel = MorseFlipperSceneHome;
     submenu_set_selected_item(app->submenu, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewMenu);
 }
 
 static bool morse_flipper_scene_menu_settings_on_event(void* context, SceneManagerEvent event) {
@@ -4181,7 +4215,7 @@ static void morse_flipper_scene_home_on_enter(void* context) {
     uint8_t idx;
     char wpm_text[4];
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneHome);
     variable_item_list_reset(app->settings_list);
     variable_item_list_set_enter_callback(
         app->settings_list, morse_flipper_settings_enter_callback, app);
@@ -4240,7 +4274,6 @@ static void morse_flipper_scene_home_on_enter(void* context) {
         sel = MorseFlipperSettingWpm;
     }
     variable_item_list_set_selected_item(app->settings_list, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewSettings);
 }
 
 static bool morse_flipper_scene_home_on_event(void* context, SceneManagerEvent event) {
@@ -4275,7 +4308,7 @@ static void morse_flipper_scene_gpio_on_enter(void* context) {
     VariableItem* item;
     uint8_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneGpio);
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneGpio);
     variable_item_list_reset(app->settings_list);
     variable_item_list_set_enter_callback(
         app->settings_list, morse_flipper_settings_noop_enter, app);
@@ -4324,7 +4357,6 @@ static void morse_flipper_scene_gpio_on_enter(void* context) {
         sel = MorseFlipperGpioSettingStraight;
     }
     variable_item_list_set_selected_item(app->settings_list, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewSettings);
 }
 
 static bool morse_flipper_scene_gpio_on_event(void* context, SceneManagerEvent event) {
@@ -4375,27 +4407,27 @@ static void morse_flipper_scene_live_on_exit(void* context) {
 
 static void morse_flipper_scene_run_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenRun);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneRun);
 }
 
 static void morse_flipper_scene_rf_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenRf);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneRf);
 }
 
 static void morse_flipper_scene_session_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenSession);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneSession);
 }
 
 static void morse_flipper_scene_straight_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenStraight);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneStraight);
 }
 
 static void morse_flipper_scene_browse_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenBrowse);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneBrowse);
 }
 
 static void morse_flipper_scene_trainer_on_enter(void* context) {
@@ -4428,7 +4460,7 @@ static void morse_flipper_scene_trainer_on_enter(void* context) {
         morse_flipper_save_config(app);
     }
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneTrainer);
     variable_item_list_reset(app->settings_list);
     memset(app->trainer_items, 0, sizeof(app->trainer_items));
     variable_item_list_set_enter_callback(
@@ -4490,7 +4522,6 @@ static void morse_flipper_scene_trainer_on_enter(void* context) {
     }
     morse_flipper_trainer_menu_refresh(app);
     morse_flipper_settings_list_restore(app->settings_list, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewSettings);
 }
 
 static void morse_flipper_scene_pc_on_enter(void* context) {
@@ -4498,7 +4529,7 @@ static void morse_flipper_scene_pc_on_enter(void* context) {
     VariableItem* it;
     uint8_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperScenePc);
 
-    morse_flipper_enter_screen(app, MorseFlipperScreenMenu, furi_get_tick());
+    morse_flipper_scene_enter_now(app, MorseFlipperScenePc);
     variable_item_list_reset(app->settings_list);
     variable_item_list_set_enter_callback(
         app->settings_list, morse_flipper_settings_noop_enter, app);
@@ -4537,17 +4568,16 @@ static void morse_flipper_scene_pc_on_enter(void* context) {
 
     if(sel > MorseFlipperUsbSettingMouseSwap) sel = MorseFlipperUsbSettingConnection;
     variable_item_list_set_selected_item(app->settings_list, sel);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewSettings);
 }
 
 static void morse_flipper_scene_pc_keys_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenPcKeys);
+    morse_flipper_scene_enter_now(app, MorseFlipperScenePcKeys);
 }
 
 static void morse_flipper_scene_trace_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_scene_show_live(app, MorseFlipperScreenTrace);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneTrace);
 }
 
 static void morse_flipper_scene_trainer_on_exit(void* context) {
