@@ -71,7 +71,7 @@ static const GpioPin* morse_flipper_dit_pin = &gpio_ext_pc3;
 static const GpioPin* morse_flipper_dah_pin = &gpio_ext_pb3;
 static const GpioPin* morse_flipper_ground_pin = &gpio_ext_pa7;
 
-typedef struct {
+typedef struct MorseFlipperApp {
     const char* name;
     float hz;
     uint8_t midi_note;
@@ -619,6 +619,10 @@ static void morse_flipper_trainer_group_size_changed(VariableItem* item);
 static void morse_flipper_trainer_groups_changed(VariableItem* item);
 static void morse_flipper_trainer_chars_changed(VariableItem* item);
 static void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app);
+
+MorseFlipperApp* morse_flipper_boot(void);
+ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app);
+void morse_flipper_shutdown(MorseFlipperApp* app);
 
 static void morse_flipper_view_dirty(MorseFlipperApp* app) {
     if(app == NULL || app->live_view == NULL) return;
@@ -4667,9 +4671,7 @@ static const SceneManagerHandlers morse_flipper_scene_handlers = {
     .scene_num = MorseFlipperSceneNum,
 };
 
-int32_t morse_flipper_fap(void* p) {
-    UNUSED(p);
-
+MorseFlipperApp* morse_flipper_boot(void) {
     static MorseFlipperApp app;
     app = (MorseFlipperApp){
         .q = NULL,
@@ -4833,39 +4835,46 @@ int32_t morse_flipper_fap(void* p) {
     view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewLive, app.live_view);
 
     scene_manager_next_scene(app.scene_manager, MorseFlipperSceneMenuMain);
-    view_dispatcher_run(app.view_dispatcher);
+    return &app;
+}
 
-    morse_flipper_clear_button_keying(&app, furi_get_tick());
-    morse_flipper_set_pc_mode(&app, MorseFlipperPcModeOff);
-    morse_flipper_radio_sync_live(&app.radio, morse_flipper_rf_frequency_hz(&app.rf), false, false);
-    morse_flipper_radio_set_tx_level(&app.radio, false);
-    morse_flipper_radio_deinit(&app.radio);
-    morse_keyer_reset(&app.keyer);
-    morse_flipper_drain_keyer_events(&app);
-    morse_flipper_release_all_notes(&app);
-    morse_flipper_tone_stop(&app);
-    if(app.backlight_mode != MorseFlipperBacklightAuto && app.notifications)
-        notification_message(app.notifications, &sequence_display_backlight_enforce_auto);
-    if(app.notifications) {
-        notification_message(app.notifications, &sequence_reset_green);
-        notification_message(app.notifications, &sequence_reset_red);
+ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app) {
+    if(app == NULL) return NULL;
+    return app->view_dispatcher;
+}
+
+void morse_flipper_shutdown(MorseFlipperApp* app) {
+    if(app == NULL) return;
+
+    morse_flipper_clear_button_keying(app, furi_get_tick());
+    morse_flipper_set_pc_mode(app, MorseFlipperPcModeOff);
+    morse_flipper_radio_sync_live(&app->radio, morse_flipper_rf_frequency_hz(&app->rf), false, false);
+    morse_flipper_radio_set_tx_level(&app->radio, false);
+    morse_flipper_radio_deinit(&app->radio);
+    morse_keyer_reset(&app->keyer);
+    morse_flipper_drain_keyer_events(app);
+    morse_flipper_release_all_notes(app);
+    morse_flipper_tone_stop(app);
+    if(app->backlight_mode != MorseFlipperBacklightAuto && app->notifications)
+        notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+    if(app->notifications) {
+        notification_message(app->notifications, &sequence_reset_green);
+        notification_message(app->notifications, &sequence_reset_red);
     }
-    morse_flipper_save_config(&app);
+    morse_flipper_save_config(app);
 
     morse_flipper_gpio_deinit();
-    if(app.view_dispatcher) {
-        view_dispatcher_remove_view(app.view_dispatcher, MorseFlipperViewSettings);
-        view_dispatcher_remove_view(app.view_dispatcher, MorseFlipperViewLive);
-        view_dispatcher_remove_view(app.view_dispatcher, MorseFlipperViewMenu);
+    if(app->view_dispatcher) {
+        view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewSettings);
+        view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewLive);
+        view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewMenu);
     }
-    if(app.settings_list) variable_item_list_free(app.settings_list);
-    if(app.live_view) view_free(app.live_view);
-    if(app.submenu) submenu_free(app.submenu);
-    if(app.scene_manager) scene_manager_free(app.scene_manager);
-    if(app.view_dispatcher) view_dispatcher_free(app.view_dispatcher);
+    if(app->settings_list) variable_item_list_free(app->settings_list);
+    if(app->live_view) view_free(app->live_view);
+    if(app->submenu) submenu_free(app->submenu);
+    if(app->scene_manager) scene_manager_free(app->scene_manager);
+    if(app->view_dispatcher) view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_DIALOGS);
     furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_GUI);
-
-    return 0;
 }
