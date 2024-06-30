@@ -364,6 +364,7 @@ typedef struct {
 } MorseFlipperConfigV1;
 
 static const MorseFlipperTone morse_flipper_tones[] = {
+    {"Off", 0.0f, 0U},
     {"G2", 98.00f, 43U},
     {"A2", 110.00f, 45U},
     {"B2", 123.47f, 47U},
@@ -897,6 +898,7 @@ static float morse_flipper_active_tone_hz(const MorseFlipperApp* app) {
 static bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app)
 {
     if(app == NULL) return false;
+    if(app->tone_idx == 0U) return false;
     return app->screen == MorseFlipperScreenRun && app->audio_pwm.running;
 }
 
@@ -1333,6 +1335,12 @@ static void morse_flipper_update_sidetone(MorseFlipperApp* app) {
     bool want_aux_tone =
         app->trainer_playback_mark || app->sk_play_mark || app->session_result_tone;
     bool want_tone = want_tx_tone || want_aux_tone;
+
+    if(app->tone_idx == 0U) {
+        morse_flipper_audio_pwm_set_gate(&app->audio_pwm, false);
+        morse_flipper_tone_stop(app);
+        return;
+    }
 
     if(morse_flipper_use_pwm_buzzer(app)) {
         if(app->sp_owned || app->tone_on) {

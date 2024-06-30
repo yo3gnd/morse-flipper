@@ -418,7 +418,7 @@ static void morse_flipper_scene_home_on_enter(void* context) {
 
     item = variable_item_list_add(
         app->settings_list,
-        "TX tone",
+        "Buzzer TX",
         COUNT_OF(morse_flipper_tones),
         morse_flipper_settings_tone_changed,
         app);
