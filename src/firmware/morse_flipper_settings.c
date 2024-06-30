@@ -222,36 +222,45 @@ static void morse_flipper_settings_tone_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
+static uint8_t morse_flipper_gpio_ui_pin(uint8_t idx) {
+    return (uint8_t)(idx + 1U);
+}
+
+static uint8_t morse_flipper_gpio_pin_ui(uint8_t pin) {
+    if(pin == MorseFlipperGpioPinP2 || pin >= MORSE_FLIPPER_GPIO_PIN_COUNT) return 0U;
+    return (uint8_t)(pin - 1U);
+}
+
 static void morse_flipper_settings_gpio_straight_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    app->gpio_edit_straight_idx = idx;
-    variable_item_set_current_value_text(item, morse_flipper_gpio_name(idx));
+    app->gpio_edit_straight_idx = morse_flipper_gpio_ui_pin(idx);
+    variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_straight_idx));
 }
 
 static void morse_flipper_settings_gpio_dit_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    app->gpio_edit_dit_idx = idx;
-    variable_item_set_current_value_text(item, morse_flipper_gpio_name(idx));
+    app->gpio_edit_dit_idx = morse_flipper_gpio_ui_pin(idx);
+    variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_dit_idx));
 }
 
 static void morse_flipper_settings_gpio_dah_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    app->gpio_edit_dah_idx = idx;
-    variable_item_set_current_value_text(item, morse_flipper_gpio_name(idx));
+    app->gpio_edit_dah_idx = morse_flipper_gpio_ui_pin(idx);
+    variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_dah_idx));
 }
 
 static void morse_flipper_settings_gpio_ground_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    app->gpio_edit_ground_idx = idx;
-    variable_item_set_current_value_text(item, morse_flipper_gpio_name(idx));
+    app->gpio_edit_ground_idx = morse_flipper_gpio_ui_pin(idx);
+    variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ground_idx));
 }
 
 static void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
@@ -470,37 +479,37 @@ static void morse_flipper_scene_gpio_on_enter(void* context) {
     item = variable_item_list_add(
         app->settings_list,
         "Straight key",
-        MORSE_FLIPPER_GPIO_PIN_COUNT,
+        MORSE_FLIPPER_GPIO_PIN_COUNT - 1U,
         morse_flipper_settings_gpio_straight_changed,
         app);
-    variable_item_set_current_value_index(item, app->gpio_edit_straight_idx);
+    variable_item_set_current_value_index(item, morse_flipper_gpio_pin_ui(app->gpio_edit_straight_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_straight_idx));
 
     item = variable_item_list_add(
         app->settings_list,
         "Paddle dit",
-        MORSE_FLIPPER_GPIO_PIN_COUNT,
+        MORSE_FLIPPER_GPIO_PIN_COUNT - 1U,
         morse_flipper_settings_gpio_dit_changed,
         app);
-    variable_item_set_current_value_index(item, app->gpio_edit_dit_idx);
+    variable_item_set_current_value_index(item, morse_flipper_gpio_pin_ui(app->gpio_edit_dit_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_dit_idx));
 
     item = variable_item_list_add(
         app->settings_list,
         "Paddle dah",
-        MORSE_FLIPPER_GPIO_PIN_COUNT,
+        MORSE_FLIPPER_GPIO_PIN_COUNT - 1U,
         morse_flipper_settings_gpio_dah_changed,
         app);
-    variable_item_set_current_value_index(item, app->gpio_edit_dah_idx);
+    variable_item_set_current_value_index(item, morse_flipper_gpio_pin_ui(app->gpio_edit_dah_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_dah_idx));
 
     item = variable_item_list_add(
         app->settings_list,
         "Force gnd",
-        MORSE_FLIPPER_GPIO_PIN_COUNT,
+        MORSE_FLIPPER_GPIO_PIN_COUNT - 1U,
         morse_flipper_settings_gpio_ground_changed,
         app);
-    variable_item_set_current_value_index(item, app->gpio_edit_ground_idx);
+    variable_item_set_current_value_index(item, morse_flipper_gpio_pin_ui(app->gpio_edit_ground_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ground_idx));
 
     if(sel > MorseFlipperGpioSettingGround) sel = MorseFlipperGpioSettingStraight;

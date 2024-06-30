@@ -12,6 +12,7 @@
 #include <furi_hal.h>
 #include <furi_hal_bus.h>
 #include <furi_hal_interrupt.h>
+#include <furi_hal_pwm.h>
 #include <furi_hal_resources.h>
 
 #include <stm32wbxx_ll_dma.h>
@@ -283,10 +284,6 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
     audio->own_bus_dma1 = false;
     audio->own_bus_dmamux1 = false;
 
-    if(!furi_hal_bus_is_enabled(FuriHalBusTIM1)) {
-        furi_hal_bus_enable(FuriHalBusTIM1);
-        audio->own_bus_tim1 = true;
-    }
     if(!furi_hal_bus_is_enabled(FuriHalBusDMA1)) {
         furi_hal_bus_enable(FuriHalBusDMA1);
         audio->own_bus_dma1 = true;
@@ -296,21 +293,25 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
         audio->own_bus_dmamux1 = true;
     }
 
-    furi_hal_gpio_init_ex( &gpio_ext_pa7, GpioModeAltFunctionPushPull, GpioPullNo, GpioSpeedVeryHigh, GpioAltFn1TIM1);
+    furi_hal_pwm_start(FuriHalPwmOutputIdTim1PA7, audio->carrier_hz, 50U);
+    audio->own_bus_tim1 = true;
 
     LL_TIM_DisableCounter(TIM1);
     LL_TIM_DisableAllOutputs(TIM1);
     LL_TIM_DisableDMAReq_UPDATE(TIM1);
+    LL_TIM_DisableIT_UPDATE(TIM1);
     LL_TIM_SetCounterMode(TIM1, LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetClockDivision(TIM1, LL_TIM_CLOCKDIVISION_DIV1);
     LL_TIM_SetClockSource(TIM1, LL_TIM_CLOCKSOURCE_INTERNAL);
     LL_TIM_SetPrescaler(TIM1, 0U);
+    LL_TIM_SetCounter(TIM1, 0U);
     LL_TIM_SetAutoReload(TIM1, audio->pwm_period - 1U);
     LL_TIM_SetRepetitionCounter(
         TIM1,
         (audio->carrier_hz / audio->sample_rate_hz) > 0U ?
             (uint32_t)((audio->carrier_hz / audio->sample_rate_hz) - 1U) :
             0U);
+    LL_TIM_DisableMasterSlaveMode(TIM1);
     LL_TIM_EnableARRPreload(TIM1);
     LL_TIM_OC_EnablePreload(TIM1, LL_TIM_CHANNEL_CH1);
     LL_TIM_OC_SetMode(TIM1, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
@@ -322,6 +323,7 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
 
     morse_flipper_audio_pwm_render(audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_SAMPLES);
 
+    LL_DMA_DisableChannel(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     dma_cfg.PeriphOrM2MSrcAddress = (uint32_t)&TIM1->CCR1;
     dma_cfg.MemoryOrM2MDstAddress = (uint32_t)audio->dma_buffer;
     dma_cfg.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
@@ -341,9 +343,12 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
     LL_DMA_EnableIT_TE(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     furi_hal_interrupt_set_isr_ex( MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, FuriHalInterruptPriorityKamiSama, morse_flipper_audio_pwm_dma_isr, audio);
 
+    LL_TIM_ClearFlag_UPDATE(TIM1);
     LL_TIM_EnableDMAReq_UPDATE(TIM1);
     LL_DMA_EnableChannel(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
+    furi_delay_us(5U);
     LL_TIM_GenerateEvent_UPDATE(TIM1);
+    furi_delay_us(5U);
     LL_TIM_EnableCounter(TIM1);
 
     audio->running = true;
@@ -353,6 +358,18 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
 void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio)
 {
     if(audio == NULL) return;
+    if(!audio->prepared) return;
+    if(!audio->running) {
+        audio->gate_requested = false;
+        audio->gate_applied = false;
+        audio->env_state = MorseFlipperAudioPwmEnvIdle;
+        audio->env_idx = 0U;
+        audio->env_anchor_q15 = 0U;
+        audio->own_bus_tim1 = false;
+        audio->own_bus_dma1 = false;
+        audio->own_bus_dmamux1 = false;
+        return;
+    }
 
     furi_hal_interrupt_set_isr(MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, NULL, NULL);
     LL_DMA_DisableIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
@@ -367,9 +384,7 @@ void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio)
     LL_TIM_DisableCounter(TIM1);
     LL_TIM_OC_SetCompareCH1(TIM1, audio->pwm_midpoint);
 
-    furi_hal_gpio_init_simple(&gpio_ext_pa7, GpioModeAnalog);
-
-    if(audio->own_bus_tim1) furi_hal_bus_disable(FuriHalBusTIM1);
+    if(audio->own_bus_tim1) furi_hal_pwm_stop(FuriHalPwmOutputIdTim1PA7);
     if(audio->own_bus_dma1) furi_hal_bus_disable(FuriHalBusDMA1);
     if(audio->own_bus_dmamux1) furi_hal_bus_disable(FuriHalBusDMAMUX1);
 
@@ -379,6 +394,9 @@ void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio)
     audio->env_state = MorseFlipperAudioPwmEnvIdle;
     audio->env_idx = 0U;
     audio->env_anchor_q15 = 0U;
+    audio->own_bus_tim1 = false;
+    audio->own_bus_dma1 = false;
+    audio->own_bus_dmamux1 = false;
 }
 
 #endif

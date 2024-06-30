@@ -787,11 +787,19 @@ static const GpioPin* morse_flipper_gpio_pin_ptr(uint8_t pin_idx) {
     return morse_flipper_gpio_pins[pin_idx];
 }
 
+static uint8_t morse_flipper_gpio_no_p2(uint8_t pin_idx, uint8_t def) {
+    return pin_idx == MorseFlipperGpioPinP2 ? def : pin_idx;
+}
+
 static void morse_flipper_gpio_bind_from_app(const MorseFlipperApp* app) {
-    morse_flipper_straight_pin = morse_flipper_gpio_pin_ptr(app->gpio_straight_idx);
-    morse_flipper_dit_pin = morse_flipper_gpio_pin_ptr(app->gpio_dit_idx);
-    morse_flipper_dah_pin = morse_flipper_gpio_pin_ptr(app->gpio_dah_idx);
-    morse_flipper_ground_pin = morse_flipper_gpio_pin_ptr(app->gpio_ground_idx);
+    morse_flipper_straight_pin = morse_flipper_gpio_pin_ptr(
+        morse_flipper_gpio_no_p2(app->gpio_straight_idx, morse_flipper_gpio_default_straight()));
+    morse_flipper_dit_pin = morse_flipper_gpio_pin_ptr(
+        morse_flipper_gpio_no_p2(app->gpio_dit_idx, morse_flipper_gpio_default_dit()));
+    morse_flipper_dah_pin = morse_flipper_gpio_pin_ptr(
+        morse_flipper_gpio_no_p2(app->gpio_dah_idx, morse_flipper_gpio_default_dah()));
+    morse_flipper_ground_pin = morse_flipper_gpio_pin_ptr(
+        morse_flipper_gpio_no_p2(app->gpio_ground_idx, morse_flipper_gpio_default_ground()));
 }
 
 static void morse_flipper_gpio_reset_candidates(void) {
@@ -1935,11 +1943,11 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .gpio_straight_idx = MorseFlipperGpioPinP3,
         .gpio_dit_idx = MorseFlipperGpioPinP7,
         .gpio_dah_idx = MorseFlipperGpioPinP5,
-        .gpio_ground_idx = MorseFlipperGpioPinP2,
+        .gpio_ground_idx = MorseFlipperGpioPinP3,
         .gpio_edit_straight_idx = MorseFlipperGpioPinP3,
         .gpio_edit_dit_idx = MorseFlipperGpioPinP7,
         .gpio_edit_dah_idx = MorseFlipperGpioPinP5,
-        .gpio_edit_ground_idx = MorseFlipperGpioPinP2,
+        .gpio_edit_ground_idx = MorseFlipperGpioPinP3,
         .trainer_row = 0U,
         .trainer_char_idx = 0U,
         .trainer_mark_idx = 0U,
