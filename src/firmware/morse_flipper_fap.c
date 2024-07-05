@@ -266,104 +266,6 @@ static const uint8_t morse_flipper_keyer_values[] = {
     MorseKeyerModeKeyahead,
 };
 
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-    uint8_t usb_mode;
-    uint8_t usb_paddle_preset;
-    uint8_t usb_straight_preset;
-    uint8_t usb_mouse_invert;
-    uint8_t trainer_farn_wpm;
-    uint8_t trainer_to_s;
-    uint8_t trainer_gap_s;
-} MorseFlipperConfig;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-    uint8_t usb_mode;
-    uint8_t usb_paddle_preset;
-    uint8_t usb_straight_preset;
-    uint8_t usb_mouse_invert;
-} MorseFlipperConfigV5;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-} MorseFlipperConfigV2;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-} MorseFlipperConfigV3;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-} MorseFlipperConfigV4;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t spare0;
-    uint8_t spare1;
-} MorseFlipperConfigV1;
-
 static const MorseFlipperTone morse_flipper_tones[] = {
     {"G2", 98.00f, 43U},
     {"A2", 110.00f, 45U},
@@ -543,7 +445,10 @@ static void morse_flipper_btn_clear(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_poll(MorseFlipperApp* app);
 static void morse_flipper_release_all_notes(MorseFlipperApp* app);
+static void morse_flipper_load_config(MorseFlipperApp* app);
 static void morse_flipper_save_config(const MorseFlipperApp* app);
+static uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app);
+static void morse_flipper_train_fix(MorseFlipperApp* app);
 static void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
 static void morse_flipper_handle_midi_rx(MorseFlipperApp* app);
 static void morse_flipper_update_sidetone(MorseFlipperApp* app);
@@ -642,6 +547,8 @@ MorseFlipperApp* morse_flipper_boot(void);
 ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app);
 void morse_flipper_shutdown(MorseFlipperApp* app);
 
+#include "morse_flipper_config.c"
+
 static uint8_t morse_flipper_backlight_mode(const MorseFlipperApp* app) {
     if(app == NULL) return MorseFlipperBacklightAuto;
 
@@ -684,36 +591,6 @@ static uint8_t morse_flipper_input_value_index(uint8_t source) {
     }
 
     return 0U;
-}
-
-static uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app) {
-    uint16_t dit;
-    uint8_t wpm;
-
-    if(app == NULL) return 0U;
-    dit = app->trainer.local_dit_ms ? app->trainer.local_dit_ms : MORSE_FLIPPER_DEFAULT_DIT_MS;
-    wpm = (uint8_t)((1200U + (dit / 2U)) / dit);
-    if(wpm < 10U) wpm = 10U;
-    if(wpm > 30U) wpm = 30U;
-    return wpm;
-}
-
-static void morse_flipper_train_fix(MorseFlipperApp* app) {
-    uint8_t w;
-
-    if(app == NULL) return;
-
-    w = morse_flipper_local_wpm(app);
-    if(app->trainer_farn_wpm == 0U) app->trainer_farn_wpm = w;
-    if(app->trainer_farn_wpm > w) app->trainer_farn_wpm = w;
-
-    if(app->trainer_to_s == 0U) app->trainer_to_s = MORSE_FLIPPER_TRAINER_TIMEOUT_DEFAULT_S;
-    if(app->trainer_to_s < MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S) app->trainer_to_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S;
-    if(app->trainer_to_s > MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S) app->trainer_to_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S;
-
-    if(app->trainer_gap_s == 0U) app->trainer_gap_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_DEFAULT_S;
-    if(app->trainer_gap_s < MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S) app->trainer_gap_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S;
-    if(app->trainer_gap_s > MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S) app->trainer_gap_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S;
 }
 
 static void morse_flipper_set_local_wpm(MorseFlipperApp* app, uint8_t wpm) {
