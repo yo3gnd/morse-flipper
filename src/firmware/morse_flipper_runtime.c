@@ -1,36 +1,3 @@
-static void morse_flipper_release_mouse_buttons(void) {
-    furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
-    furi_hal_hid_mouse_release(HID_MOUSE_BTN_RIGHT);
-}
-
-static void morse_flipper_send_mouse_note(MorseFlipperApp* app, uint8_t note, bool active) {
-    uint8_t btn = morse_pc_mouse_button(note, app->mouse_invert);
-
-    if(btn == MorsePcMouseBtnNone) return;
-
-    if(active) {
-        furi_hal_hid_mouse_press(btn);
-    } else {
-        furi_hal_hid_mouse_release(btn);
-    }
-}
-
-static void morse_flipper_send_transport_note(MorseFlipperApp* app, uint8_t note, bool active) {
-    switch(app->pc_mode) {
-    case MorseFlipperPcModeMidi:
-        morse_flipper_send_midi_note(note, active);
-        break;
-    case MorseFlipperPcModeKeyboard:
-        morse_flipper_send_keyboard_note(app, note, active);
-        break;
-    case MorseFlipperPcModeMouse:
-        morse_flipper_send_mouse_note(app, note, active);
-        break;
-    default:
-        break;
-    }
-}
-
 static void morse_flipper_clear_vail_overrides(MorseFlipperApp* app) {
     bool had_tone_override = app->vail_tone_active;
 
