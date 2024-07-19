@@ -9,7 +9,6 @@ App(
     stack_size=16 * 1024,
     cdefines=["MORSE_FLIPPER_FAP=1"],
     sources=[
-        "src/firmware/morse_flipper_app.c",
         "src/firmware/morse_flipper_fap.c",
         "src/firmware/morse_flipper_gpio.c",
         "src/firmware/morse_flipper_audio_pwm.c",
