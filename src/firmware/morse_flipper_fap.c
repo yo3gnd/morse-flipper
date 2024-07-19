@@ -455,6 +455,7 @@ static void morse_flipper_update_sidetone(MorseFlipperApp* app);
 static void morse_flipper_cycle_pc_mode(MorseFlipperApp* app, int dir);
 static void morse_flipper_midi_rx_ready(void* context);
 static void morse_flipper_cycle_pc_key_preset(MorseFlipperApp* app, int dir);
+static void morse_flipper_key_evt( MorseFlipperApp* app, const InputEvent* event);
 static const char* morse_flipper_pc_state_name(const MorseFlipperApp* app);
 static uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note);
 static bool morse_flipper_transport_connected(const MorseFlipperApp* app);
@@ -546,6 +547,7 @@ static void morse_flipper_trainer_group_size_changed(VariableItem* item);
 static void morse_flipper_trainer_groups_changed(VariableItem* item);
 static void morse_flipper_trainer_chars_changed(VariableItem* item);
 static void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app);
+static bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event);
 
 MorseFlipperApp* morse_flipper_boot(void);
 ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app);
@@ -1053,6 +1055,7 @@ static bool morse_flipper_session_running_view(const MorseFlipperApp* app) {
 #include "morse_flipper_session.h"
 #include "morse_flipper_session.c"
 #include "morse_flipper_transport.c"
+#include "morse_flipper_input.c"
 
 #include "morse_flipper_runtime.c"
 #include "morse_flipper_rf_live.c"
