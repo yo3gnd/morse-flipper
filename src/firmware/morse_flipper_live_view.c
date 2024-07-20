@@ -227,6 +227,19 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenStraight) {
+        if(!app->sk_started) {
+            canvas_set_font(canvas, FontPrimary);
+            canvas_draw_str(canvas, 10, 14, "Straight Trainer");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 18, 34, "Press OK to start");
+            if(app->in_src == MorseFlipperInputSourceButtons)
+                canvas_draw_str(canvas, 8, 50, "after that, key with OK");
+            else
+                canvas_draw_str(canvas, 8, 50, morse_flipper_gpio_name(app->gpio_straight_idx));
+            canvas_draw_str(canvas, 8, 64, "OK start  Bk back");
+            return;
+        }
+
         snprintf(
             trainer_line,
             sizeof(trainer_line),
@@ -268,7 +281,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         } else if(app->sk_wait) {
             canvas_draw_str(canvas, 2, 64, morse_flipper_straight_wait_hint(app, browse_line, sizeof(browse_line)));
         } else {
-            canvas_draw_str(canvas, 2, 64, "OK play  Bk back");
+            canvas_draw_str(canvas, 2, 64, "OK next  Bk back");
         }
         return;
     }

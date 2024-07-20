@@ -161,7 +161,7 @@ static bool morse_flipper_straight_input( MorseFlipperApp* app, const InputEvent
 {
     if(app->screen != MorseFlipperScreenStraight) return false;
 
-    if(morse_flipper_live_back_exits(app) && event->key == InputKeyBack &&
+    if(event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         morse_flipper_scene_back(app);
         return true;

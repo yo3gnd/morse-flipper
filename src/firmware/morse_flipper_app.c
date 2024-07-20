@@ -90,6 +90,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .session_line_idx = 0U,
         .straight_playback_active = false,
         .sk_play_mark = false,
+        .sk_started = false,
         .sk_wait = false,
         .sk_done = false,
         .sk_down = false,

@@ -390,6 +390,7 @@ typedef struct {
     uint8_t session_line_idx;
     bool straight_playback_active;
     bool sk_play_mark;
+    bool sk_started;
     bool sk_wait;
     bool sk_done;
     bool sk_down;
@@ -833,10 +834,6 @@ static bool morse_flipper_live_back_is_key(const MorseFlipperApp* app) {
     return morse_flipper_input_gate(app).back_key;
 }
 
-static bool morse_flipper_live_back_exits(const MorseFlipperApp* app) {
-    return morse_flipper_input_gate(app).back_exit;
-}
-
 static bool morse_flipper_live_left_hint(const MorseFlipperApp* app) {
     return morse_flipper_input_gate(app).left_hint;
 }
@@ -970,12 +967,7 @@ static const char* morse_flipper_straight_wait_hint( const MorseFlipperApp* app,
         return buf;
     }
 
-    snprintf(
-        buf,
-        buf_sz,
-        "%s/%s key Bk back",
-        morse_flipper_gpio_name(app->gpio_dit_idx),
-        morse_flipper_gpio_name(app->gpio_dah_idx));
+    snprintf(buf, buf_sz, "%s key  Bk back", morse_flipper_gpio_name(app->gpio_straight_idx));
     return buf;
 }
 
@@ -1108,15 +1100,8 @@ static bool morse_flipper_training_playback_active(const MorseFlipperApp* app) {
 static bool morse_flipper_straight_answer_down(const MorseFlipperApp* app) {
     if(app == NULL) return false;
 
-    if(app->in_src == MorseFlipperInputSourceStraight) {
-        return morse_flipper_straight_down();
-    }
-
-    if(app->in_src == MorseFlipperInputSourcePaddle) {
-        return morse_flipper_logical_dit_down(app) || morse_flipper_logical_dah_down(app);
-    }
-
-    return false;
+    if(app->in_src == MorseFlipperInputSourceButtons) return false;
+    return morse_flipper_straight_down();
 }
 
 static void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms) {
@@ -1124,6 +1109,7 @@ static void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t no
 
     app->straight_playback_active = false;
     app->sk_play_mark = false;
+    app->sk_started = false;
     app->sk_wait = false;
     app->sk_done = false;
     app->sk_down = false;
@@ -1144,6 +1130,7 @@ static void morse_flipper_start_straight_round(MorseFlipperApp* app, uint32_t no
 
     morse_flipper_reset_straight_state(app, now_ms);
     morse_flipper_straight_trainer_start( &app->straight_trainer, morse_trainer_charset(&app->trainer), morse_flipper_current_dit_ms(app));
+    app->sk_started = true;
     app->straight_playback_active = true;
     app->sk_play_mark = false;
     app->sk_mark_i = 0U;
