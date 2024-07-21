@@ -87,6 +87,18 @@ static uint8_t straight_score(uint16_t got, uint16_t want)
     return (uint8_t)pct;
 }
 
+static const char* straight_score_txt(uint8_t sc, char* out, size_t out_sz)
+{
+    if(out == NULL || out_sz < 3U) return "";
+    if(sc >= 90U) {
+        snprintf(out, out_sz, "OK");
+        return out;
+    }
+
+    snprintf(out, out_sz, "%02u", (unsigned)sc);
+    return out;
+}
+
 static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
 {
     size_t i;
@@ -99,6 +111,9 @@ static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
     uint32_t dah_sum = 0U;
     uint32_t dit_cnt = 0U;
     uint32_t dah_cnt = 0U;
+    char s_txt[4];
+    char di_txt[4];
+    char da_txt[4];
 
     if(!trainer) return;
 
@@ -106,6 +121,7 @@ static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
     tview_at = 0U;
     trainer->error_bars[0] = 0;
     trainer->timing_view[0] = 0;
+    trainer->metrics_line[0] = 0;
     trainer->worst_space_score = 100U;
     trainer->worst_dit_score = 100U;
     trainer->worst_dah_score = 100U;
@@ -181,6 +197,16 @@ static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
     if(at > 0 && at < sizeof(trainer->error_bars)) trainer->error_bars[at - 1U] = 0;
     if(tview_at > 0 && tview_at < sizeof(trainer->timing_view)) trainer->timing_view[tview_at - 1U] = 0;
     trainer->average_drift_percent = counted ? (uint8_t)(total_pct / counted) : 0U;
+
+    snprintf(
+        trainer->metrics_line,
+        sizeof(trainer->metrics_line),
+        "S %2s di %2s da %2s r%u.%02u",
+        straight_score_txt(trainer->worst_space_score, s_txt, sizeof(s_txt)),
+        straight_score_txt(trainer->worst_dit_score, di_txt, sizeof(di_txt)),
+        straight_score_txt(trainer->worst_dah_score, da_txt, sizeof(da_txt)),
+        (unsigned)(trainer->ratio_x100 / 100U),
+        (unsigned)(trainer->ratio_x100 % 100U));
 }
 
 void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer)
@@ -210,6 +236,7 @@ void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer,
     memset(trainer->answer, 0, sizeof(trainer->answer));
     memset(trainer->error_bars, 0, sizeof(trainer->error_bars));
     memset(trainer->timing_view, 0, sizeof(trainer->timing_view));
+    memset(trainer->metrics_line, 0, sizeof(trainer->metrics_line));
     memset(trainer->target_mark_units, 0, sizeof(trainer->target_mark_units));
     memset(trainer->target_marks_ms, 0, sizeof(trainer->target_marks_ms));
     memset(trainer->answer_marks_ms, 0, sizeof(trainer->answer_marks_ms));
@@ -302,6 +329,11 @@ const char* morse_flipper_straight_trainer_error_bars(const MorseFlipperStraight
 const char* morse_flipper_straight_trainer_timing_view(const MorseFlipperStraightTrainer* trainer)
 {
     return trainer ? trainer->timing_view : "";
+}
+
+const char* morse_flipper_straight_trainer_metrics_line(const MorseFlipperStraightTrainer* trainer)
+{
+    return trainer ? trainer->metrics_line : "";
 }
 
 bool morse_flipper_straight_trainer_active(const MorseFlipperStraightTrainer* trainer)

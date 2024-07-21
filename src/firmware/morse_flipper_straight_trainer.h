@@ -11,6 +11,7 @@ typedef struct
     char answer[16];
     char error_bars[48];
     char timing_view[96];
+    char metrics_line[32];
     uint8_t target_mark_units[8];
     uint16_t target_marks_ms[8];
     uint16_t answer_marks_ms[16];
@@ -38,6 +39,7 @@ uint16_t morse_flipper_straight_trainer_average_mark_error_ms(const MorseFlipper
 uint8_t morse_flipper_straight_trainer_average_drift_percent(const MorseFlipperStraightTrainer* trainer);
 const char* morse_flipper_straight_trainer_error_bars(const MorseFlipperStraightTrainer* trainer);
 const char* morse_flipper_straight_trainer_timing_view(const MorseFlipperStraightTrainer* trainer);
+const char* morse_flipper_straight_trainer_metrics_line(const MorseFlipperStraightTrainer* trainer);
 bool morse_flipper_straight_trainer_active(const MorseFlipperStraightTrainer* trainer);
 uint8_t morse_flipper_straight_trainer_worst_space_score(const MorseFlipperStraightTrainer* trainer);
 uint8_t morse_flipper_straight_trainer_worst_dit_score(const MorseFlipperStraightTrainer* trainer);
