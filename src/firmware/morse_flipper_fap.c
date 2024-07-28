@@ -1189,6 +1189,7 @@ static uint16_t morse_flipper_straight_attempt_sum(const MorseFlipperApp* app)
     uint16_t sum = 0U;
 
     if(app == NULL) return 0U;
+    if(morse_flipper_straight_trainer_answer(&app->straight_trainer)[0] == '\0') return 0U;
     sum += morse_flipper_straight_trainer_worst_space_score(&app->straight_trainer);
     sum += morse_flipper_straight_trainer_worst_dit_score(&app->straight_trainer);
     sum += morse_flipper_straight_trainer_worst_dah_score(&app->straight_trainer);
@@ -1273,6 +1274,10 @@ static void morse_flipper_note_straight_session(MorseFlipperApp* app)
 
 static void morse_flipper_finish_sk(MorseFlipperApp* app, uint32_t now_ms)
 {
+    const char* answer;
+    uint16_t err_ms;
+    uint8_t drift_pct;
+
     if(app == NULL) return;
 
     app->sk_wait = false;
@@ -1280,13 +1285,21 @@ static void morse_flipper_finish_sk(MorseFlipperApp* app, uint32_t now_ms)
     app->straight_trainer.active = false;
     app->straight_next_at = now_ms + ((uint32_t)app->sk_gap_s * 1000U);
     morse_flipper_note_straight_session(app);
+    answer = morse_flipper_straight_trainer_answer(&app->straight_trainer);
+    if(answer[0] == '\0') {
+        err_ms = 0xFFFFU;
+        drift_pct = 100U;
+    } else {
+        err_ms = morse_flipper_straight_trainer_average_mark_error_ms(&app->straight_trainer);
+        drift_pct = morse_flipper_straight_trainer_average_drift_percent(&app->straight_trainer);
+    }
     morse_trainer_note_straight_attempt(
         &app->straight_stats,
         morse_flipper_straight_trainer_target_char(&app->straight_trainer),
-        morse_flipper_straight_trainer_average_mark_error_ms(&app->straight_trainer),
-        morse_flipper_straight_trainer_average_drift_percent(&app->straight_trainer),
+        err_ms,
+        drift_pct,
         morse_flipper_straight_trainer_target_morse(&app->straight_trainer),
-        morse_flipper_straight_trainer_answer(&app->straight_trainer));
+        answer);
     morse_flipper_view_dirty(app);
 }
 

@@ -34,8 +34,7 @@ static const char* straight_morse(char ch)
 
 static uint8_t straight_weight(char ch)
 {
-    if(ch == 'E' || ch == 'T') return 1U;
-    return 10U;
+    return (ch == 'E' || ch == 'T') ? 1U : 10U;
 }
 
 static uint8_t straight_units_total(const char* code)
@@ -177,7 +176,10 @@ static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
         }
 
         if(i > 0U && trainer->answer_spaces_ms[i - 1U] != 0U) {
-            uint8_t sp = straight_score(trainer->answer_spaces_ms[i - 1U], trainer->target_marks_ms[0]);
+            uint16_t want_gap = trainer->target_mark_units[0] ?
+                (uint16_t)(trainer->target_marks_ms[0] / trainer->target_mark_units[0]) :
+                0U;
+            uint8_t sp = straight_score(trainer->answer_spaces_ms[i - 1U], want_gap);
             if(sp < trainer->worst_space_score) trainer->worst_space_score = sp;
         }
 
