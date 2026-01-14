@@ -434,14 +434,14 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     if(app->screen == MorseFlipperScreenStraight) {
         if(!app->sk_started) {
             canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 10, 14, "Straight Trainer");
+            canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "Straight Trainer");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str(canvas, 18, 34, "Press OK to start");
-            if(app->in_src == MorseFlipperInputSourceButtons)
-                canvas_draw_str(canvas, 8, 50, "after that, key with OK");
-            else
-                canvas_draw_str(canvas, 8, 50, morse_flipper_gpio_name(app->gpio_straight_idx));
-            canvas_draw_str(canvas, 8, 64, "OK start  Bk back");
+            if(app->in_src == MorseFlipperInputSourceButtons) {
+                canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
+            } else {
+                canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Press OK to start");
+                canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "Press your key to start");
+            }
             return;
         }
 

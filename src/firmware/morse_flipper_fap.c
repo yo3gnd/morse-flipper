@@ -1153,6 +1153,8 @@ static bool morse_flipper_straight_answer_down(const MorseFlipperApp* app) {
     if(app == NULL) return false;
 
     if(app->in_src == MorseFlipperInputSourceButtons) return false;
+    if(app->in_src == MorseFlipperInputSourcePaddle)
+        return morse_flipper_logical_dit_down(app) || morse_flipper_logical_dah_down(app);
     return morse_flipper_straight_down();
 }
 
