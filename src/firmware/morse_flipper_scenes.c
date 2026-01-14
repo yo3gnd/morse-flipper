@@ -4,16 +4,16 @@ static void morse_flipper_scene_menu_main_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuMain);
     submenu_set_header(app->submenu, "Morse Flipper");
-    submenu_add_item(app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Radio TX & RX", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Training", MorseFlipperSceneMenuTraining, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Settings", MorseFlipperSceneMenuSettings, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Help", MorseFlipperSceneMenuHelp, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(app->submenu, "Radio TX", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "About", MorseFlipperSceneAbout, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneRun && sel != MorseFlipperSceneRf &&
        sel != MorseFlipperSceneMenuTraining && sel != MorseFlipperSceneMenuSettings &&
        sel != MorseFlipperSceneMenuHelp && sel != MorseFlipperSceneAbout)
-        sel = MorseFlipperSceneRun;
+        sel = MorseFlipperSceneMenuTraining;
     submenu_set_selected_item(app->submenu, sel);
 }
 
