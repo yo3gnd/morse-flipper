@@ -25,6 +25,7 @@ typedef struct {
     MorseTrainerPhase phase;
     int16_t last_score;
     bool last_failed;
+    bool last_missed;
     bool session_active;
     bool session_aborted;
     uint8_t session_index;
@@ -72,6 +73,7 @@ MorseTrainerPhase morse_trainer_phase(const MorseTrainer* trainer);
 const char* morse_trainer_phase_name(const MorseTrainer* trainer);
 int16_t morse_trainer_last_score(const MorseTrainer* trainer);
 bool morse_trainer_last_failed(const MorseTrainer* trainer);
+bool morse_trainer_last_missed(const MorseTrainer* trainer);
 bool morse_trainer_session_active(const MorseTrainer* trainer);
 bool morse_trainer_session_has_next(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_index(const MorseTrainer* trainer);

@@ -89,6 +89,7 @@ void morse_trainer_init(MorseTrainer* trainer) {
     trainer->session_groups = 10U;
     trainer->local_dit_ms = 100U;
     trainer->rng_state = 1U;
+    trainer->last_missed = false;
 }
 
 size_t morse_trainer_lesson_count(void) {
@@ -321,6 +322,7 @@ void morse_trainer_tick(MorseTrainer* trainer, uint32_t ms, uint32_t timeout_ms)
 
     trainer->last_score = 0;
     trainer->last_failed = true;
+    trainer->last_missed = true;
     trainer->phase = MorseTrainerPhaseDone;
     morse_trainer_note_session_result(trainer, true);
 }
@@ -345,8 +347,9 @@ int16_t morse_trainer_score_repeat(MorseTrainer* trainer) {
     trainer->last_score =
         expected_len == 0U ? 0 : (int16_t)(((int32_t)matched * 100) / (int32_t)expected_len);
     trainer->last_failed = trainer->last_score != 100 || trainer->answer[0] == '\0';
+    trainer->last_missed = trainer->answer[0] == '\0';
     trainer->phase = MorseTrainerPhaseDone;
-    morse_trainer_note_session_result(trainer, trainer->answer[0] == '\0');
+    morse_trainer_note_session_result(trainer, trainer->last_missed);
     return trainer->last_score;
 }
 
@@ -368,8 +371,9 @@ int16_t morse_trainer_score_repeat_text(MorseTrainer* trainer, const char* text)
     trainer->last_score = want_len == 0U ? 0 : (int16_t)(((int32_t)hit * 100) / (int32_t)want_len);
     trainer->last_failed =
         trainer->reveal[0] == '\0' || want_len != got_len || strcmp(trainer->last_group, trainer->reveal) != 0;
+    trainer->last_missed = trainer->reveal[0] == '\0';
     trainer->phase = MorseTrainerPhaseDone;
-    morse_trainer_note_session_result(trainer, trainer->answer[0] == '\0');
+    morse_trainer_note_session_result(trainer, trainer->last_missed);
     return trainer->last_score;
 }
 
@@ -380,6 +384,7 @@ void morse_trainer_reset_session(MorseTrainer* trainer) {
     trainer->phase = MorseTrainerPhaseIdle;
     trainer->last_score = -1;
     trainer->last_failed = false;
+    trainer->last_missed = false;
     trainer->session_active = false;
     trainer->session_aborted = false;
     trainer->session_index = 0U;
@@ -460,6 +465,10 @@ int16_t morse_trainer_last_score(const MorseTrainer* trainer) {
 
 bool morse_trainer_last_failed(const MorseTrainer* trainer) {
     return trainer ? trainer->last_failed : true;
+}
+
+bool morse_trainer_last_missed(const MorseTrainer* trainer) {
+    return trainer ? trainer->last_missed : true;
 }
 
 bool morse_trainer_session_active(const MorseTrainer* trainer) {

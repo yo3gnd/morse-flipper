@@ -82,7 +82,7 @@ static void morse_flipper_queue_session_feedback(MorseFlipperApp* app, uint32_t 
     app->session_round_pending = false;
     app->session_result_hold = true;
     app->session_result_good = !morse_trainer_last_failed(&app->trainer);
-    missed = morse_trainer_answer(&app->trainer)[0] == '\0';
+    missed = morse_trainer_last_missed(&app->trainer);
     app->session_result_tone = !app->session_result_good;
     app->session_result_until = now_ms + MORSE_FLIPPER_SESSION_RESULT_MS;
     app->session_next_group_at = morse_trainer_session_has_next(&app->trainer) ?
@@ -192,20 +192,21 @@ static void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
-    if(!morse_flipper_session_repeat_active(app) || morse_trainer_answer(&app->trainer)[0] == '\0')
-        return;
-
     if(morse_flipper_session_live_keying(app)) {
         app->session_last_input_at = now_ms;
         return;
     }
+
+    if(!morse_flipper_session_repeat_active(app)) return;
+
+    morse_flipper_session_answer_text(app, ans, sizeof(ans), morse_trainer_group_size(&app->trainer));
+    if(ans[0] == '\0') return;
 
     dt = morse_flipper_current_dit_ms(app) * 8U;
     if(dt < MORSE_FLIPPER_SESSION_SETTLE_MS) dt = MORSE_FLIPPER_SESSION_SETTLE_MS;
 
     if(now_ms - app->session_last_input_at < dt) return;
 
-    morse_flipper_session_answer_text(app, ans, sizeof(ans), morse_trainer_group_size(&app->trainer));
     morse_trainer_score_repeat_text(&app->trainer, ans);
     morse_flipper_queue_session_feedback(app, now_ms);
 }
