@@ -109,9 +109,10 @@ typedef enum {
     MorseFlipperScreenBrowse = 7,
     MorseFlipperScreenRf = 8,
     MorseFlipperScreenStraight = 9,
-    MorseFlipperScreenMenu = 10,
-    MorseFlipperScreenHelp = 11,
-    MorseFlipperScreenAbout = 12,
+    MorseFlipperScreenSessionEnd = 10,
+    MorseFlipperScreenMenu = 11,
+    MorseFlipperScreenHelp = 12,
+    MorseFlipperScreenAbout = 13,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -131,6 +132,7 @@ typedef enum {
     MorseFlipperSceneSession,
     MorseFlipperSceneStraight,
     MorseFlipperSceneBrowse,
+    MorseFlipperSceneSessionEnd,
     MorseFlipperSceneHome,
     MorseFlipperSceneTrainer,
     MorseFlipperSceneStraightCfg,
@@ -394,6 +396,7 @@ typedef struct {
     uint32_t session_last_input_at;
     uint32_t session_result_until;
     uint32_t session_next_group_at;
+    uint32_t session_complete_at;
     uint32_t rf_tail_at;
     uint32_t rf_tx_edge_at;
     uint32_t gpio_edge_at;
@@ -423,6 +426,7 @@ typedef struct {
     uint8_t sk_ret_scr;
     uint8_t rf_edit_digit;
     uint8_t backlight;
+    uint8_t sess_end_flash;
     char rf_edit_khz[8];
     char rf_rx_text[64];
     char rf_tx_text[64];
@@ -593,7 +597,8 @@ static uint8_t morse_flipper_backlight_mode(const MorseFlipperApp* app) {
     if(app->screen == MorseFlipperScreenRf)
         return app->rf_live ? MorseFlipperBacklightHold : MorseFlipperBacklightAuto;
 
-    if(app->screen == MorseFlipperScreenSession)
+    if(app->screen == MorseFlipperScreenSession ||
+       app->screen == MorseFlipperScreenSessionEnd)
         return app->session_started ? MorseFlipperBacklightHold : MorseFlipperBacklightAuto;
 
     return MorseFlipperBacklightAuto;
@@ -1072,7 +1077,12 @@ static void morse_flipper_enter_screen( MorseFlipperApp* app, uint8_t screen, ui
     if(app->screen == screen) return;
     old_screen = app->screen;
 
-    if(app->screen == MorseFlipperScreenSession && screen != MorseFlipperScreenSession) {
+    if(app->screen == MorseFlipperScreenSession && screen != MorseFlipperScreenSession &&
+       screen != MorseFlipperScreenSessionEnd) {
+        morse_flipper_reset_session_state(app, now_ms);
+    }
+
+    if(app->screen == MorseFlipperScreenSessionEnd && screen != MorseFlipperScreenSessionEnd) {
         morse_flipper_reset_session_state(app, now_ms);
     }
 
@@ -1093,8 +1103,14 @@ static void morse_flipper_enter_screen( MorseFlipperApp* app, uint8_t screen, ui
 
     morse_flipper_btn_clear(app, now_ms);
 
-    if(screen == MorseFlipperScreenSession && app->screen != MorseFlipperScreenSession) {
+    if(screen == MorseFlipperScreenSession && app->screen != MorseFlipperScreenSession &&
+       app->screen != MorseFlipperScreenSessionEnd) {
         morse_flipper_reset_session_state(app, now_ms);
+    }
+
+    if(screen == MorseFlipperScreenSessionEnd && app->screen != MorseFlipperScreenSessionEnd) {
+        morse_flipper_drop_live_play(app, now_ms);
+        morse_flipper_update_sidetone(app);
     }
 
     if(screen == MorseFlipperScreenStraight && app->screen != MorseFlipperScreenStraight) {

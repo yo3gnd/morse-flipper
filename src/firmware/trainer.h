@@ -31,6 +31,8 @@ typedef struct {
     uint8_t session_index;
     uint8_t session_fail_count;
     uint8_t session_consecutive_missed;
+    uint8_t last_group_hits;
+    uint16_t session_letter_hits;
     uint16_t session_score_sum;
     uint8_t session_scored_groups;
     uint8_t custom_set_idx;
@@ -81,5 +83,8 @@ uint8_t morse_trainer_session_total(const MorseTrainer* trainer);
 bool morse_trainer_session_aborted(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_fail_count(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_consecutive_missed(const MorseTrainer* trainer);
+uint16_t morse_trainer_session_letter_hits(const MorseTrainer* trainer);
+uint16_t morse_trainer_session_letter_total(const MorseTrainer* trainer);
+uint8_t morse_trainer_session_letter_percent(const MorseTrainer* trainer);
 uint8_t morse_trainer_session_average_score(const MorseTrainer* trainer);
 bool morse_trainer_session_completed(const MorseTrainer* trainer);

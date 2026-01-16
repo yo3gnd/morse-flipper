@@ -173,7 +173,7 @@ static void morse_flipper_sync_gpio_inputs(MorseFlipperApp* app, uint32_t now_ms
         dah_active = morse_flipper_logical_dah_down(app);
     }
 
-    if(morse_flipper_training_playback_active(app) ||
+    if(morse_flipper_training_playback_active(app) || app->screen == MorseFlipperScreenSessionEnd ||
        (app->screen == MorseFlipperScreenSession && !morse_flipper_session_repeat_active(app))) {
         straight_active = false;
         dit_active = false;
@@ -246,6 +246,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
     bool old_busy = app->sp_busy;
     uint8_t old_mask = app->input_mask;
     bool old_transport = app->transport_connected;
+    uint8_t old_session_flash = app->sess_end_flash;
     bool raw_straight;
     bool tx_now;
 
@@ -335,11 +336,15 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
 #if MORSE_FLIPPER_RF_LIVE_DECODERS
     morse_flipper_radio_drain_rx(&app->radio);
 #endif
+    if(app->screen == MorseFlipperScreenSessionEnd && morse_flipper_session_end_flash(app))
+        app->sess_end_flash = (uint8_t)((now_ms / 250U) & 1U);
+    else
+        app->sess_end_flash = 0U;
     morse_flipper_update_sidetone(app);
     morse_flipper_sync_backlight(app, now_ms);
 
     if(old_tone != app->tone_on || old_busy != app->sp_busy || old_mask != app->input_mask ||
-       old_transport != app->transport_connected) {
+       old_transport != app->transport_connected || old_session_flash != app->sess_end_flash) {
         morse_flipper_view_dirty(app);
     }
 }

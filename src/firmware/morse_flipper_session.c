@@ -11,7 +11,9 @@ static void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     app->session_last_input_at = 0U;
     app->session_result_until = 0U;
     app->session_next_group_at = 0U;
+    app->session_complete_at = 0U;
     app->session_wait_draw_s = 0xFFU;
+    app->sess_end_flash = 0U;
 }
 
 static void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now_ms) {
@@ -196,6 +198,16 @@ static void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
+    if(morse_trainer_session_completed(&app->trainer)) {
+        if(app->session_complete_at == 0U) app->session_complete_at = now_ms;
+        if(now_ms - app->session_complete_at >= 1000U) {
+            morse_flipper_scene_open(app, MorseFlipperSceneSessionEnd);
+            return;
+        }
+    } else {
+        app->session_complete_at = 0U;
+    }
+
     if(!app->session_round_pending || app->trainer_playback_active) return;
 
     if(morse_trainer_phase(&app->trainer) == MorseTrainerPhaseDone) {
@@ -226,6 +238,48 @@ static void morse_flipper_leave_session(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
     morse_flipper_reset_session_state(app, now_ms);
     morse_flipper_scene_back(app);
+}
+
+static uint8_t morse_flipper_session_final_percent(const MorseFlipperApp* app) {
+    if(app == NULL) return 100U;
+    return morse_trainer_session_letter_percent(&app->trainer);
+}
+
+static bool morse_flipper_session_end_flash(const MorseFlipperApp* app) {
+    return app != NULL && morse_flipper_session_final_percent(app) > 95U;
+}
+
+static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
+    if(app == NULL) return "Keep practicing";
+    if(morse_trainer_lesson(&app->trainer) >= 40U) return "Congratulations!";
+    if(morse_flipper_session_final_percent(app) >= 90U) return "Try the next lesson";
+    return "Keep practicing";
+}
+
+static void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
+    char digits[4];
+    bool flash_on = false;
+    uint8_t x;
+    uint8_t score = morse_flipper_session_final_percent(app);
+
+    if(canvas == NULL || app == NULL) return;
+
+    if(morse_flipper_session_end_flash(app) && app->sess_end_flash != 0U) {
+        canvas_draw_box(canvas, 0, 0, 128, 64);
+        canvas_set_color(canvas, ColorWhite);
+        flash_on = true;
+    }
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
+    snprintf(digits, sizeof(digits), "%u", (unsigned)score);
+    canvas_set_font(canvas, FontBigNumbers);
+    x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
+    canvas_draw_str(canvas, x, 39, digits);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
+
+    if(flash_on) canvas_set_color(canvas, ColorBlack);
 }
 static char morse_flipper_upper_char(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
@@ -324,6 +378,38 @@ static uint8_t morse_flipper_session_answer_count(const char* answer) {
     }
 
     return n;
+}
+
+static void morse_flipper_session_answer_committed_text( const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+    size_t wi = 0U;
+    uint8_t i = 0U;
+
+    if(out == NULL || out_sz == 0U) return;
+    out[0] = '\0';
+    if(app == NULL || max_chars == 0U) return;
+
+    for(i = 0U; app->rf_tx_text[i] != '\0' && wi + 1U < out_sz && wi < max_chars; i++) {
+        char ch = morse_flipper_upper_char(app->rf_tx_text[i]);
+
+        if(ch == ' ' || ch == '|') continue;
+        out[wi++] = ch;
+    }
+
+    out[wi] = '\0';
+}
+
+static uint8_t morse_flipper_session_text_hits(const char* want, const char* got) {
+    uint8_t hit = 0U;
+    uint8_t i = 0U;
+
+    if(want == NULL || got == NULL) return 0U;
+
+    while(want[i] != '\0' && got[i] != '\0') {
+        if(morse_flipper_upper_char(want[i]) == morse_flipper_upper_char(got[i])) hit++;
+        i++;
+    }
+
+    return hit;
 }
 
 static void morse_flipper_session_title( const MorseFlipperApp* app, char* out, size_t out_sz) {
@@ -493,16 +579,19 @@ static void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperAp
 
 static void morse_flipper_draw_session_bottom(Canvas* canvas, const MorseFlipperApp* app) {
     char lesson_line[48];
-    char count_line[16];
-    char size_line[16];
-    char score_line[16];
+    char progress_line[16];
+    char pct_line[16];
     char wait_line[16];
+    char live_answer[MORSE_TRAINER_GROUP_CAP];
+    uint8_t size = morse_trainer_group_size(&app->trainer);
     uint8_t asked = 0U;
     uint8_t total = morse_trainer_session_total(&app->trainer);
-    uint8_t fail = morse_trainer_session_fail_count(&app->trainer);
     uint8_t scored = 0U;
-    uint8_t good = 0U;
     uint8_t fill = 0U;
+    uint16_t letter_hits;
+    uint16_t letter_total;
+    uint8_t letter_pct;
+    uint8_t live_count = 0U;
     uint8_t x;
     Font title_font = FontSecondary;
     bool wait = false;
@@ -517,45 +606,50 @@ static void morse_flipper_draw_session_bottom(Canvas* canvas, const MorseFlipper
 
     if(app->session_started) {
         asked = morse_trainer_session_index(&app->trainer);
+        if(asked == 1U && !app->trainer_playback_active && !app->session_round_pending &&
+           morse_trainer_phase(&app->trainer) == MorseTrainerPhaseListen)
+            asked = 0U;
         if(app->session_round_pending && asked != 0U) scored = (uint8_t)(asked - 1U);
         else scored = asked;
     }
 
-    if(fail > scored) fail = scored;
-    good = (uint8_t)(scored - fail);
     if(total != 0U && asked != 0U) fill = (uint8_t)(((uint16_t)asked * 100U) / total);
+    letter_hits = morse_trainer_session_letter_hits(&app->trainer);
+    letter_total = (uint16_t)((uint16_t)scored * (uint16_t)size);
+    if(app->session_round_pending && !app->trainer_playback_active &&
+       morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
+        morse_flipper_session_answer_committed_text( app, live_answer, sizeof(live_answer), size);
+        live_count = morse_flipper_session_answer_count(live_answer);
+        letter_hits = (uint16_t)(letter_hits + morse_flipper_session_text_hits(morse_trainer_last_group(&app->trainer), live_answer));
+        letter_total = (uint16_t)(letter_total + live_count);
+    }
+    if(letter_total != 0U && letter_hits > letter_total) letter_hits = letter_total;
+    letter_pct = letter_total == 0U ? 100U : (uint8_t)(((uint32_t)letter_hits * 100U) / letter_total);
 
-    snprintf(size_line, sizeof(size_line), "size %u", (unsigned)morse_trainer_group_size(&app->trainer));
-    snprintf(count_line, sizeof(count_line), "%u/%u", (unsigned)asked, (unsigned)total);
-    snprintf(score_line, sizeof(score_line), "%u/%u", (unsigned)good, (unsigned)asked);
+    snprintf(progress_line, sizeof(progress_line), "%u/%u", (unsigned)asked, (unsigned)total);
+    snprintf(pct_line, sizeof(pct_line), "%u%%", (unsigned)letter_pct);
 
     canvas_set_font(canvas, FontSecondary);
-    if(!wait) {
-        if(canvas_string_width(canvas, lesson_line) > 128U) {
-            title_font = FontKeyboard;
-            canvas_set_font(canvas, title_font);
-        }
+    if(canvas_string_width(canvas, lesson_line) > 128U) {
+        title_font = FontKeyboard;
+        canvas_set_font(canvas, title_font);
+    }
 
-        x = (uint8_t)((128 - canvas_string_width(canvas, lesson_line)) / 2);
-        canvas_draw_str(canvas, x, 42, lesson_line);
-    } else {
+    x = (uint8_t)((128 - canvas_string_width(canvas, lesson_line)) / 2);
+    canvas_draw_str(canvas, x, 42, lesson_line);
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 0, 51, pct_line);
+    if(wait) {
         left_ms = app->session_next_group_at - now_ms;
         secs = (uint16_t)((left_ms + 999U) / 1000U);
         if(secs == 0U) secs = 1U;
         snprintf(wait_line, sizeof(wait_line), "%u", (unsigned)secs);
-        canvas_set_font(canvas, FontPrimary);
         x = (uint8_t)((128 - canvas_string_width(canvas, wait_line)) / 2);
-        canvas_draw_str(canvas, x, 47, wait_line);
+        canvas_draw_str(canvas, x, 51, wait_line);
     }
-
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 0, 51, size_line);
-    if(!wait) {
-        x = (uint8_t)((128 - canvas_string_width(canvas, count_line)) / 2);
-        canvas_draw_str(canvas, x, 51, count_line);
-    }
-    x = (uint8_t)(128 - canvas_string_width(canvas, score_line));
-    canvas_draw_str(canvas, x, 51, score_line);
+    x = (uint8_t)(128 - canvas_string_width(canvas, progress_line));
+    canvas_draw_str(canvas, x, 51, progress_line);
 
     canvas_draw_frame(canvas, 13, 57, 102, 5);
     if(fill != 0U) canvas_draw_box(canvas, 14, 58, fill, 3);

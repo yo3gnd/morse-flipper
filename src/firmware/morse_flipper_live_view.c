@@ -488,6 +488,11 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
+    if(app->screen == MorseFlipperScreenSessionEnd) {
+        morse_flipper_draw_session_end(canvas, app);
+        return;
+    }
+
     if(app->screen == MorseFlipperScreenBrowse) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 8, 14, "Session Logs");
