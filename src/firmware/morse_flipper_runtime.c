@@ -215,6 +215,7 @@ static uint8_t morse_flipper_read_input_mask(const MorseFlipperApp* app) {
 }
 
 static const char* morse_flipper_input_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+    uint8_t straight_idx = morse_flipper_gpio_straight_idx(app);
     size_t n = snprintf(buf, buf_sz, "raw ");
 
     if(app->input_mask & (1U << 0)) {
@@ -227,12 +228,12 @@ static const char* morse_flipper_input_line(const MorseFlipperApp* app, char* bu
         n += snprintf(buf + n, buf_sz - n, "bk ");
     }
     if(app->input_mask & (1U << 3)) {
-        n += snprintf(buf + n, buf_sz - n, "%s ", morse_flipper_gpio_name(app->gpio_straight_idx));
+        n += snprintf(buf + n, buf_sz - n, "%s ", morse_flipper_gpio_name(straight_idx));
     }
-    if((app->input_mask & (1U << 4)) && app->gpio_dah_idx != app->gpio_straight_idx) {
+    if((app->input_mask & (1U << 4)) && app->gpio_dah_idx != straight_idx) {
         n += snprintf(buf + n, buf_sz - n, "%s ", morse_flipper_gpio_name(app->gpio_dah_idx));
     }
-    if((app->input_mask & (1U << 5)) && app->gpio_dit_idx != app->gpio_straight_idx &&
+    if((app->input_mask & (1U << 5)) && app->gpio_dit_idx != straight_idx &&
        app->gpio_dit_idx != app->gpio_dah_idx) {
         n += snprintf(buf + n, buf_sz - n, "%s ", morse_flipper_gpio_name(app->gpio_dit_idx));
     }

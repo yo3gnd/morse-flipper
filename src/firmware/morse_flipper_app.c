@@ -53,7 +53,6 @@ MorseFlipperApp* morse_flipper_boot(void)
         .gpio_dit_idx = MorseFlipperGpioPinP7,
         .gpio_dah_idx = MorseFlipperGpioPinP5,
         .gpio_ground_idx = MorseFlipperGpioPinP3,
-        .gpio_edit_straight_idx = MorseFlipperGpioPinP7,
         .gpio_edit_dit_idx = MorseFlipperGpioPinP7,
         .gpio_edit_dah_idx = MorseFlipperGpioPinP5,
         .gpio_edit_ground_idx = MorseFlipperGpioPinP3,

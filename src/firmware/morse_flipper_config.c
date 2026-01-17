@@ -191,6 +191,20 @@ static void morse_flipper_sk_fix(MorseFlipperApp* app)
     UNUSED(w);
 }
 
+static void morse_flipper_config_apply_gpio( MorseFlipperApp* app, uint8_t dit, uint8_t dah, uint8_t ground)
+{
+    if(app == NULL) return;
+
+    if(morse_flipper_gpio_validate(dit, dah, ground) != MorseFlipperGpioRuleOk) {
+        return;
+    }
+
+    app->gpio_dit_idx = dit;
+    app->gpio_dah_idx = dah;
+    app->gpio_ground_idx = ground;
+    morse_flipper_gpio_sync_straight_idx(app);
+}
+
 static void morse_flipper_load_config(MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -221,16 +235,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
             morse_trainer_set_session_groups(&app->trainer, config.trainer_session_groups);
             if(config.local_dit_ms != 0U) app->trainer.local_dit_ms = config.local_dit_ms;
 
-            if(morse_flipper_gpio_validate(
-                   config.gpio_straight_idx,
-                   config.gpio_dit_idx,
-                   config.gpio_dah_idx,
-                   config.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
-                app->gpio_straight_idx = config.gpio_straight_idx;
-                app->gpio_dit_idx = config.gpio_dit_idx;
-                app->gpio_dah_idx = config.gpio_dah_idx;
-                app->gpio_ground_idx = config.gpio_ground_idx;
-            }
+            morse_flipper_config_apply_gpio( app, config.gpio_dit_idx, config.gpio_dah_idx, config.gpio_ground_idx);
 
             if(config.trainer_custom_set_idx <= app->custom_sets.count)
                 app->trainer.custom_set_idx = config.trainer_custom_set_idx;
@@ -265,16 +270,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
                 morse_trainer_set_session_groups(&app->trainer, config_v6.trainer_session_groups);
                 if(config_v6.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v6.local_dit_ms;
 
-                if(morse_flipper_gpio_validate(
-                       config_v6.gpio_straight_idx,
-                       config_v6.gpio_dit_idx,
-                       config_v6.gpio_dah_idx,
-                       config_v6.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
-                    app->gpio_straight_idx = config_v6.gpio_straight_idx;
-                    app->gpio_dit_idx = config_v6.gpio_dit_idx;
-                    app->gpio_dah_idx = config_v6.gpio_dah_idx;
-                    app->gpio_ground_idx = config_v6.gpio_ground_idx;
-                }
+                morse_flipper_config_apply_gpio( app, config_v6.gpio_dit_idx, config_v6.gpio_dah_idx, config_v6.gpio_ground_idx);
 
                 if(config_v6.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v6.trainer_custom_set_idx;
@@ -307,16 +303,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
                 morse_trainer_set_session_groups(&app->trainer, config_v5.trainer_session_groups);
                 if(config_v5.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v5.local_dit_ms;
 
-                if(morse_flipper_gpio_validate(
-                       config_v5.gpio_straight_idx,
-                       config_v5.gpio_dit_idx,
-                       config_v5.gpio_dah_idx,
-                       config_v5.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
-                    app->gpio_straight_idx = config_v5.gpio_straight_idx;
-                    app->gpio_dit_idx = config_v5.gpio_dit_idx;
-                    app->gpio_dah_idx = config_v5.gpio_dah_idx;
-                    app->gpio_ground_idx = config_v5.gpio_ground_idx;
-                }
+                morse_flipper_config_apply_gpio( app, config_v5.gpio_dit_idx, config_v5.gpio_dah_idx, config_v5.gpio_ground_idx);
 
                 if(config_v5.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v5.trainer_custom_set_idx;
@@ -345,16 +332,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
                 morse_trainer_set_session_groups(&app->trainer, config_v4.trainer_session_groups);
                 if(config_v4.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v4.local_dit_ms;
 
-                if(morse_flipper_gpio_validate(
-                       config_v4.gpio_straight_idx,
-                       config_v4.gpio_dit_idx,
-                       config_v4.gpio_dah_idx,
-                       config_v4.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
-                    app->gpio_straight_idx = config_v4.gpio_straight_idx;
-                    app->gpio_dit_idx = config_v4.gpio_dit_idx;
-                    app->gpio_dah_idx = config_v4.gpio_dah_idx;
-                    app->gpio_ground_idx = config_v4.gpio_ground_idx;
-                }
+                morse_flipper_config_apply_gpio( app, config_v4.gpio_dit_idx, config_v4.gpio_dah_idx, config_v4.gpio_ground_idx);
 
                 if(config_v4.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v4.trainer_custom_set_idx;
@@ -377,16 +355,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
                 morse_trainer_set_session_groups(&app->trainer, config_v3.trainer_session_groups);
                 if(config_v3.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v3.local_dit_ms;
 
-                if(morse_flipper_gpio_validate(
-                       config_v3.gpio_straight_idx,
-                       config_v3.gpio_dit_idx,
-                       config_v3.gpio_dah_idx,
-                       config_v3.gpio_ground_idx) == MorseFlipperGpioRuleOk) {
-                    app->gpio_straight_idx = config_v3.gpio_straight_idx;
-                    app->gpio_dit_idx = config_v3.gpio_dit_idx;
-                    app->gpio_dah_idx = config_v3.gpio_dah_idx;
-                    app->gpio_ground_idx = config_v3.gpio_ground_idx;
-                }
+                morse_flipper_config_apply_gpio( app, config_v3.gpio_dit_idx, config_v3.gpio_dah_idx, config_v3.gpio_ground_idx);
             }
         } else if(got == sizeof(config_v2)) {
             memcpy(&config_v2, &config, sizeof(config_v2));
@@ -440,7 +409,7 @@ static void morse_flipper_save_config(const MorseFlipperApp* app)
         .trainer_session_groups = morse_trainer_session_groups(&app->trainer),
         .spare0 = app->in_src,
         .local_dit_ms = app->trainer.local_dit_ms,
-        .gpio_straight_idx = app->gpio_straight_idx,
+        .gpio_straight_idx = morse_flipper_gpio_straight_idx(app),
         .gpio_dit_idx = app->gpio_dit_idx,
         .gpio_dah_idx = app->gpio_dah_idx,
         .gpio_ground_idx = app->gpio_ground_idx,

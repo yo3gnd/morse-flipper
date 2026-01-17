@@ -42,9 +42,9 @@ static const char* const morse_help_connecting_paddle[] = {
     "With this header layout, ground sits on P2 and P3. That is fine physically. The app should still use P3 as the default force ground.",
     "The jack and cable should point outward, away from the screen and buttons. It is neater, sturdier, and less annoying than loose GPIO wires.",
     "If your paddle uses a 3.5 mm plug, use a simple 3.5 mm to 6.5 mm adapter, just the usual audio sort.",
-    "A straight key fits the same header: P3 = gnd, P7 = key.",
+    "A straight key fits the same header: P3 = gnd, P7 = dit/SK.",
     "One adapter covers both cases: paddle on P3/P5/P7, straight key on P3/P7.",
-    "If your wiring does not match this layout, change it in Settings -> Main settings -> GPIO. You can move straight, dit, dah and the ground pin in there. This layout matches the female jack to the GPIO header with the least swaps.",
+    "If your wiring does not match this layout, change it in Settings -> Main settings -> GPIO. You can move dit/SK, dah and the ground pin in there. Straight mode always uses the dit/SK pin from that menu. This layout matches the female jack to the GPIO header with the least swaps.",
     "Regardless of layout, you always need a ground. P3 can be reassigned if that is more convenient, or you can use the Flipper's normal ground pins. If your key has no ground contact, it will not work.",
 };
 
