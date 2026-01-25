@@ -31,7 +31,6 @@ MorseFlipperApp* morse_flipper_boot(void)
         .left_down = false,
         .ok_down = false,
         .back_down = false,
-        .session_log_pending = false,
         .trainer_playback_active = false,
         .trainer_playback_mark = false,
         .session_started = false,
@@ -93,12 +92,10 @@ MorseFlipperApp* morse_flipper_boot(void)
         .note_src = {0U, 0U, 0U},
         .trainer = {0},
         .custom_sets = {0},
-        .session_lines = {0},
         .straight_stats = {0},
         .straight_hist_cnt = {0},
         .straight_hist_sum = {0},
         .straight_worst_line = {0},
-        .session_line_idx = 0U,
         .straight_playback_active = false,
         .sk_play_mark = false,
         .sk_started = false,
@@ -138,7 +135,6 @@ MorseFlipperApp* morse_flipper_boot(void)
     morse_flipper_cw_decoder_init(&app.gpio_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_straight_trainer_init(&app.straight_trainer);
     morse_trainer_load_custom_sets(&app.custom_sets);
-    morse_trainer_load_session_lines(&app.session_lines);
    morse_trainer_load_straight_stats(&app.straight_stats);
     morse_flipper_pick_charset(&app);
     morse_flipper_load_config(&app);

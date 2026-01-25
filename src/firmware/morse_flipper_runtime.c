@@ -260,18 +260,6 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
         morse_flipper_handle_midi_rx(app);
     }
 
-    if(app->screen == MorseFlipperScreenSession && app->session_started && app->session_log_pending &&
-       !morse_trainer_session_active(&app->trainer) &&
-       morse_trainer_phase(&app->trainer) == MorseTrainerPhaseDone) {
-        if(morse_trainer_session_completed(&app->trainer)) {
-            morse_trainer_append_session_log(&app->trainer);
-            morse_trainer_load_session_lines(&app->session_lines);
-            app->session_line_idx =
-                app->session_lines.count == 0U ? 0U : (app->session_lines.count - 1U);
-        }
-        app->session_log_pending = false;
-    }
-
     if(app->screen == MorseFlipperScreenSession && app->session_started &&
        morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
         morse_trainer_tick( &app->trainer, MORSE_FLIPPER_POLL_MS, (uint32_t)app->trainer_to_s * 1000U);

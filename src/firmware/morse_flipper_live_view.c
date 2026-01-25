@@ -582,26 +582,6 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
-    if(app->screen == MorseFlipperScreenBrowse) {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 8, 14, "Session Logs");
-        canvas_set_font(canvas, FontSecondary);
-        snprintf(
-            browse_line,
-            sizeof(browse_line),
-            "%u/%u",
-            (unsigned)(app->session_line_idx + 1U),
-            (unsigned)app->session_lines.count);
-        canvas_draw_str(canvas, 96, 14, browse_line);
-        if(app->session_lines.count != 0U) {
-            canvas_draw_str(canvas, 2, 32, app->session_lines.lines[app->session_line_idx]);
-        } else {
-            canvas_draw_str(canvas, 2, 32, "no saved sessions");
-        }
-        canvas_draw_str(canvas, 2, 62, "U/D pick  R/Bk back");
-        return;
-    }
-
     if(app->screen == MorseFlipperScreenRf) {
         snprintf(
             trainer_line,

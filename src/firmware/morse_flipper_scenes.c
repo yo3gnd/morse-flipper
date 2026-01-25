@@ -48,8 +48,7 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
     submenu_set_header(app->submenu, "Training");
     submenu_add_item(app->submenu, "Koch - LCWO groups", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Straight Key trainer", MorseFlipperSceneStraight, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Koch statistics", MorseFlipperSceneBrowse, morse_flipper_scene_menu_pick, app);
-    if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight && sel != MorseFlipperSceneBrowse)
+    if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight)
         sel = MorseFlipperSceneSession;
     submenu_set_selected_item(app->submenu, sel);
 }
@@ -193,11 +192,6 @@ static void morse_flipper_scene_straight_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneStraight);
 }
 
-static void morse_flipper_scene_browse_on_enter(void* context) {
-    MorseFlipperApp* app = context;
-    morse_flipper_scene_enter_now(app, MorseFlipperSceneBrowse);
-}
-
 static void morse_flipper_scene_session_end_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSessionEnd);
@@ -292,7 +286,6 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
     morse_flipper_scene_rf_on_enter,
     morse_flipper_scene_session_on_enter,
     morse_flipper_scene_straight_on_enter,
-    morse_flipper_scene_browse_on_enter,
     morse_flipper_scene_session_end_on_enter,
     morse_flipper_scene_home_on_enter,
     morse_flipper_scene_trainer_on_enter,
@@ -316,7 +309,6 @@ static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[Morse
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
     morse_flipper_scene_home_on_event,
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,
@@ -334,7 +326,6 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_menu_training_on_exit,
     morse_flipper_scene_menu_settings_on_exit,
     morse_flipper_scene_menu_help_on_exit,
-    morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,

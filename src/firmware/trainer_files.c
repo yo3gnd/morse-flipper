@@ -14,7 +14,6 @@
 #include <string.h>
 
 static const char* morse_trainer_custom_path_value = MORSE_FLIPPER_CUSTOM_CHARS_PATH;
-static const char* morse_trainer_session_log_path_value = "/ext/ham/flipper-cw-session-results.txt";
 static const char* morse_trainer_straight_stats_path_value = MORSE_FLIPPER_STRAIGHT_STATS_PATH;
 static const char* morse_trainer_custom_defaults =
     "numbers=0123456789\n"
@@ -23,10 +22,6 @@ static const char* morse_trainer_custom_defaults =
 
 const char* morse_trainer_custom_chars_path(void) {
     return morse_trainer_custom_path_value;
-}
-
-const char* morse_trainer_session_log_path(void) {
-    return morse_trainer_session_log_path_value;
 }
 
 const char* morse_trainer_straight_stats_path(void) {
@@ -130,118 +125,6 @@ bool morse_trainer_load_custom_sets(MorseTrainerCustomSets* sets) {
     }
 
     return sets->count != 0U;
-}
-
-bool morse_trainer_append_session_log(const MorseTrainer* trainer) {
-    char line[192];
-
-    if(trainer == NULL) {
-        return false;
-    }
-
-    snprintf(
-        line,
-        sizeof(line),
-        "lesson=%u speed=%u groups=%u size=%u score=%u fails=%u aborted=%u missed=%u\n",
-        (unsigned)morse_trainer_lesson(trainer),
-        (unsigned)(trainer->local_dit_ms == 0U ? 0U : (1200U / trainer->local_dit_ms)),
-        (unsigned)morse_trainer_session_total(trainer),
-        (unsigned)morse_trainer_group_size(trainer),
-        (unsigned)morse_trainer_session_average_score(trainer),
-        (unsigned)morse_trainer_session_fail_count(trainer),
-        morse_trainer_session_aborted(trainer) ? 1U : 0U,
-        (unsigned)morse_trainer_session_consecutive_missed(trainer));
-
-#ifdef MORSE_FLIPPER_FAP
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    bool ok;
-
-    storage_common_mkdir(storage, "/ext/ham");
-    ok = storage_file_open( file, morse_trainer_session_log_path_value, FSAM_WRITE, FSOM_OPEN_APPEND);
-    if(ok) {
-        storage_file_write(file, line, strlen(line));
-    }
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-    return ok;
-#else
-    FILE* f = fopen(morse_trainer_session_log_path_value, "ab");
-    if(f == NULL) {
-        mkdir("/ext", 0777);
-        mkdir("/ext/ham", 0777);
-        f = fopen(morse_trainer_session_log_path_value, "ab");
-    }
-    if(f == NULL) {
-        return false;
-    }
-    fwrite(line, 1, strlen(line), f);
-    fclose(f);
-    return true;
-#endif
-}
-
-bool morse_trainer_load_session_lines(MorseTrainerSessionLines* lines) {
-    char buf[1024];
-    char* line;
-    char* next;
-    uint8_t slot;
-    uint8_t i;
-
-    if(lines == NULL) {
-        return false;
-    }
-
-    memset(lines, 0, sizeof(*lines));
-
-#ifdef MORSE_FLIPPER_FAP
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    uint16_t got = 0U;
-
-    if(storage_file_open(file, morse_trainer_session_log_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        got = storage_file_read(file, buf, sizeof(buf) - 1U);
-        buf[got] = '\0';
-    } else {
-        buf[0] = '\0';
-    }
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-#else
-    FILE* f = fopen(morse_trainer_session_log_path_value, "rb");
-    size_t got = 0U;
-
-    if(f != NULL) {
-        got = fread(buf, 1, sizeof(buf) - 1U, f);
-        fclose(f);
-    }
-    buf[got] = '\0';
-#endif
-
-    line = buf;
-    while(line != NULL && *line != '\0') {
-        next = strchr(line, '\n');
-        if(next != NULL) {
-            *next++ = '\0';
-        }
-
-        if(lines->count < 8U) {
-            slot = lines->count++;
-        } else {
-            for(i = 1U; i < 8U; i++) {
-                strcpy(lines->lines[i - 1U], lines->lines[i]);
-            }
-            slot = 7U;
-        }
-
-        strncpy(lines->lines[slot], line, sizeof(lines->lines[slot]) - 1U);
-        lines->lines[slot][sizeof(lines->lines[slot]) - 1U] = '\0';
-        line = next;
-    }
-
-    return lines->count != 0U;
 }
 
 static void morse_trainer_clear_straight_stats(MorseTrainerStraightStats* stats) {

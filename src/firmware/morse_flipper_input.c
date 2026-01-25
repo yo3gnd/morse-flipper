@@ -172,7 +172,6 @@ static bool morse_flipper_trainer_input(MorseFlipperApp* app, const InputEvent* 
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         app->trainer_playback_active = false;
         app->trainer_playback_mark = false;
-        app->session_log_pending = false;
         morse_flipper_scene_back(app);
         return true;
     }
@@ -320,14 +319,6 @@ static bool morse_flipper_session_input( MorseFlipperApp* app, const InputEvent*
         return true;
     }
 
-    if(event->key == InputKeyUp && event->type == InputTypeLong &&
-       !morse_trainer_session_active(&app->trainer) && !app->trainer_playback_active) {
-        morse_trainer_load_session_lines(&app->session_lines);
-        app->session_line_idx = app->session_lines.count == 0U ? 0U : (app->session_lines.count - 1U);
-        morse_flipper_scene_open(app, MorseFlipperSceneBrowse);
-        return true;
-    }
-
     return false;
 }
 
@@ -347,37 +338,6 @@ static bool morse_flipper_session_end_input( MorseFlipperApp* app, const InputEv
     if((event->key == InputKeyOk || event->key == InputKeyBack) &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         morse_flipper_leave_session_end(app, now_ms);
-        return true;
-    }
-
-    return false;
-}
-
-static bool morse_flipper_browse_input(MorseFlipperApp* app, const InputEvent* event)
-{
-    if(app->screen != MorseFlipperScreenBrowse) return false;
-
-    if(event->key == InputKeyUp &&
-       (event->type == InputTypeShort || event->type == InputTypeRepeat) &&
-       app->session_lines.count != 0U) {
-        app->session_line_idx = app->session_line_idx == 0U ?
-                                    (app->session_lines.count - 1U) :
-                                    (app->session_line_idx - 1U);
-        morse_flipper_view_dirty(app);
-        return true;
-    }
-
-    if(event->key == InputKeyDown &&
-       (event->type == InputTypeShort || event->type == InputTypeRepeat) &&
-       app->session_lines.count != 0U) {
-        app->session_line_idx = (app->session_line_idx + 1U) % app->session_lines.count;
-        morse_flipper_view_dirty(app);
-        return true;
-    }
-
-    if((event->key == InputKeyRight || event->key == InputKeyBack) &&
-       (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        morse_flipper_scene_back(app);
         return true;
     }
 
@@ -552,7 +512,6 @@ static bool morse_flipper_input_chunk_b( MorseFlipperApp* app, InputEvent* event
     if(morse_flipper_straight_input(app, event, now_ms)) return true;
     if(morse_flipper_session_input(app, event, now_ms)) return true;
     if(morse_flipper_session_end_input(app, event, now_ms)) return true;
-    if(morse_flipper_browse_input(app, event)) return true;
     if(morse_flipper_rf_input(app, event)) return true;
     if(morse_flipper_run_trace_home_input(app, event)) return true;
     return false;

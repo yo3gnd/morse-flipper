@@ -21,7 +21,6 @@ static void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now
 
     app->trainer_playback_active = false;
     app->trainer_playback_mark = false;
-    app->session_log_pending = false;
 
     morse_flipper_drop_live_play(app, now_ms);
     morse_flipper_reset_session_runtime(app);
@@ -147,7 +146,6 @@ static void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms) {
     morse_flipper_reset_session_state(app, now_ms);
     morse_trainer_start_session(&app->trainer);
     app->session_started = true;
-    app->session_log_pending = true;
     app->session_round_pending = false;
     app->session_result_hold = true;
     app->session_result_tone = false;

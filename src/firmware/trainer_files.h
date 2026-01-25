@@ -19,11 +19,6 @@ typedef struct {
 } MorseTrainerCustomSets;
 
 typedef struct {
-    uint8_t count;
-    char lines[8][96];
-} MorseTrainerSessionLines;
-
-typedef struct {
     bool have_best;
     bool have_worst;
     char best_char;
@@ -37,9 +32,6 @@ typedef struct {
 
 const char* morse_trainer_custom_chars_path(void);
 bool morse_trainer_load_custom_sets(MorseTrainerCustomSets* sets);
-const char* morse_trainer_session_log_path(void);
-bool morse_trainer_append_session_log(const MorseTrainer* trainer);
-bool morse_trainer_load_session_lines(MorseTrainerSessionLines* lines);
 const char* morse_trainer_straight_stats_path(void);
 bool morse_trainer_load_straight_stats(MorseTrainerStraightStats* stats);
 bool morse_trainer_note_straight_attempt(

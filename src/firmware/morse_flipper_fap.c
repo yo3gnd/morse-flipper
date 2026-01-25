@@ -107,14 +107,13 @@ typedef enum {
     MorseFlipperScreenPcKeys = 4,
     MorseFlipperScreenTrainer = 5,
     MorseFlipperScreenSession = 6,
-    MorseFlipperScreenBrowse = 7,
-    MorseFlipperScreenRf = 8,
-    MorseFlipperScreenStraight = 9,
-    MorseFlipperScreenSessionEnd = 10,
-    MorseFlipperScreenMenu = 11,
-    MorseFlipperScreenHelp = 12,
-    MorseFlipperScreenAbout = 13,
-    MorseFlipperScreenStartupProbe = 14,
+    MorseFlipperScreenRf = 7,
+    MorseFlipperScreenStraight = 8,
+    MorseFlipperScreenSessionEnd = 9,
+    MorseFlipperScreenMenu = 10,
+    MorseFlipperScreenHelp = 11,
+    MorseFlipperScreenAbout = 12,
+    MorseFlipperScreenStartupProbe = 13,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -133,7 +132,6 @@ typedef enum {
     MorseFlipperSceneRf,
     MorseFlipperSceneSession,
     MorseFlipperSceneStraight,
-    MorseFlipperSceneBrowse,
     MorseFlipperSceneSessionEnd,
     MorseFlipperSceneHome,
     MorseFlipperSceneTrainer,
@@ -340,7 +338,6 @@ typedef struct {
     bool left_down;
     bool ok_down;
     bool back_down;
-    bool session_log_pending;
     bool trainer_playback_active;
     bool trainer_playback_mark;
     bool session_started;
@@ -408,12 +405,10 @@ typedef struct {
     uint32_t note_src[3];
     MorseTrainer trainer;
     MorseTrainerCustomSets custom_sets;
-    MorseTrainerSessionLines session_lines;
     MorseTrainerStraightStats straight_stats;
     uint8_t straight_hist_cnt[36];
     uint16_t straight_hist_sum[36];
     char straight_worst_line[24];
-    uint8_t session_line_idx;
     bool straight_playback_active;
     bool sk_play_mark;
     bool sk_started;
