@@ -49,8 +49,6 @@ static uint8_t morse_flipper_scene_screen(uint32_t scene)
         return MorseFlipperScreenStraight;
     case MorseFlipperSceneSessionEnd:
         return MorseFlipperScreenSessionEnd;
-    case MorseFlipperScenePcKeys:
-        return MorseFlipperScreenPcKeys;
     case MorseFlipperSceneTrace:
         return MorseFlipperScreenTrace;
     case MorseFlipperSceneHelp:

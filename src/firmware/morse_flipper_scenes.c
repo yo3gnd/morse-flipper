@@ -196,11 +196,6 @@ static void morse_flipper_scene_session_end_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSessionEnd);
 }
 
-static void morse_flipper_scene_pc_keys_on_enter(void* context) {
-    MorseFlipperApp* app = context;
-    morse_flipper_scene_enter_now(app, MorseFlipperScenePcKeys);
-}
-
 static void morse_flipper_scene_trace_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_enter_now(app, MorseFlipperSceneTrace);
@@ -291,7 +286,6 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
     morse_flipper_scene_trainer_on_enter,
     morse_flipper_scene_straight_cfg_on_enter,
     morse_flipper_scene_pc_on_enter,
-    morse_flipper_scene_pc_keys_on_enter,
     morse_flipper_scene_trace_on_enter,
     morse_flipper_scene_gpio_on_enter,
     morse_flipper_scene_help_on_enter,
@@ -314,7 +308,6 @@ static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[Morse
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_pc_on_event,
     morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
     morse_flipper_scene_gpio_on_event,
     morse_flipper_scene_help_on_event,
     morse_flipper_scene_about_on_event,
@@ -335,7 +328,6 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_trainer_on_exit,
     morse_flipper_scene_straight_cfg_on_exit,
     morse_flipper_scene_pc_on_exit,
-    morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_gpio_on_exit,
     morse_flipper_scene_live_on_exit,

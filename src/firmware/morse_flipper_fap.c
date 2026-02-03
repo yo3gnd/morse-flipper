@@ -103,17 +103,15 @@ typedef enum {
     MorseFlipperScreenHome = 0,
     MorseFlipperScreenRun = 1,
     MorseFlipperScreenTrace = 2,
-    MorseFlipperScreenPc = 3,
-    MorseFlipperScreenPcKeys = 4,
-    MorseFlipperScreenTrainer = 5,
-    MorseFlipperScreenSession = 6,
-    MorseFlipperScreenRf = 7,
-    MorseFlipperScreenStraight = 8,
-    MorseFlipperScreenSessionEnd = 9,
-    MorseFlipperScreenMenu = 10,
-    MorseFlipperScreenHelp = 11,
-    MorseFlipperScreenAbout = 12,
-    MorseFlipperScreenStartupProbe = 13,
+    MorseFlipperScreenTrainer = 3,
+    MorseFlipperScreenSession = 4,
+    MorseFlipperScreenRf = 5,
+    MorseFlipperScreenStraight = 6,
+    MorseFlipperScreenSessionEnd = 7,
+    MorseFlipperScreenMenu = 8,
+    MorseFlipperScreenHelp = 9,
+    MorseFlipperScreenAbout = 10,
+    MorseFlipperScreenStartupProbe = 11,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -137,7 +135,6 @@ typedef enum {
     MorseFlipperSceneTrainer,
     MorseFlipperSceneStraightCfg,
     MorseFlipperScenePc,
-    MorseFlipperScenePcKeys,
     MorseFlipperSceneTrace,
     MorseFlipperSceneGpio,
     MorseFlipperSceneHelp,
@@ -351,7 +348,6 @@ typedef struct {
     uint8_t pc_pref;
     uint8_t pc_paddle_preset;
     uint8_t pc_straight_preset;
-    uint8_t pc_keys_row;
     uint8_t handedness;
     uint8_t in_src;
     uint8_t keyer_mode;
@@ -478,9 +474,7 @@ static void morse_flipper_sk_fix(MorseFlipperApp* app);
 static void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
 static void morse_flipper_handle_midi_rx(MorseFlipperApp* app);
 static void morse_flipper_update_sidetone(MorseFlipperApp* app);
-static void morse_flipper_cycle_pc_mode(MorseFlipperApp* app, int dir);
 static void morse_flipper_midi_rx_ready(void* context);
-static void morse_flipper_cycle_pc_key_preset(MorseFlipperApp* app, int dir);
 static void morse_flipper_key_evt( MorseFlipperApp* app, const InputEvent* event);
 static const char* morse_flipper_pc_state_name(const MorseFlipperApp* app);
 static uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note);
@@ -555,7 +549,6 @@ static bool morse_flipper_gpio_try_apply( MorseFlipperApp* app, uint8_t dit, uin
 static const char* morse_flipper_status_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_free_practice_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
-static const char* morse_flipper_pc_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static void morse_flipper_settings_noop_enter(void* context, uint32_t index);
 static void morse_flipper_settings_enter_callback(void* context, uint32_t index);
 static void morse_flipper_settings_wpm_changed(VariableItem* item);
@@ -593,7 +586,7 @@ static uint8_t morse_flipper_backlight_mode(const MorseFlipperApp* app) {
     if(app == NULL) return MorseFlipperBacklightAuto;
 
     if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenTrace ||
-       app->screen == MorseFlipperScreenPc || app->screen == MorseFlipperScreenStraight)
+       app->screen == MorseFlipperScreenStraight)
         return MorseFlipperBacklightHold;
 
     if(app->screen == MorseFlipperScreenRf)
@@ -998,8 +991,7 @@ static MorseFlipperInputGate morse_flipper_input_gate(const MorseFlipperApp* app
 
     if(app == NULL) return g;
 
-    if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenTrace ||
-       app->screen == MorseFlipperScreenPc) {
+    if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenTrace) {
         g.live = true;
     } else if(app->screen == MorseFlipperScreenSession) {
         g.live = morse_flipper_session_repeat_active(app) || morse_flipper_session_running_view(app);
@@ -1084,19 +1076,6 @@ static const char* morse_flipper_status_line(const MorseFlipperApp* app, char* b
     return buf;
 }
 
-static const char* morse_flipper_pc_mode_name(uint8_t mode) {
-    switch(mode) {
-    case MorseFlipperPcModeKeyboard:
-        return "keyboard";
-    case MorseFlipperPcModeMouse:
-        return "mouse";
-    case MorseFlipperPcModeMidi:
-        return "midi";
-    default:
-        return "off";
-    }
-}
-
 static const char* morse_flipper_hand_name(const MorseFlipperApp* app) {
     return (app->handedness == MorseFlipperHandednessSwapped) ? "swp" : "norm";
 }
@@ -1143,16 +1122,6 @@ static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* b
     }
 
     snprintf(buf, buf_sz, "gpio live  Bk back");
-    return buf;
-}
-
-static const char* morse_flipper_pc_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
-    if(app->in_src == MorseFlipperInputSourceButtons) {
-        snprintf( buf, buf_sz, "%s", morse_flipper_live_back_is_key(app) ? "O/B key U/D mode" : "OK str U/D mode");
-        return buf;
-    }
-
-    snprintf(buf, buf_sz, "gpio key U/D mode");
     return buf;
 }
 

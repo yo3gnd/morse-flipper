@@ -44,7 +44,6 @@ MorseFlipperApp* morse_flipper_boot(void)
         .pc_pref = MorseFlipperPcModeOff,
         .pc_paddle_preset = 0U,
         .pc_straight_preset = 0U,
-        .pc_keys_row = 0U,
         .handedness = MorseFlipperHandednessSwapped,
         .in_src = MorseFlipperInputSourceStraight,
         .keyer_mode = MorseKeyerModeStraight,

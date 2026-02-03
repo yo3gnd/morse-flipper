@@ -355,9 +355,6 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     char trace_line3[32];
     char trace_line4[32];
     char run_line[32];
-    char pc_line[32];
-    char pc_pad_line[32];
-    char pc_str_line[32];
     char trainer_line[32];
     char trainer_line2[32];
     char trainer_line3[32];
@@ -410,65 +407,6 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         if(morse_flipper_live_left_hint(app)) {
             morse_flipper_draw_left_exit_hint(canvas);
         }
-        return;
-    }
-
-    if(app->screen == MorseFlipperScreenPc) {
-        snprintf(pc_line, sizeof(pc_line), "< %s >", morse_flipper_pc_mode_name(app->pc_mode));
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 18, 14, "PC Mode");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 20, 30, pc_line);
-        canvas_draw_str(canvas, 8, 44, morse_flipper_pc_state_name(app));
-        if(app->pc_mode == MorseFlipperPcModeKeyboard) {
-            snprintf(
-                pc_pad_line,
-                sizeof(pc_pad_line),
-                "pad %s",
-                morse_pc_paddle_preset_name(app->pc_paddle_preset));
-            snprintf(
-                pc_str_line,
-                sizeof(pc_str_line),
-                "str %s hold R keys",
-                morse_pc_straight_preset_name(app->pc_straight_preset));
-            canvas_draw_str(canvas, 8, 54, pc_pad_line);
-            canvas_draw_str(canvas, 8, 63, pc_str_line);
-        } else {
-            snprintf(
-                tone_line,
-                sizeof(tone_line),
-                "wpm %u  %s",
-                morse_flipper_current_wpm(app),
-                morse_flipper_hand_name(app));
-            canvas_draw_str(canvas, 8, 54, tone_line);
-            canvas_draw_str(canvas, 8, 63, morse_flipper_pc_hint(app, browse_line, sizeof(browse_line)));
-        }
-        if(morse_flipper_live_left_hint(app)) {
-            morse_flipper_draw_left_exit_hint(canvas);
-        }
-        return;
-    }
-
-    if(app->screen == MorseFlipperScreenPcKeys) {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 6, 14, "USB Key Presets");
-        canvas_set_font(canvas, FontSecondary);
-        snprintf(
-            pc_pad_line,
-            sizeof(pc_pad_line),
-            "%c Paddle <%s>",
-            app->pc_keys_row == 0U ? '>' : ' ',
-            morse_pc_paddle_preset_name(app->pc_paddle_preset));
-        snprintf(
-            pc_str_line,
-            sizeof(pc_str_line),
-            "%c Straight <%s>",
-            app->pc_keys_row == 1U ? '>' : ' ',
-            morse_pc_straight_preset_name(app->pc_straight_preset));
-        canvas_draw_str(canvas, 2, 30, pc_pad_line);
-        canvas_draw_str(canvas, 2, 44, pc_str_line);
-        canvas_draw_str(canvas, 2, 58, "U/D row L/R pick");
-        canvas_draw_str(canvas, 2, 64, "OK/Bk back");
         return;
     }
 
