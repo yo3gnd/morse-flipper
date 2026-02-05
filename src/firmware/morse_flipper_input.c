@@ -466,6 +466,13 @@ static void morse_flipper_key_evt( MorseFlipperApp* app, const InputEvent* event
     bool btn_str = g.btn_str;
     bool btn_pad = g.btn_pad;
 
+    if(app->screen == MorseFlipperScreenRun && event->key == InputKeyLeft &&
+       event->type == InputTypeShort) {
+        morse_flipper_reset_run_state(app);
+        morse_flipper_view_dirty(app);
+        return;
+    }
+
     if(btn_src && event->key == InputKeyLeft) {
         if(event->type == InputTypePress) {
             app->left_down = true;
@@ -513,7 +520,22 @@ static void morse_flipper_key_evt( MorseFlipperApp* app, const InputEvent* event
         return;
     }
 
-    if(app->screen == MorseFlipperScreenRun) return;
+    if(app->screen == MorseFlipperScreenRun) {
+        if(event->key == InputKeyUp &&
+           (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+            morse_flipper_set_run_wpm(app, (uint8_t)(morse_flipper_current_wpm(app) + 1U));
+            return;
+        }
+
+        if(event->key == InputKeyDown &&
+           (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+            uint8_t wpm = morse_flipper_current_wpm(app);
+            morse_flipper_set_run_wpm(app, wpm > 0U ? (uint8_t)(wpm - 1U) : 0U);
+            return;
+        }
+
+        return;
+    }
 
     if(event->key == InputKeyUp && event->type == InputTypeShort) {
         morse_flipper_toggle_source(app);

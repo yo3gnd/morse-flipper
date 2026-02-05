@@ -78,6 +78,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .straight_wait_started_at = 0U,
         .straight_last_input_at = 0U,
         .straight_mark_started_at = 0U,
+        .run_dit_ms = 0U,
         .straight_dit_ms = MORSE_FLIPPER_DEFAULT_DIT_MS,
         .straight_session_total = 0U,
         .straight_session_good = 0U,

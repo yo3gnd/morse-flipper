@@ -7,6 +7,11 @@ static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
     canvas_draw_box(canvas, 127, 29, 1, 7);
 }
 
+static char morse_flipper_live_upper_char(char ch) {
+    if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
+    return ch;
+}
+
 static void morse_flipper_gpio_probe_pair_text( const MorseFlipperApp* app, uint8_t pin_idx, char* out, size_t out_sz) {
     if(app == NULL || out == NULL || out_sz == 0U) return;
     snprintf(
@@ -384,6 +389,9 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenRun) {
+        MorseFlipperRunHistory preview_history = app->run_history;
+        char preview = morse_flipper_live_upper_char(morse_flipper_cw_decoder_preview(&app->tx_decoder));
+
         snprintf(
             run_line,
             sizeof(run_line),
@@ -397,10 +405,15 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
             morse_flipper_run_keyer_name(app),
             morse_flipper_run_usb_name(app));
 
+        if(preview != 0 && preview != ' ' && preview != '|') {
+            char preview_text[2] = {preview, '\0'};
+            morse_flipper_run_history_append(&preview_history, preview_text);
+        }
+
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 3, 10, app->run_history.line[0]);
-        canvas_draw_str(canvas, 3, 20, app->run_history.line[1]);
-        canvas_draw_str(canvas, 3, 30, app->run_history.line[2]);
+        canvas_draw_str(canvas, 1, 10, preview_history.line[0]);
+        canvas_draw_str(canvas, 1, 20, preview_history.line[1]);
+        canvas_draw_str(canvas, 1, 30, preview_history.line[2]);
         canvas_draw_line(canvas, 0, 34, 127, 34);
         canvas_draw_str(canvas, 3, 44, run_line);
         canvas_draw_str(canvas, 3, 54, browse_line);
