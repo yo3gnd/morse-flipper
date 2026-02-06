@@ -12,6 +12,60 @@ static char morse_flipper_live_upper_char(char ch) {
     return ch;
 }
 
+static void morse_flipper_run_history_rows(
+    Canvas* canvas,
+    const char* text,
+    char out[MORSE_FLIPPER_RUN_HISTORY_ROWS][MORSE_FLIPPER_RUN_HISTORY_TEXT])
+{
+    char row[MORSE_FLIPPER_RUN_HISTORY_TEXT];
+    uint16_t row_w = 0U;
+    uint8_t row_n = 0U;
+    size_t row_len = 0U;
+    const uint16_t max_w = 126U;
+
+    if(canvas == NULL || text == NULL || out == NULL) return;
+    memset(out, 0, MORSE_FLIPPER_RUN_HISTORY_ROWS * MORSE_FLIPPER_RUN_HISTORY_TEXT);
+    row[0] = '\0';
+
+    while(*text) {
+        char ch = *text++;
+        size_t glyph_w;
+
+        if(ch == ' ' && row_len == 0U) continue;
+
+        glyph_w = canvas_glyph_width(canvas, (uint8_t)ch);
+        if(row_len != 0U && row_w + glyph_w > max_w) {
+            if(row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS) {
+                memcpy(out[row_n++], row, row_len + 1U);
+            } else {
+                memcpy(out[0], out[1], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+                memcpy(out[1], out[2], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+                memcpy(out[2], row, row_len + 1U);
+            }
+
+            row[0] = '\0';
+            row_len = 0U;
+            row_w = 0U;
+            if(ch == ' ') continue;
+        }
+
+        if(row_len + 1U >= sizeof(row)) break;
+        row[row_len++] = ch;
+        row[row_len] = '\0';
+        row_w += (uint16_t)glyph_w;
+    }
+
+    if(row_len != 0U) {
+        if(row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS) {
+            memcpy(out[row_n], row, row_len + 1U);
+        } else {
+            memcpy(out[0], out[1], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+            memcpy(out[1], out[2], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+            memcpy(out[2], row, row_len + 1U);
+        }
+    }
+}
+
 static void morse_flipper_gpio_probe_pair_text( const MorseFlipperApp* app, uint8_t pin_idx, char* out, size_t out_sz) {
     if(app == NULL || out == NULL || out_sz == 0U) return;
     snprintf(
@@ -390,6 +444,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
 
     if(app->screen == MorseFlipperScreenRun) {
         MorseFlipperRunHistory preview_history = app->run_history;
+        char run_rows[MORSE_FLIPPER_RUN_HISTORY_ROWS][MORSE_FLIPPER_RUN_HISTORY_TEXT];
         char preview = morse_flipper_live_upper_char(morse_flipper_cw_decoder_preview(&app->tx_decoder));
 
         snprintf(
@@ -411,9 +466,10 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         }
 
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 1, 10, preview_history.line[0]);
-        canvas_draw_str(canvas, 1, 20, preview_history.line[1]);
-        canvas_draw_str(canvas, 1, 30, preview_history.line[2]);
+        morse_flipper_run_history_rows( canvas, morse_flipper_run_history_text(&preview_history), run_rows);
+        canvas_draw_str(canvas, 1, 10, run_rows[0]);
+        canvas_draw_str(canvas, 1, 20, run_rows[1]);
+        canvas_draw_str(canvas, 1, 30, run_rows[2]);
         canvas_draw_line(canvas, 0, 34, 127, 34);
         canvas_draw_str(canvas, 3, 44, run_line);
         canvas_draw_str(canvas, 3, 54, browse_line);
