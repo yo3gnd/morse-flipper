@@ -1,4 +1,4 @@
-#include "morse_flipper_prompt_font.h"
+#include "fonts/morse_flipper_terminus24.h"
 
 static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
     canvas_draw_box(canvas, 124, 32, 1, 1);
@@ -10,6 +10,54 @@ static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
 static char morse_flipper_live_upper_char(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
     return ch;
+}
+
+static uint8_t morse_flipper_hex_nibble(char ch)
+{
+    if(ch >= '0' && ch <= '9') return (uint8_t)(ch - '0');
+    if(ch >= 'A' && ch <= 'F') return (uint8_t)(10 + (ch - 'A'));
+    if(ch >= 'a' && ch <= 'f') return (uint8_t)(10 + (ch - 'a'));
+    return 0U;
+}
+
+static void morse_flipper_draw_sk_prompt(Canvas* canvas, int32_t cx, int32_t cy, char ch)
+{
+    const MorseFlipperTerminus24Glyph* glyph;
+    int32_t x0;
+    int32_t y0;
+    size_t row;
+    size_t x_max;
+    size_t y_max;
+
+    if(canvas == NULL) return;
+
+    glyph = morse_flipper_terminus24_glyph(morse_flipper_live_upper_char(ch));
+    x0 = cx - (int32_t)(MORSE_FLIPPER_TERMINUS24_WIDTH / 2U);
+    y0 = cy - (int32_t)(MORSE_FLIPPER_TERMINUS24_HEIGHT / 2U);
+    x_max = canvas_width(canvas);
+    y_max = canvas_height(canvas);
+
+    for(row = 0U; row < MORSE_FLIPPER_TERMINUS24_HEIGHT; row++) {
+        const char* hex = glyph->rows[row];
+        uint16_t bits = 0U;
+        uint8_t col;
+        uint8_t i;
+
+        for(i = 0U; hex[i] != '\0'; i++) {
+            bits = (uint16_t)((bits << 4U) | morse_flipper_hex_nibble(hex[i]));
+        }
+
+        for(col = 0U; col < MORSE_FLIPPER_TERMINUS24_WIDTH; col++) {
+            if((bits & (uint16_t)(1U << (15U - col))) != 0U) {
+                int32_t px = x0 + (int32_t)col;
+                int32_t py = y0 + (int32_t)row;
+
+                if(px >= 0 && py >= 0 && (size_t)px < x_max && (size_t)py < y_max) {
+                    canvas_draw_dot(canvas, px, py);
+                }
+            }
+        }
+    }
 }
 
 static void morse_flipper_run_history_rows(
@@ -534,9 +582,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
             return;
         }
 
-        snprintf(trainer_line, sizeof(trainer_line), "%c", morse_flipper_straight_trainer_target_char(&app->straight_trainer));
-        canvas_set_custom_u8g2_font(canvas, morse_flipper_straight_prompt_font);
-        canvas_draw_str_aligned(canvas, 19, 18, AlignCenter, AlignCenter, trainer_line);
+        morse_flipper_draw_sk_prompt( canvas, 19, 18, morse_flipper_straight_trainer_target_char(&app->straight_trainer));
 
         if(app->sk_done &&
            morse_flipper_straight_trainer_answer(&app->straight_trainer)[0] != '\0') {
