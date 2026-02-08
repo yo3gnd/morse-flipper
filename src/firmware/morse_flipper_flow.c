@@ -77,6 +77,7 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
     case MorseFlipperSceneMenuTraining:
     case MorseFlipperSceneMenuSettings:
     case MorseFlipperSceneMenuHelp:
+    case MorseFlipperSceneMenuRf:
         return MorseFlipperViewMenu;
     default:
         return MorseFlipperViewLive;

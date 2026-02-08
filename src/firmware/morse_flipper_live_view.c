@@ -7,6 +7,21 @@ static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
     canvas_draw_box(canvas, 127, 29, 1, 7);
 }
 
+static void morse_flipper_draw_tx_div(Canvas* canvas, bool left_hint) {
+    if(canvas == NULL) return;
+
+    if(!left_hint) {
+        canvas_draw_line(canvas, 0, 34, 119, 34);
+        return;
+    }
+
+    canvas_draw_line(canvas, 0, 34, 119, 34);
+    canvas_draw_box(canvas, 124, 34, 1, 1);
+    canvas_draw_box(canvas, 125, 33, 1, 3);
+    canvas_draw_box(canvas, 126, 32, 1, 5);
+    canvas_draw_box(canvas, 127, 31, 1, 7);
+}
+
 static char morse_flipper_live_upper_char(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
     return ch;
@@ -387,6 +402,36 @@ static void morse_flipper_draw_sk_met(Canvas* canvas, const MorseFlipperApp* app
     canvas_draw_str(canvas, x, 64, cnt);
 }
 
+static void morse_flipper_draw_tx_hist( Canvas* canvas, MorseFlipperApp* app, const char* second_line) {
+    MorseFlipperRunHistory preview_history;
+    char run_rows[MORSE_FLIPPER_RUN_HISTORY_ROWS][MORSE_FLIPPER_RUN_HISTORY_TEXT];
+    char mode_line[32];
+    char hint_line[32];
+    char preview;
+    bool left_hint;
+
+    if(canvas == NULL || app == NULL) return;
+
+    preview_history = app->run_history;
+    preview = morse_flipper_live_upper_char(morse_flipper_cw_decoder_preview(&app->tx_decoder));
+    if(preview != 0 && preview != ' ' && preview != '|') {
+        char preview_text[2] = {preview, '\0'};
+        morse_flipper_run_history_append(&preview_history, preview_text);
+    }
+
+    left_hint = morse_flipper_live_left_hint(app);
+
+    canvas_set_font(canvas, FontSecondary);
+    morse_flipper_run_history_rows( canvas, morse_flipper_run_history_text(&preview_history), run_rows);
+    canvas_draw_str(canvas, 1, 10, run_rows[0]);
+    canvas_draw_str(canvas, 1, 20, run_rows[1]);
+    canvas_draw_str(canvas, 1, 30, run_rows[2]);
+    morse_flipper_draw_tx_div(canvas, left_hint);
+    canvas_draw_str( canvas, 3, 44, morse_flipper_run_mode_line(app, mode_line, sizeof(mode_line)));
+    canvas_draw_str(canvas, 3, 54, second_line ? second_line : "");
+    canvas_draw_str( canvas, 3, 64, morse_flipper_run_hint(app, hint_line, sizeof(hint_line)));
+}
+
 static const char* morse_flipper_help_title(uint8_t idx) {
     switch(idx) {
     case MorseFlipperHelpFirstSteps:
@@ -461,7 +506,6 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     char trace_line2[32];
     char trace_line3[32];
     char trace_line4[32];
-    char run_line[32];
     char trainer_line[32];
     char trainer_line2[32];
     char trainer_line3[32];
@@ -491,37 +535,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenRun) {
-        MorseFlipperRunHistory preview_history = app->run_history;
-        char run_rows[MORSE_FLIPPER_RUN_HISTORY_ROWS][MORSE_FLIPPER_RUN_HISTORY_TEXT];
-        char preview = morse_flipper_live_upper_char(morse_flipper_cw_decoder_preview(&app->tx_decoder));
-
-        snprintf(
-            run_line,
-            sizeof(run_line),
-            "%u wpm  %s",
-            (unsigned)morse_flipper_current_wpm(app),
-            morse_flipper_run_input_name(app));
-        snprintf(
-            browse_line,
-            sizeof(browse_line),
-            "%s  %s",
-            morse_flipper_run_keyer_name(app),
-            morse_flipper_run_usb_name(app));
-
-        if(preview != 0 && preview != ' ' && preview != '|') {
-            char preview_text[2] = {preview, '\0'};
-            morse_flipper_run_history_append(&preview_history, preview_text);
-        }
-
-        canvas_set_font(canvas, FontSecondary);
-        morse_flipper_run_history_rows( canvas, morse_flipper_run_history_text(&preview_history), run_rows);
-        canvas_draw_str(canvas, 1, 10, run_rows[0]);
-        canvas_draw_str(canvas, 1, 20, run_rows[1]);
-        canvas_draw_str(canvas, 1, 30, run_rows[2]);
-        canvas_draw_line(canvas, 0, 34, 127, 34);
-        canvas_draw_str(canvas, 3, 44, run_line);
-        canvas_draw_str(canvas, 3, 54, browse_line);
-        canvas_draw_str(canvas, 3, 64, morse_flipper_run_hint(app, input_line, sizeof(input_line)));
+        morse_flipper_draw_tx_hist(canvas, app, morse_flipper_run_usb_name(app));
         return;
     }
 
@@ -634,69 +648,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenRf) {
-        snprintf(
-            trainer_line,
-            sizeof(trainer_line),
-            "rf %s %s",
-            morse_flipper_rf_frequency_text(&app->rf),
-            app->rf_live ? "live" : "idle");
-        canvas_draw_str(canvas, 2, 10, trainer_line);
-        if(app->rf_man) {
-            snprintf(
-                trainer_line2,
-                sizeof(trainer_line2),
-                "khz %s [%u]",
-                app->rf_edit_khz,
-                (unsigned)app->rf_edit_digit);
-            canvas_draw_str(canvas, 2, 22, trainer_line2);
-            canvas_draw_str(canvas, 2, 34, "L/R move U/D digit");
-            canvas_draw_str(canvas, 2, 46, "OK apply");
-            canvas_draw_str(canvas, 2, 64, "Bk cancel");
-            return;
-        }
-
-        if(app->rf_live) {
-            snprintf(
-                trainer_line2,
-                sizeof(trainer_line2),
-                "src %s mode %s",
-                morse_flipper_source_short_name(app, browse_line, sizeof(browse_line)),
-                morse_keyer_mode_name(morse_flipper_current_keyer_mode(app)));
-            canvas_draw_str(canvas, 2, 22, trainer_line2);
-            snprintf(
-                trainer_line3,
-                sizeof(trainer_line3),
-                "rx %.28s",
-                app->rf_rx_text[0] ? app->rf_rx_text : "-");
-            canvas_draw_str(canvas, 2, 34, trainer_line3);
-            snprintf(
-                tone_line,
-                sizeof(tone_line),
-                "tx %.28s",
-                app->rf_tx_text[0] ? app->rf_tx_text : "-");
-            canvas_draw_str(canvas, 2, 46, tone_line);
-            canvas_draw_str(
-                canvas,
-                2,
-                58,
-                morse_flipper_rf_last_error(&app->rf)[0] ? morse_flipper_rf_last_error(&app->rf) :
-                                                           morse_flipper_rf_rx_log_line(&app->rf, morse_flipper_rf_rx_log_count(&app->rf) ?
-                                                                                                 (morse_flipper_rf_rx_log_count(&app->rf) - 1U) :
-                                                                                                 0U));
-            canvas_draw_str( canvas, 2, 64, morse_flipper_live_back_is_key(app) ? "live key hold L" : "live key Bk back");
-            if(morse_flipper_live_left_hint(app)) {
-                morse_flipper_draw_left_exit_hint(canvas);
-            }
-            return;
-        }
-
-        canvas_draw_str(canvas, 2, 22, "L/R step  U band");
-        canvas_draw_str(canvas, 2, 34, "OK edit  D live");
-        canvas_draw_str(canvas, 2, 46, morse_flipper_rf_last_error(&app->rf)[0] ?
-                                            morse_flipper_rf_last_error(&app->rf) :
-                                            morse_flipper_rf_manual_khz_text(&app->rf));
-        canvas_draw_str(canvas, 2, 58, app->gpio_text[0] ? app->gpio_text : "gpio -");
-        canvas_draw_str(canvas, 2, 64, "Bk back");
+        morse_flipper_draw_tx_hist( canvas, app, morse_flipper_rf_khz_line(app, browse_line, sizeof(browse_line)));
         return;
     }
 

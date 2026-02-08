@@ -74,7 +74,7 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     if(out[0] == '\0') return;
 
     morse_flipper_append_text(app->rf_tx_text, sizeof(app->rf_tx_text), out);
-    if(app->screen == MorseFlipperScreenRun) {
+    if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf) {
         morse_flipper_run_history_append(&app->run_history, out);
         morse_flipper_view_dirty(app);
     }
@@ -92,7 +92,6 @@ static bool morse_flipper_tx_decoder_allowed(const MorseFlipperApp* app) {
     if(app == NULL) return false;
     if(app->trainer_playback_active || app->straight_playback_active) return false;
     if(app->screen == MorseFlipperScreenSession && !morse_flipper_session_repeat_active(app)) return false;
-    if(app->screen == MorseFlipperScreenRf && !MORSE_FLIPPER_RF_LIVE_DECODERS) return false;
     return true;
 }
 

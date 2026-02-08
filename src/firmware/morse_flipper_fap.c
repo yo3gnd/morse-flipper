@@ -127,6 +127,7 @@ typedef enum {
     MorseFlipperSceneMenuTraining,
     MorseFlipperSceneMenuSettings,
     MorseFlipperSceneMenuHelp,
+    MorseFlipperSceneMenuRf,
     MorseFlipperSceneRun,
     MorseFlipperSceneRf,
     MorseFlipperSceneSession,
@@ -414,7 +415,6 @@ typedef struct {
     bool sk_wait;
     bool sk_done;
     bool sk_down;
-    bool rf_man;
     bool rf_live;
     bool rf_tx_level;
     bool rf_tx_gap_flushed;
@@ -422,10 +422,8 @@ typedef struct {
     bool gpio_gap_flushed;
     uint8_t sk_mark_i;
     uint8_t sk_ret_scr;
-    uint8_t rf_edit_digit;
     uint8_t backlight;
     uint8_t sess_end_flash;
-    char rf_edit_khz[8];
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
@@ -552,9 +550,11 @@ static void morse_flipper_gpio_alert(MorseFlipperApp* app, MorseFlipperGpioRule 
 static bool morse_flipper_gpio_try_apply( MorseFlipperApp* app, uint8_t dit, uint8_t dah, uint8_t ground, MorseFlipperGpioRule* out_rule);
 static const char* morse_flipper_status_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_run_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_run_input_name(const MorseFlipperApp* app);
 static const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app);
 static const char* morse_flipper_run_usb_name(const MorseFlipperApp* app);
+static const char* morse_flipper_rf_khz_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static void morse_flipper_reset_run_state(MorseFlipperApp* app);
 static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static void morse_flipper_settings_noop_enter(void* context, uint32_t index);
@@ -1119,12 +1119,35 @@ static const char* morse_flipper_run_hint(const MorseFlipperApp* app, char* buf,
             buf,
             buf_sz,
             "%s",
-            morse_flipper_live_back_is_key(app) ? "Left clr; hold L exit" :
+            morse_flipper_live_back_is_key(app) ? "Left clear; hold L exit" :
                                                   "Bk exit; Left clear");
         return buf;
     }
 
     snprintf(buf, buf_sz, "Bk exit; Left clear");
+    return buf;
+}
+
+static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+    const char* input;
+    const char* keyer;
+
+    if(app == NULL || buf == NULL || buf_sz == 0U) return "---";
+
+    input = morse_flipper_run_input_name(app);
+    keyer = morse_flipper_run_keyer_name(app);
+    if(morse_flipper_straight_like_mode(app) || strcmp(keyer, "---") == 0) {
+        snprintf(buf, buf_sz, "%u wpm  %s", (unsigned)morse_flipper_current_wpm(app), input);
+    } else {
+        snprintf(
+            buf,
+            buf_sz,
+            "%u wpm  %s  %s",
+            (unsigned)morse_flipper_current_wpm(app),
+            input,
+            keyer);
+    }
+
     return buf;
 }
 
@@ -1177,6 +1200,15 @@ static const char* morse_flipper_run_usb_name(const MorseFlipperApp* app) {
     default:
         return "USB off";
     }
+}
+
+static const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+    unsigned long khz = 434150UL;
+
+    if(buf == NULL || buf_sz == 0U) return "434150 khz";
+    if(app != NULL) khz = (unsigned long)(morse_flipper_rf_frequency_hz(&app->rf) / 1000U);
+    snprintf(buf, buf_sz, "%lu khz", khz);
+    return buf;
 }
 
 static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
@@ -1260,7 +1292,6 @@ static void morse_flipper_enter_screen( MorseFlipperApp* app, uint8_t screen, ui
 
     if(app->screen == MorseFlipperScreenRf && screen != MorseFlipperScreenRf) {
         app->rf_live = false;
-        app->rf_man = false;
         morse_flipper_radio_sync_live(&app->radio, morse_flipper_rf_frequency_hz(&app->rf), false, false);
         morse_flipper_radio_set_tx_level(&app->radio, false);
     }
@@ -1288,6 +1319,16 @@ static void morse_flipper_enter_screen( MorseFlipperApp* app, uint8_t screen, ui
 
     if(screen == MorseFlipperScreenRun && app->screen != MorseFlipperScreenRun) {
         app->run_dit_ms = morse_flipper_current_dit_ms(app);
+        morse_flipper_reset_run_state(app);
+    }
+
+    if(screen == MorseFlipperScreenRf && app->screen != MorseFlipperScreenRf) {
+        morse_flipper_rf_set_frequency_hz(&app->rf, 434150000U);
+        app->rf_live = true;
+        app->rf_rx_text[0] = '\0';
+        app->rf_tail_at = 0U;
+        morse_flipper_rf_reset_live(&app->rf);
+        morse_flipper_cw_decoder_init(&app->rf_decoder, morse_flipper_current_dit_ms(app));
         morse_flipper_reset_run_state(app);
     }
 

@@ -103,16 +103,13 @@ MorseFlipperApp* morse_flipper_boot(void)
         .sk_wait = false,
         .sk_done = false,
         .sk_down = false,
-        .rf_man = false,
         .rf_live = false,
         .rf_tx_level = false,
         .rf_tx_gap_flushed = true,
         .gpio_level = false,
         .gpio_gap_flushed = true,
         .sk_mark_i = 0U,
-        .rf_edit_digit = 0U,
         .backlight = MorseFlipperBacklightAuto,
-        .rf_edit_khz = {0},
         .rf_rx_text = {0},
         .rf_tx_text = {0},
         .gpio_text = {0},
@@ -127,7 +124,6 @@ MorseFlipperApp* morse_flipper_boot(void)
 
     morse_trainer_init(&app.trainer);
     morse_flipper_rf_init(&app.rf);
-    morse_flipper_rf_load_settings(&app.rf, MORSE_FLIPPER_SUBGHZ_SETTINGS_PATH);
     morse_flipper_radio_init(&app.radio);
     morse_flipper_radio_set_rx_callback(&app.radio, morse_flipper_rf_rx_edge, &app);
     morse_flipper_audio_pwm_reset(&app.audio_pwm);
