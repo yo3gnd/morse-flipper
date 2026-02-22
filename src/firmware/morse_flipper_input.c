@@ -1,27 +1,3 @@
-static bool morse_flipper_help_input(MorseFlipperApp* app, const InputEvent* event)
-{
-    if(app->screen != MorseFlipperScreenHelp) return false;
-
-    if(event->key == InputKeyLeft && (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
-        app->help_topic = app->help_topic == 0U ? (MorseFlipperHelpCount - 1U) : app->help_topic - 1U;
-        morse_flipper_view_dirty(app);
-        return true;
-    }
-
-    if(event->key == InputKeyRight && (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
-            app->help_topic = (app->help_topic + 1U) % MorseFlipperHelpCount;
-        morse_flipper_view_dirty(app);
-        return true;
-    }
-
-    if(event->key == InputKeyBack && (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        morse_flipper_scene_back(app);
-        return true;
-    }
-
-    return false;
-}
-
 static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* event)
 {
     if(app->screen != MorseFlipperScreenAbout) return false;
@@ -68,7 +44,6 @@ static bool morse_flipper_startup_probe_input(MorseFlipperApp* app, const InputE
 
 static bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event)
 {
-    if(morse_flipper_help_input(app, event)) return true;
     if(morse_flipper_about_input(app, event)) return true;
     if(morse_flipper_startup_probe_input(app, event)) return true;
     return false;
@@ -245,12 +220,6 @@ static bool morse_flipper_session_input( MorseFlipperApp* app, const InputEvent*
     if(event->key == InputKeyOk && event->type == InputTypeShort &&
        !morse_trainer_session_active(&app->trainer) && !app->trainer_playback_active) {
         morse_flipper_start_session(app, now_ms);
-        return true;
-    }
-
-    if(event->key == InputKeyOk && event->type == InputTypeLong &&
-       !morse_trainer_session_active(&app->trainer) && !app->trainer_playback_active) {
-        morse_flipper_scene_open(app, MorseFlipperSceneStraight);
         return true;
     }
 

@@ -566,72 +566,6 @@ static void morse_flipper_draw_rf_rx_screen(Canvas* canvas, MorseFlipperApp* app
     canvas_draw_str(canvas, 125 - canvas_string_width(canvas, "Bk exit"), 64, "Bk exit");
 }
 
-static const char* morse_flipper_help_title(uint8_t idx) {
-    switch(idx) {
-    case MorseFlipperHelpFirstSteps:
-        return "First steps";
-    case MorseFlipperHelpInputKeys:
-        return "Input & keys";
-    case MorseFlipperHelpConnectingPaddle:
-        return "Connecting the paddle";
-    case MorseFlipperHelpLcwo:
-        return "LCWO";
-    case MorseFlipperHelpPrepping:
-        return "Prepping";
-    case MorseFlipperHelpContact:
-        return "A complete Morse contact";
-    case MorseFlipperHelpContesting:
-        return "Contesting";
-    case MorseFlipperHelpUsbLive:
-        return "USB & live practice";
-    default:
-        return "Moving forward";
-    }
-}
-
-static const char* morse_flipper_help_blurb(uint8_t idx) {
-    switch(idx) {
-    case MorseFlipperHelpFirstSteps:
-        return "Short guide goes here later.";
-    case MorseFlipperHelpInputKeys:
-        return "Input notes go here later.";
-    case MorseFlipperHelpConnectingPaddle:
-        return "Paddle wiring notes go here later.";
-    case MorseFlipperHelpLcwo:
-        return "LCWO notes go here later.";
-    case MorseFlipperHelpPrepping:
-        return "Prepping notes go here later.";
-    case MorseFlipperHelpContact:
-        return "Contact notes go here later.";
-    case MorseFlipperHelpContesting:
-        return "Contest notes go here later.";
-    case MorseFlipperHelpUsbLive:
-        return "USB and live notes later.";
-    default:
-        return "More notes go here later.";
-    }
-}
-
-static void morse_flipper_draw_help_page(Canvas* canvas, MorseFlipperApp* app) {
-    char nbuf[20];
-    uint8_t n = app->help_topic;
-
-    if(n >= MorseFlipperHelpCount) n = 0U;
-
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 4, 12, morse_flipper_help_title(n));
-
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 4, 28, morse_flipper_help_blurb(n));
-    canvas_draw_str(canvas, 4, 40, "Copy and polish later.");
-
-    snprintf(nbuf, sizeof(nbuf), "%u/%u", (unsigned)(n + 1U), (unsigned)MorseFlipperHelpCount);
-    canvas_draw_str(canvas, 104, 12, nbuf);
-    canvas_draw_str(canvas, 4, 56, "< prev");
-	canvas_draw_str(canvas, 88, 56, "next >");
-    canvas_draw_str(canvas, 4, 64, "Bk back");
-}
-
 static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     MorseFlipperApp* app = ctx;
     char tone_line[32];
@@ -647,11 +581,6 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
-
-    if(app->screen == MorseFlipperScreenHelp) {
-        morse_flipper_draw_help_page(canvas, app);
-        return;
-    }
 
     if(app->screen == MorseFlipperScreenAbout) {
         canvas_set_font(canvas, FontPrimary);
@@ -724,7 +653,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
 
         if(!app->sk_started) {
             canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "Straight Trainer");
+            canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "Straight trainer");
             canvas_set_font(canvas, FontSecondary);
             if(app->in_src == MorseFlipperInputSourceButtons) {
                 canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
@@ -840,7 +769,7 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 8, 14, "Main settings");
+    canvas_draw_str(canvas, 8, 14, "Keying");
 
     snprintf(
         tone_line,

@@ -767,7 +767,7 @@ static void morse_flipper_scene_pc_on_enter(void* context) {
 
     it = variable_item_list_add(
         app->settings_list,
-        "Paddle",
+        "Paddle keys",
         morse_pc_paddle_preset_count(),
         morse_flipper_settings_usb_paddle_changed,
         app);
@@ -776,7 +776,7 @@ static void morse_flipper_scene_pc_on_enter(void* context) {
 
     it = variable_item_list_add(
         app->settings_list,
-        "Straight",
+        "Straight key",
         morse_pc_straight_preset_count(),
         morse_flipper_settings_usb_straight_changed,
         app);

@@ -7,7 +7,7 @@ static void morse_flipper_scene_menu_main_on_enter(void* context) {
     submenu_add_item(app->submenu, "Training", MorseFlipperSceneMenuTraining, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Settings", MorseFlipperSceneMenuSettings, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Help", MorseFlipperSceneMenuHelp, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Radio TX", MorseFlipperSceneMenuRf, morse_flipper_scene_menu_pick, app);
+    submenu_add_item( app->submenu, "Flipper Radio", MorseFlipperSceneMenuRf, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "About", MorseFlipperSceneAbout, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneRun && sel != MorseFlipperSceneMenuRf &&
@@ -47,7 +47,7 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuTraining);
     submenu_set_header(app->submenu, "Training");
     submenu_add_item(app->submenu, "Koch - LCWO groups", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Straight Key trainer", MorseFlipperSceneStraight, morse_flipper_scene_menu_pick, app);
+    submenu_add_item( app->submenu, "Straight trainer", MorseFlipperSceneStraight, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight)
         sel = MorseFlipperSceneSession;
     submenu_set_selected_item(app->submenu, sel);
@@ -81,9 +81,9 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuSettings);
     submenu_set_header(app->submenu, "Settings");
-    submenu_add_item(app->submenu, "Main settings", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(app->submenu, "Keying", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Koch - LCWO", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Straight key", MorseFlipperSceneStraightCfg, morse_flipper_scene_menu_pick, app);
+    submenu_add_item( app->submenu, "Straight trainer", MorseFlipperSceneStraightCfg, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "USB", MorseFlipperScenePc, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneHome && sel != MorseFlipperSceneTrainer &&
        sel != MorseFlipperSceneStraightCfg && sel != MorseFlipperScenePc)
@@ -161,10 +161,10 @@ static void morse_flipper_scene_menu_rf_on_enter(void* context) {
     uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuRf);
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuRf);
-    submenu_set_header(app->submenu, "Radio TX");
-    submenu_add_item( app->submenu, "Start transmitting", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
-    submenu_add_item( app->submenu, "Start receiving", MorseFlipperSceneRfRx, morse_flipper_scene_menu_pick, app);
-    submenu_add_item( app->submenu, "Set frequency", MorseFlipperSceneRfFreq, morse_flipper_scene_menu_pick, app);
+    submenu_set_header(app->submenu, "Flipper Radio");
+    submenu_add_item( app->submenu, "Transmit", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
+    submenu_add_item( app->submenu, "Receive monitor", MorseFlipperSceneRfRx, morse_flipper_scene_menu_pick, app);
+    submenu_add_item( app->submenu, "Frequency", MorseFlipperSceneRfFreq, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneRf && sel != MorseFlipperSceneRfRx &&
        sel != MorseFlipperSceneRfFreq)
         sel = MorseFlipperSceneRf;
