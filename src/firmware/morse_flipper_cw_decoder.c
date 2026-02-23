@@ -70,6 +70,31 @@ static char decoder_lookup(uint8_t code)
     return '_';
 }
 
+static bool decoder_preview_extendable(uint8_t code, size_t count)
+{
+    uint8_t bit;
+    uint8_t next_code;
+    char preview;
+    char next;
+
+    if(code <= 1u || count >= 7u) return false;
+
+    preview = decoder_lookup(code);
+    bit = (uint8_t)(1u << count);
+
+    next_code = (uint8_t)(code & (uint8_t)~bit);
+    next_code |= (uint8_t)(1u << (count + 1u));
+    next = decoder_lookup(next_code);
+    if(next != 0 && next != '_' && next != preview) return true;
+
+    next_code = (uint8_t)(code | bit);
+    next_code |= (uint8_t)(1u << (count + 1u));
+    next = decoder_lookup(next_code);
+    if(next != 0 && next != '_' && next != preview) return true;
+
+    return false;
+}
+
 static void decoder_flush_symbol_buffer(MorseFlipperCwDecoder* decoder)
 {
     char letter;
@@ -303,4 +328,10 @@ char morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
 {
     if(!decoder || !decoder->symbol_count) return 0;
     return decoder_lookup(decoder->symbol_code);
+}
+
+bool morse_flipper_cw_decoder_prev_more(const MorseFlipperCwDecoder* decoder)
+{
+    if(!decoder || !decoder->symbol_count) return false;
+    return decoder_preview_extendable(decoder->symbol_code, decoder->symbol_count);
 }

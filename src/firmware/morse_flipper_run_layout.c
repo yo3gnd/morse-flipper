@@ -1,0 +1,100 @@
+#include "morse_flipper_run_layout.h"
+
+#include <string.h>
+
+static void morse_flipper_run_layout_push_row( MorseFlipperRunLayout* layout, const char* row, size_t row_len, uint8_t* row_n)
+{
+    if(layout == NULL || row == NULL || row_n == NULL) return;
+
+    if(*row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS) {
+        memcpy(layout->rows[*row_n], row, row_len + 1U);
+        (*row_n)++;
+        return;
+    }
+
+    memcpy(layout->rows[0], layout->rows[1], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+    memcpy(layout->rows[1], layout->rows[2], MORSE_FLIPPER_RUN_HISTORY_TEXT);
+    memcpy(layout->rows[2], row, row_len + 1U);
+}
+
+void morse_flipper_run_layout_build(
+    const char* text,
+    bool underline_last_char,
+    uint16_t max_w,
+    MorseFlipperGlyphWidthFn glyph_width,
+    void* glyph_ctx,
+    MorseFlipperRunLayout* layout)
+{
+    char row[MORSE_FLIPPER_RUN_HISTORY_TEXT];
+    uint16_t row_w = 0U;
+    uint16_t last_char_x = 0U;
+    uint8_t last_char_w = 0U;
+    uint8_t row_n = 0U;
+    size_t row_len = 0U;
+    uint16_t cursor_w;
+
+    if(text == NULL || glyph_width == NULL || layout == NULL) return;
+
+    cursor_w = glyph_width((uint8_t)'_', glyph_ctx);
+    if(cursor_w == 0U) cursor_w = 1U;
+
+    memset(layout, 0, sizeof(*layout));
+    row[0] = '\0';
+
+    while(*text) {
+        char ch = *text++;
+        uint16_t ch_w;
+
+        if(ch == ' ' && row_len == 0U) continue;
+
+        ch_w = glyph_width((uint8_t)ch, glyph_ctx);
+        if(ch_w == 0U) ch_w = 1U;
+
+        if(row_len != 0U && row_w + ch_w > max_w) {
+            morse_flipper_run_layout_push_row(layout, row, row_len, &row_n);
+            row[0] = '\0';
+            row_len = 0U;
+            row_w = 0U;
+            if(ch == ' ') continue;
+        }
+
+        if(row_len + 1U >= sizeof(row)) break;
+        last_char_x = row_w;
+        last_char_w = (uint8_t)ch_w;
+        row[row_len++] = ch;
+        row[row_len] = '\0';
+        row_w += ch_w;
+
+        if(ch == '=') {
+            morse_flipper_run_layout_push_row(layout, row, row_len, &row_n);
+            row[0] = '\0';
+            row_len = 0U;
+            row_w = 0U;
+        }
+    }
+
+    if(underline_last_char && row_len != 0U) {
+        layout->underline_valid = true;
+        layout->underline_row =
+            row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS ? row_n : (MORSE_FLIPPER_RUN_HISTORY_ROWS - 1U);
+        layout->underline_x = last_char_x;
+        layout->underline_w = last_char_w == 0U ? 1U : last_char_w;
+    } else {
+        if(row_len != 0U && row_w + cursor_w > max_w) {
+            morse_flipper_run_layout_push_row(layout, row, row_len, &row_n);
+            row[0] = '\0';
+            row_len = 0U;
+            row_w = 0U;
+        }
+
+        layout->underline_valid = true;
+        layout->underline_row =
+            row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS ? row_n : (MORSE_FLIPPER_RUN_HISTORY_ROWS - 1U);
+        layout->underline_x = row_w;
+        layout->underline_w = (uint8_t)cursor_w;
+    }
+
+    if(row_len != 0U || layout->underline_valid) {
+        morse_flipper_run_layout_push_row(layout, row, row_len, &row_n);
+    }
+}

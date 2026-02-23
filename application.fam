@@ -14,6 +14,7 @@ App(
         "src/firmware/morse_flipper_audio_pwm.c",
         "src/firmware/morse_flipper_gpio_probe.c",
         "src/firmware/morse_flipper_run_history.c",
+        "src/firmware/morse_flipper_run_layout.c",
         "src/firmware/keyer.c",
         "src/firmware/cw.c",
         "src/firmware/morse_flipper_cw_decoder.c",

@@ -29,5 +29,6 @@ const char* morse_flipper_cw_decoder_output(const MorseFlipperCwDecoder* decoder
 void morse_flipper_cw_decoder_clear_output(MorseFlipperCwDecoder* decoder);
 bool morse_flipper_cw_decoder_timing_reset(const MorseFlipperCwDecoder* decoder);
 char morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder);
+bool morse_flipper_cw_decoder_prev_more(const MorseFlipperCwDecoder* decoder);
 
 #endif
