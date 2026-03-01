@@ -311,7 +311,7 @@ static bool morse_flipper_scene_startup_probe_on_event(void* context, SceneManag
     MorseFlipperApp* app = context;
 
     if(event.type == SceneManagerEventTypeBack) {
-        app->boot_probe = MorseFlipperGpioProbeOk;
+        app->startup_gpio_probe_state = MorseFlipperGpioProbeOk;
         scene_manager_search_and_switch_to_another_scene( app->scene_manager, MorseFlipperSceneMenuMain);
         return true;
     }

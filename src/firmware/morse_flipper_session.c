@@ -13,7 +13,7 @@ static void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     app->session_next_group_at = 0U;
     app->session_complete_at = 0U;
     app->session_wait_draw_s = 0xFFU;
-    app->sess_end_flash = 0U;
+    app->session_end_flash_phase = 0U;
 }
 
 static void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now_ms) {
@@ -22,7 +22,7 @@ static void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now
     app->trainer_playback_active = false;
     app->trainer_playback_mark = false;
 
-    morse_flipper_drop_live_play(app, now_ms);
+    morse_flipper_drop_live_keying_for_playback(app, now_ms);
     morse_flipper_reset_session_runtime(app);
     morse_trainer_reset_session(&app->trainer);
     app->rf_tx_text[0] = '\0';
@@ -57,21 +57,21 @@ static bool morse_flipper_session_live_keying(const MorseFlipperApp* app) {
     return app &&
            (app->paddle_sources[MorseKeyerPaddleDit] != 0U ||
             app->paddle_sources[MorseKeyerPaddleDah] != 0U ||
-            app->note_src[0] != 0U || app->note_src[1] != 0U ||
-            app->note_src[2] != 0U);
+            app->note_sources[0] != 0U || app->note_sources[1] != 0U ||
+            app->note_sources[2] != 0U);
 }
 
 static bool morse_flipper_session_wait_key_down(const MorseFlipperApp* app) {
     if(app == NULL) return false;
-    if(morse_flipper_probe_note(app)) return false;
+    if(morse_flipper_gpio_probe_notice_active(app)) return false;
     if(morse_flipper_gpio_probe_blocks_start(app)) return false;
 
-    if(app->in_src == MorseFlipperInputSourceButtons) {
+    if(app->input_source == MorseFlipperInputSourceButtons) {
         if(morse_flipper_straight_like_mode(app)) return app->ok_down;
         return app->ok_down || app->back_down;
     }
 
-    if(app->in_src == MorseFlipperInputSourceStraight) return morse_flipper_straight_down();
+    if(app->input_source == MorseFlipperInputSourceStraight) return morse_flipper_straight_down();
     if(morse_flipper_gpio_probe_use_straight(app)) return !furi_hal_gpio_read(morse_flipper_dit_pin);
 
     return morse_flipper_logical_dit_down(app) || morse_flipper_logical_dah_down(app);
@@ -90,7 +90,7 @@ static void morse_flipper_queue_session_feedback(MorseFlipperApp* app, uint32_t 
     app->session_result_tone = !app->session_result_good;
     app->session_result_until = now_ms + MORSE_FLIPPER_SESSION_RESULT_MS;
     app->session_next_group_at = morse_trainer_session_has_next(&app->trainer) ?
-        (now_ms + ((uint32_t)app->trainer_gap_s * 1000U)) : 0U;
+        (now_ms + ((uint32_t)app->trainer_group_pause_s * 1000U)) : 0U;
     app->session_wait_draw_s = 0xFFU;
     seq = &morse_flipper_led_good_twice;
     if(!app->session_result_good) {
@@ -102,21 +102,21 @@ static void morse_flipper_queue_session_feedback(MorseFlipperApp* app, uint32_t 
     morse_flipper_view_dirty(app);
 }
 
-static void morse_flipper_drop_live_play(MorseFlipperApp* app, uint32_t now_ms) {
+static void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
 
-    morse_flipper_btn_clear(app, now_ms);
+    morse_flipper_clear_button_keying(app, now_ms);
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, false);
     morse_flipper_set_paddle_source( app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, false, now_ms);
     morse_flipper_set_paddle_source( app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, false, now_ms);
 }
 
-static void morse_flipper_group_play(MorseFlipperApp* app, uint32_t now_ms) {
+static void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) {
         return;
     }
 
-    morse_flipper_drop_live_play(app, now_ms);
+    morse_flipper_drop_live_keying_for_playback(app, now_ms);
     app->trainer_playback_active = true;
     app->trainer_playback_mark = false;
     app->trainer_char_idx = 0U;
@@ -151,7 +151,7 @@ static void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms) {
     app->session_result_tone = false;
     app->session_result_good = false;
     app->session_result_until = 0U;
-    app->session_next_group_at = now_ms + ((uint32_t)app->trainer_gap_s * 1000U);
+    app->session_next_group_at = now_ms + ((uint32_t)app->trainer_group_pause_s * 1000U);
     app->session_wait_draw_s = 0xFFU;
     morse_flipper_view_dirty(app);
 }
@@ -190,9 +190,9 @@ static void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
         if(!app->session_round_pending && !app->trainer_playback_active &&
            morse_trainer_phase(&app->trainer) == MorseTrainerPhaseListen) {
             app->session_result_hold = false;
-            morse_flipper_group_play(app, now_ms);
+            morse_flipper_begin_group_playback(app, now_ms);
         } else if(morse_trainer_next_session_group(&app->trainer)) {
-            morse_flipper_group_play(app, now_ms);
+            morse_flipper_begin_group_playback(app, now_ms);
         } else {
             morse_flipper_view_dirty(app);
         }
@@ -265,7 +265,7 @@ static void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp
 
     if(canvas == NULL || app == NULL) return;
 
-    if(morse_flipper_session_end_flash(app) && app->sess_end_flash != 0U) {
+    if(morse_flipper_session_end_flash(app) && app->session_end_flash_phase != 0U) {
         canvas_draw_box(canvas, 0, 0, 128, 64);
         canvas_set_color(canvas, ColorWhite);
         flash_on = true;
@@ -500,7 +500,7 @@ static void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperAp
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "Koch - LCWO");
         canvas_set_font(canvas, FontSecondary);
-        if(app->in_src == MorseFlipperInputSourceButtons) {
+        if(app->input_source == MorseFlipperInputSourceButtons) {
             canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
         } else {
             canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Press OK to start");

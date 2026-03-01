@@ -60,7 +60,7 @@ void morse_flipper_audio_pwm_prepare(
     uint16_t release_ms);
 void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate);
 void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst, size_t count);
-bool morse_flipper_audio_pwm_on(const MorseFlipperAudioPwm* audio);
+bool morse_flipper_audio_pwm_sound_active(const MorseFlipperAudioPwm* audio);
 
 #ifdef MORSE_FLIPPER_FAP
 bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio);

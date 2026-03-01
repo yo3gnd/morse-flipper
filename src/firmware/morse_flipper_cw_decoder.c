@@ -330,7 +330,7 @@ char morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
     return decoder_lookup(decoder->symbol_code);
 }
 
-bool morse_flipper_cw_decoder_prev_more(const MorseFlipperCwDecoder* decoder)
+bool morse_flipper_cw_decoder_preview_extendable(const MorseFlipperCwDecoder* decoder)
 {
     if(!decoder || !decoder->symbol_count) return false;
     return decoder_preview_extendable(decoder->symbol_code, decoder->symbol_count);

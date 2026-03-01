@@ -214,8 +214,8 @@ static void morse_flipper_apply_vail_tone(MorseFlipperApp* app, uint8_t midi_not
 
 static void morse_flipper_resync_transport_notes(MorseFlipperApp* app)
 {
-    for(uint8_t note = 0U; note < COUNT_OF(app->note_src); note++) {
-        if(app->note_src[note] != 0U) morse_flipper_send_transport_note(app, note, true);
+    for(uint8_t note = 0U; note < COUNT_OF(app->note_sources); note++) {
+        if(app->note_sources[note] != 0U) morse_flipper_send_transport_note(app, note, true);
     }
 }
 

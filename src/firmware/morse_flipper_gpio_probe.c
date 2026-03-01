@@ -20,7 +20,7 @@ bool morse_flipper_gpio_probe_any_short(uint8_t state) {
     return state != MorseFlipperGpioProbeOk;
 }
 
-bool morse_flipper_probe_sk(uint8_t state) {
+bool morse_flipper_gpio_probe_forces_straight(uint8_t state) {
     return state == MorseFlipperGpioProbeGroundToDah;
 }
 

@@ -222,7 +222,7 @@ void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst,
     }
 }
 
-bool morse_flipper_audio_pwm_on(const MorseFlipperAudioPwm* audio)
+bool morse_flipper_audio_pwm_sound_active(const MorseFlipperAudioPwm* audio)
 {
     if(audio == NULL) return false;
     return audio->env_state != MorseFlipperAudioPwmEnvIdle;
