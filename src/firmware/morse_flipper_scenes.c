@@ -82,10 +82,11 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuSettings);
     submenu_set_header(app->submenu, "Settings");
     submenu_add_item(app->submenu, "Keying", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(app->submenu, "Audio output", MorseFlipperSceneAudioCfg, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "Koch - LCWO", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
     submenu_add_item( app->submenu, "Straight trainer", MorseFlipperSceneStraightCfg, morse_flipper_scene_menu_pick, app);
     submenu_add_item(app->submenu, "USB", MorseFlipperScenePc, morse_flipper_scene_menu_pick, app);
-    if(sel != MorseFlipperSceneHome && sel != MorseFlipperSceneTrainer &&
+    if(sel != MorseFlipperSceneHome && sel != MorseFlipperSceneAudioCfg && sel != MorseFlipperSceneTrainer &&
        sel != MorseFlipperSceneStraightCfg && sel != MorseFlipperScenePc)
         sel = MorseFlipperSceneHome;
     submenu_set_selected_item(app->submenu, sel);
@@ -333,6 +334,7 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
     morse_flipper_scene_straight_on_enter,
     morse_flipper_scene_session_end_on_enter,
     morse_flipper_scene_home_on_enter,
+    morse_flipper_scene_audio_cfg_on_enter,
     morse_flipper_scene_trainer_on_enter,
     morse_flipper_scene_straight_cfg_on_enter,
     morse_flipper_scene_pc_on_enter,
@@ -357,6 +359,7 @@ static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[Morse
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_home_on_event,
+    morse_flipper_scene_audio_cfg_on_event,
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,
     morse_flipper_scene_pc_on_event,
@@ -381,6 +384,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,
     morse_flipper_scene_home_on_exit,
+    morse_flipper_scene_audio_cfg_on_exit,
     morse_flipper_scene_trainer_on_exit,
     morse_flipper_scene_straight_cfg_on_exit,
     morse_flipper_scene_pc_on_exit,

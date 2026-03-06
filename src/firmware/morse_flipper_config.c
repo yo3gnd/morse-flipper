@@ -23,6 +23,8 @@ typedef struct {
     uint16_t straight_dit_ms;
     uint8_t straight_answer_timeout_s;
     uint8_t straight_next_delay_s;
+    uint8_t audio_path;
+    uint8_t p2_volume_pct;
 } MorseFlipperConfig;
 
 typedef struct {
@@ -205,6 +207,19 @@ static uint8_t morse_flipper_config_load_tone_idx(uint8_t stored_tone_idx)
     return 0U;
 }
 
+static uint8_t morse_flipper_config_load_audio_path(uint8_t stored_audio_path)
+{
+    if(stored_audio_path <= MorseFlipperAudioPathGpioP2Hd) return stored_audio_path;
+    return MorseFlipperAudioPathBuzzer;
+}
+
+static uint8_t morse_flipper_config_load_p2_volume(uint8_t stored_p2_volume_pct)
+{
+    if(stored_p2_volume_pct < 10U) return 10U;
+    if(stored_p2_volume_pct > 100U) return 100U;
+    return (uint8_t)(10U + ((((uint16_t)stored_p2_volume_pct - 10U) / 5U) * 5U));
+}
+
 static void morse_flipper_load_config(MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -252,6 +267,8 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
             app->straight_dit_ms = config.straight_dit_ms;
             app->straight_answer_timeout_s = config.straight_answer_timeout_s;
             app->straight_next_delay_s = config.straight_next_delay_s;
+            app->audio_path = morse_flipper_config_load_audio_path(config.audio_path);
+            app->p2_volume_pct = morse_flipper_config_load_p2_volume(config.p2_volume_pct);
         } else if(got == sizeof(config_v6)) {
             memcpy(&config_v6, &config, sizeof(config_v6));
             if(config_v6.version == 6U) {
@@ -441,6 +458,8 @@ static void morse_flipper_save_config(const MorseFlipperApp* app)
         .straight_dit_ms = app->straight_dit_ms,
         .straight_answer_timeout_s = app->straight_answer_timeout_s,
         .straight_next_delay_s = app->straight_next_delay_s,
+        .audio_path = app->audio_path,
+        .p2_volume_pct = app->p2_volume_pct,
     };
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS))

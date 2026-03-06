@@ -43,8 +43,7 @@ static bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app)
 
 static bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app)
 {
-    if(app == NULL || app->screen != MorseFlipperScreenRun) return false;
-    return morse_flipper_local_buzzer_enabled(app) && app->audio_pwm.running;
+    return morse_flipper_audio_output_is_pwm(app) && app->audio_pwm.running;
 }
 
 static bool morse_flipper_any_active_notes(const MorseFlipperApp* app)
@@ -97,14 +96,26 @@ static void morse_flipper_tone_start(MorseFlipperApp* app)
 
 static void morse_flipper_update_sidetone(MorseFlipperApp* app)
 {
+    bool use_pwm;
     bool want_tx_tone = morse_flipper_any_active_notes(app) || (app->preview_ticks > 0U);
     bool want_aux_tone = app->trainer_playback_mark || app->straight_playback_mark ||
                          app->session_result_tone || app->rf_monitor_tone;
-    bool want_speaker =
-        want_aux_tone || (want_tx_tone && morse_flipper_local_buzzer_enabled(app));
+    bool want_speaker;
 
-    if(morse_flipper_use_pwm_buzzer(app)) {
-        morse_flipper_audio_pwm_set_gate(&app->audio_pwm, want_tx_tone);
+    use_pwm = morse_flipper_use_pwm_buzzer(app);
+    want_speaker = !use_pwm && (want_aux_tone ||
+                   (want_tx_tone && morse_flipper_local_buzzer_enabled(app)));
+
+    if(use_pwm) {
+        if(app->speaker_owned || app->tone_on) {
+            morse_flipper_tone_stop(app);
+        }
+
+        morse_flipper_audio_pwm_set_gate(&app->audio_pwm, want_tx_tone || want_aux_tone);
+        app->tone_on =
+            want_tx_tone || want_aux_tone || morse_flipper_audio_pwm_sound_active(&app->audio_pwm);
+        app->speaker_busy = false;
+        return;
     }
 
     if(want_speaker) {

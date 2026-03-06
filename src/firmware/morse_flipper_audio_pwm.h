@@ -56,6 +56,7 @@ void morse_flipper_audio_pwm_prepare(
     uint32_t carrier_hz,
     uint32_t sample_rate_hz,
     uint32_t tone_hz,
+    uint8_t volume_pct,
     uint16_t attack_ms,
     uint16_t release_ms);
 void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate);

@@ -70,6 +70,7 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
 {
     switch(scene) {
     case MorseFlipperSceneHome:
+    case MorseFlipperSceneAudioCfg:
     case MorseFlipperSceneTrainer:
     case MorseFlipperSceneStraightCfg:
     case MorseFlipperScenePc:
@@ -90,6 +91,6 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
 
 static void morse_flipper_scene_enter_now(MorseFlipperApp* app, uint32_t scene)
 {
-        morse_flipper_enter_screen(app, morse_flipper_scene_screen(scene), furi_get_tick());
+        morse_flipper_enter_screen(app, morse_flipper_scene_screen(scene), scene, furi_get_tick());
     view_dispatcher_switch_to_view(app->view_dispatcher, morse_flipper_scene_view(scene));
 }

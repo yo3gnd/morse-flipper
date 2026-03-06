@@ -149,6 +149,7 @@ void morse_flipper_audio_pwm_prepare(
     uint32_t carrier_hz,
     uint32_t sample_rate_hz,
     uint32_t tone_hz,
+    uint8_t volume_pct,
     uint16_t attack_ms,
     uint16_t release_ms)
 {
@@ -163,6 +164,8 @@ void morse_flipper_audio_pwm_prepare(
     carrier_hz = carrier_hz == 0U ? MORSE_FLIPPER_AUDIO_PWM_CARRIER_HZ : carrier_hz;
     sample_rate_hz = sample_rate_hz == 0U ? MORSE_FLIPPER_AUDIO_PWM_SAMPLE_RATE_HZ : sample_rate_hz;
     tone_hz = tone_hz == 0U ? MORSE_FLIPPER_AUDIO_PWM_TONE_HZ : tone_hz;
+    if(volume_pct < 10U) volume_pct = 10U;
+    if(volume_pct > 100U) volume_pct = 100U;
 
     audio->sample_rate_hz = sample_rate_hz;
     audio->carrier_hz = carrier_hz;
@@ -174,6 +177,8 @@ void morse_flipper_audio_pwm_prepare(
     audio->pwm_midpoint = audio->pwm_period / 2U;
     audio->pwm_amplitude = audio->pwm_midpoint > 2U ? (uint16_t)(audio->pwm_midpoint - 2U) :
                                                       audio->pwm_midpoint;
+    audio->pwm_amplitude =
+        (uint16_t)(((uint32_t)audio->pwm_amplitude * volume_pct) / 100U);
 
     attack_samples = ((uint32_t)attack_ms * sample_rate_hz) / 1000U;
     release_samples = ((uint32_t)release_ms * sample_rate_hz) / 1000U;
