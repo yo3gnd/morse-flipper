@@ -115,6 +115,7 @@ static void morse_flipper_update_sidetone(MorseFlipperApp* app)
         app->tone_on =
             want_tx_tone || want_aux_tone || morse_flipper_audio_pwm_sound_active(&app->audio_pwm);
         app->speaker_busy = false;
+        morse_flipper_sync_ptt(app, furi_get_tick());
         return;
     }
 
@@ -131,6 +132,8 @@ static void morse_flipper_update_sidetone(MorseFlipperApp* app)
     } else {
         morse_flipper_tone_stop(app);
     }
+
+    morse_flipper_sync_ptt(app, furi_get_tick());
 }
 
 static uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle)

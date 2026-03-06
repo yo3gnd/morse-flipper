@@ -36,7 +36,7 @@
 #define MORSE_FLIPPER_PREVIEW_TICKS 8
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
 #define MORSE_FLIPPER_RF_CONFIG_PATH APP_DATA_PATH("rf.bin")
-#define MORSE_FLIPPER_CONFIG_VERSION 9
+#define MORSE_FLIPPER_CONFIG_VERSION 10
 #define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 #define MORSE_FLIPPER_SESSION_SETTLE_MS 1000U
 #define MORSE_FLIPPER_SESSION_RESULT_MS 160U
@@ -89,6 +89,7 @@ static const GpioPin* morse_flipper_straight_pin = &gpio_ext_pa6;
 static const GpioPin* morse_flipper_dit_pin = &gpio_ext_pc3;
 static const GpioPin* morse_flipper_dah_pin = &gpio_ext_pb3;
 static const GpioPin* morse_flipper_ground_pin = NULL;
+static const GpioPin* morse_flipper_ptt_pin = NULL;
 
 typedef struct MorseFlipperApp {
     const char* name;
@@ -194,6 +195,7 @@ typedef enum {
     MorseFlipperGpioSettingDit = 0,
     MorseFlipperGpioSettingDah,
     MorseFlipperGpioSettingGround,
+    MorseFlipperGpioSettingPtt,
 } MorseFlipperGpioSettingIndex;
 
 typedef enum {
@@ -388,6 +390,7 @@ typedef struct {
     uint8_t gpio_dit_idx;
     uint8_t gpio_dah_idx;
     uint8_t gpio_ground_idx;
+    uint8_t gpio_ptt_idx;
     uint8_t trainer_row;
     uint8_t help_topic;
     uint8_t help_page;
@@ -404,6 +407,7 @@ typedef struct {
     uint8_t gpio_edit_dit_idx;
     uint8_t gpio_edit_dah_idx;
     uint8_t gpio_edit_ground_idx;
+    uint8_t gpio_edit_ptt_idx;
     uint8_t gpio_probe_state;
     uint8_t startup_gpio_probe_state;
     bool vail_mode_active;
@@ -436,6 +440,7 @@ typedef struct {
     uint32_t rf_rssi_peak_decay_at;
     uint32_t gpio_edge_at;
     uint32_t gpio_probe_notice_until;
+    uint32_t ptt_tail_until;
     uint32_t rf_edit_khz;
     int32_t rf_rssi_sum_dbm;
     uint32_t paddle_sources[MorseKeyerPaddleCount];
@@ -459,6 +464,7 @@ typedef struct {
     bool rf_carrier_present;
     bool rf_monitor_tone;
     bool audio_wait_active;
+    bool ptt_level;
     bool gpio_level;
     bool gpio_gap_flushed;
     uint8_t straight_mark_idx;
@@ -602,7 +608,14 @@ static void morse_flipper_gpio_bind_from_app(const MorseFlipperApp* app);
 static void morse_flipper_gpio_reset_candidates(void);
 static void morse_flipper_gpio_apply(MorseFlipperApp* app);
 static void morse_flipper_gpio_alert(MorseFlipperApp* app, MorseFlipperGpioRule rule);
-static bool morse_flipper_gpio_try_apply( MorseFlipperApp* app, uint8_t dit, uint8_t dah, uint8_t ground, MorseFlipperGpioRule* out_rule);
+static bool morse_flipper_gpio_try_apply(
+    MorseFlipperApp* app,
+    uint8_t dit,
+    uint8_t dah,
+    uint8_t ground,
+    uint8_t ptt,
+    MorseFlipperGpioRule* out_rule);
+static void morse_flipper_sync_ptt(MorseFlipperApp* app, uint32_t now_ms);
 static const char* morse_flipper_status_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_run_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
@@ -622,6 +635,7 @@ static void morse_flipper_settings_tone_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_dit_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_dah_changed(VariableItem* item);
 static void morse_flipper_settings_gpio_ground_changed(VariableItem* item);
+static void morse_flipper_settings_gpio_ptt_changed(VariableItem* item);
 static void morse_flipper_settings_usb_mode_changed(VariableItem* item);
 static void morse_flipper_settings_usb_paddle_changed(VariableItem* item);
 static void morse_flipper_settings_usb_straight_changed(VariableItem* item);
@@ -867,6 +881,21 @@ static const GpioPin* morse_flipper_gpio_ground_pin_ptr(uint8_t pin_idx) {
     return morse_flipper_gpio_pins[pin_idx];
 }
 
+static const GpioPin* morse_flipper_gpio_ptt_pin_ptr(const MorseFlipperApp* app) {
+    uint8_t ptt;
+
+    if(app == NULL) return NULL;
+
+    ptt = app->gpio_ptt_idx;
+    if(ptt == MORSE_FLIPPER_GPIO_PIN_NONE) return NULL;
+    if(ptt != MorseFlipperGpioPinP15) return NULL;
+    if(ptt == morse_flipper_gpio_straight_idx(app) || ptt == app->gpio_dit_idx ||
+       ptt == app->gpio_dah_idx || ptt == app->gpio_ground_idx)
+        return NULL;
+
+    return morse_flipper_gpio_pins[ptt];
+}
+
 static void morse_flipper_gpio_bind_from_app(const MorseFlipperApp* app) {
     morse_flipper_straight_pin = morse_flipper_gpio_pin_ptr(
         morse_flipper_gpio_no_p2(
@@ -877,6 +906,7 @@ static void morse_flipper_gpio_bind_from_app(const MorseFlipperApp* app) {
         morse_flipper_gpio_no_p2(app->gpio_dah_idx, morse_flipper_gpio_default_dah()));
     morse_flipper_ground_pin = morse_flipper_gpio_ground_pin_ptr(
         morse_flipper_gpio_no_p2(app->gpio_ground_idx, morse_flipper_gpio_default_ground()));
+    morse_flipper_ptt_pin = morse_flipper_gpio_ptt_pin_ptr(app);
 }
 
 static void morse_flipper_gpio_reset_candidates(void) {
@@ -895,6 +925,15 @@ static void morse_flipper_gpio_apply(MorseFlipperApp* app) {
         furi_hal_gpio_init( morse_flipper_ground_pin, GpioModeOutputPushPull, GpioPullNo, GpioSpeedLow);
         furi_hal_gpio_write(morse_flipper_ground_pin, false);
     }
+    if(morse_flipper_ptt_pin != NULL) {
+        furi_hal_gpio_init(morse_flipper_ptt_pin, GpioModeOutputPushPull, GpioPullNo, GpioSpeedLow);
+        furi_hal_gpio_write(morse_flipper_ptt_pin, false);
+    }
+
+    if(app != NULL) {
+        app->ptt_level = false;
+        app->ptt_tail_until = 0U;
+    }
 }
 
 static void morse_flipper_gpio_alert(MorseFlipperApp* app, MorseFlipperGpioRule rule) {
@@ -912,7 +951,13 @@ static void morse_flipper_gpio_alert(MorseFlipperApp* app, MorseFlipperGpioRule 
     dialog_message_free(msg);
 }
 
-static bool morse_flipper_gpio_try_apply( MorseFlipperApp* app, uint8_t dit, uint8_t dah, uint8_t ground, MorseFlipperGpioRule* out_rule) {
+static bool morse_flipper_gpio_try_apply(
+    MorseFlipperApp* app,
+    uint8_t dit,
+    uint8_t dah,
+    uint8_t ground,
+    uint8_t ptt,
+    MorseFlipperGpioRule* out_rule) {
     MorseFlipperGpioRule rule = morse_flipper_gpio_validate(dit, dah, ground);
 
     if(out_rule != NULL) {
@@ -926,12 +971,35 @@ static bool morse_flipper_gpio_try_apply( MorseFlipperApp* app, uint8_t dit, uin
     app->gpio_dit_idx = dit;
     app->gpio_dah_idx = dah;
     app->gpio_ground_idx = ground;
+    app->gpio_ptt_idx = ptt == MorseFlipperGpioPinP15 ? MorseFlipperGpioPinP15 : MORSE_FLIPPER_GPIO_PIN_NONE;
     morse_flipper_gpio_sync_straight_idx(app);
     morse_flipper_gpio_apply(app);
     morse_flipper_poll(app);
     morse_flipper_view_dirty(app);
     morse_flipper_save_config(app);
     return true;
+}
+
+static void morse_flipper_sync_ptt(MorseFlipperApp* app, uint32_t now_ms) {
+    bool tx_active;
+    bool want_high;
+
+    if(app == NULL) return;
+
+    if(app->screen != MorseFlipperScreenRun || morse_flipper_ptt_pin == NULL) {
+        app->ptt_tail_until = 0U;
+        want_high = false;
+    } else {
+        tx_active = (app->note_sources[0] != 0U) || (app->note_sources[1] != 0U) ||
+                    (app->note_sources[2] != 0U) || (app->preview_ticks > 0U);
+        if(tx_active) app->ptt_tail_until = now_ms + ((uint32_t)morse_flipper_current_dit_ms(app) * 7U);
+        want_high = tx_active || (app->ptt_tail_until != 0U && now_ms < app->ptt_tail_until);
+        if(!want_high) app->ptt_tail_until = 0U;
+    }
+
+    if(app->ptt_level == want_high) return;
+    if(morse_flipper_ptt_pin != NULL) furi_hal_gpio_write(morse_flipper_ptt_pin, want_high);
+    app->ptt_level = want_high;
 }
 
 static uint8_t morse_flipper_current_keyer_mode(const MorseFlipperApp* app) {

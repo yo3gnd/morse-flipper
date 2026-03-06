@@ -364,6 +364,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
     else
         app->session_end_flash_phase = 0U;
     morse_flipper_update_sidetone(app);
+    morse_flipper_sync_ptt(app, now_ms);
     morse_flipper_sync_backlight(app, now_ms);
 
     if(old_tone != app->tone_on || old_busy != app->speaker_busy || old_mask != app->input_mask ||
