@@ -210,6 +210,18 @@ void morse_flipper_audio_pwm_prepare(
     audio->prepared = true;
 }
 
+void morse_flipper_audio_pwm_set_tone_hz(MorseFlipperAudioPwm* audio, uint32_t tone_hz)
+{
+    if(audio == NULL || !audio->prepared || audio->sample_rate_hz == 0U) return;
+
+    tone_hz = tone_hz == 0U ? MORSE_FLIPPER_AUDIO_PWM_TONE_HZ : tone_hz;
+    if(audio->tone_hz == tone_hz) return;
+
+    audio->tone_hz = tone_hz;
+    audio->phase_step_q32 =
+        (uint32_t)(((uint64_t)tone_hz << 32U) / (uint64_t)audio->sample_rate_hz);
+}
+
 void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate)
 {
     if(audio == NULL || !audio->prepared) return;

@@ -294,7 +294,7 @@ static const char* const morse_flipper_input_names[] = {
 
 static const char* const morse_flipper_audio_path_names[] = {
     "Buzzer",
-    "GPIO P2 HD",
+    "P2 (HD)",
 };
 
 static const uint8_t morse_flipper_keyer_values[] = {
@@ -550,6 +550,7 @@ static bool morse_flipper_audio_output_is_pwm(const MorseFlipperApp* app);
 static uint8_t morse_flipper_p2_volume_pct(const MorseFlipperApp* app);
 static void morse_flipper_sync_audio_output(MorseFlipperApp* app);
 static const char* morse_flipper_current_tone_name(const MorseFlipperApp* app);
+static float morse_flipper_active_tone_hz(const MorseFlipperApp* app);
 static void morse_flipper_toggle_handedness(MorseFlipperApp* app);
 static void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_help_open(MorseFlipperApp* app);
@@ -828,8 +829,8 @@ static const GpioPin* morse_flipper_gpio_pin_ptr(uint8_t pin_idx) {
     return morse_flipper_gpio_pins[pin_idx];
 }
 
-static uint8_t morse_flipper_gpio_no_p2(uint8_t pin_idx, uint8_t def) {
-    return pin_idx == MorseFlipperGpioPinP2 ? def : pin_idx;
+static uint8_t morse_flipper_gpio_no_reserved(uint8_t pin_idx, uint8_t def) {
+    return (pin_idx == MorseFlipperGpioPinP2 || pin_idx == MorseFlipperGpioPinP15) ? def : pin_idx;
 }
 
 static bool morse_flipper_scene_supports_audio_pwm(uint8_t scene) {
@@ -899,14 +900,15 @@ static const GpioPin* morse_flipper_gpio_ptt_pin_ptr(const MorseFlipperApp* app)
 
 static void morse_flipper_gpio_bind_from_app(const MorseFlipperApp* app) {
     morse_flipper_straight_pin = morse_flipper_gpio_pin_ptr(
-        morse_flipper_gpio_no_p2(
+        morse_flipper_gpio_no_reserved(
             morse_flipper_gpio_straight_idx(app), morse_flipper_gpio_default_dit()));
     morse_flipper_dit_pin = morse_flipper_gpio_pin_ptr(
-        morse_flipper_gpio_no_p2(app->gpio_dit_idx, morse_flipper_gpio_default_dit()));
+        morse_flipper_gpio_no_reserved(app->gpio_dit_idx, morse_flipper_gpio_default_dit()));
     morse_flipper_dah_pin = morse_flipper_gpio_pin_ptr(
-        morse_flipper_gpio_no_p2(app->gpio_dah_idx, morse_flipper_gpio_default_dah()));
+        morse_flipper_gpio_no_reserved(app->gpio_dah_idx, morse_flipper_gpio_default_dah()));
     morse_flipper_ground_pin = morse_flipper_gpio_ground_pin_ptr(
-        morse_flipper_gpio_no_p2(app->gpio_ground_idx, morse_flipper_gpio_default_ground()));
+        morse_flipper_gpio_no_reserved(
+            app->gpio_ground_idx, morse_flipper_gpio_default_ground()));
     morse_flipper_ptt_pin = morse_flipper_gpio_ptt_pin_ptr(app);
 }
 
@@ -1534,7 +1536,7 @@ static void morse_flipper_sync_audio_output(MorseFlipperApp* app)
             &app->audio_pwm,
             MORSE_FLIPPER_AUDIO_PWM_CARRIER_HZ,
             MORSE_FLIPPER_AUDIO_PWM_SAMPLE_RATE_HZ,
-            MORSE_FLIPPER_AUDIO_PWM_TONE_HZ,
+            (uint32_t)(morse_flipper_active_tone_hz(app) + 0.5f),
             morse_flipper_p2_volume_pct(app),
             MORSE_FLIPPER_AUDIO_PWM_FADE_MS,
             MORSE_FLIPPER_AUDIO_PWM_FADE_MS);

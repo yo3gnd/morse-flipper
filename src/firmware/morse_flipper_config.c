@@ -215,7 +215,6 @@ static void morse_flipper_config_apply_gpio(
 
 static uint8_t morse_flipper_config_load_tone_idx(uint8_t stored_tone_idx)
 {
-    if(stored_tone_idx == MORSE_FLIPPER_TONE_OFF_IDX) return MORSE_FLIPPER_TONE_OFF_IDX;
     if(stored_tone_idx < COUNT_OF(morse_flipper_tones)) return stored_tone_idx;
     return MORSE_FLIPPER_DEFAULT_TONE_IDX;
 }

@@ -281,12 +281,19 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
     uint8_t old_mask = app->input_mask;
     bool old_transport = app->transport_connected;
     uint8_t old_session_flash = app->session_end_flash_phase;
+    uint32_t pwm_tone_hz;
     bool raw_straight;
     bool tx_now;
 
     if(app->pc_mode == MorseFlipperPcModeMidi && app->midi_rx_pending) {
         app->midi_rx_pending = false;
         morse_flipper_handle_midi_rx(app);
+    }
+
+    if(morse_flipper_use_pwm_buzzer(app)) {
+        pwm_tone_hz = (uint32_t)(morse_flipper_active_tone_hz(app) + 0.5f);
+        if(app->audio_pwm.tone_hz != pwm_tone_hz)
+            morse_flipper_audio_pwm_set_tone_hz(&app->audio_pwm, pwm_tone_hz);
     }
 
     if(app->screen == MorseFlipperScreenSession && app->session_started &&

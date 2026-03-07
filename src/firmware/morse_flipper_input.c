@@ -503,17 +503,17 @@ static void morse_flipper_handle_active_keying_event( MorseFlipperApp* app, cons
 
 static void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir)
 {
-    int idx =
-        app->tone_idx == MORSE_FLIPPER_TONE_OFF_IDX ? 0 : ((int)app->tone_idx + 1);
+    int idx = app->tone_idx < COUNT_OF(morse_flipper_tones) ? (int)app->tone_idx :
+                                                            (int)MORSE_FLIPPER_DEFAULT_TONE_IDX;
     int current_idx = idx;
 
     idx += dir;
 
     if(idx < 0) idx = 0;
-    if(idx > (int)COUNT_OF(morse_flipper_tones)) idx = (int)COUNT_OF(morse_flipper_tones);
+    if(idx >= (int)COUNT_OF(morse_flipper_tones)) idx = (int)COUNT_OF(morse_flipper_tones) - 1;
     if(idx == current_idx) return;
 
-    app->tone_idx = idx == 0 ? MORSE_FLIPPER_TONE_OFF_IDX : (uint8_t)(idx - 1);
+    app->tone_idx = (uint8_t)idx;
     app->preview_ticks = MORSE_FLIPPER_PREVIEW_TICKS;
 
     morse_flipper_save_config(app);
