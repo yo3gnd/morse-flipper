@@ -1,12 +1,12 @@
 static const MorseFlipperTone* morse_flipper_current_tone(const MorseFlipperApp* app)
 {
-    if(app == NULL) return &morse_flipper_tones[0];
+    if(app == NULL) return &morse_flipper_tones[MORSE_FLIPPER_DEFAULT_TONE_IDX];
 
     if(app->vail_tone_active && app->vail_tone_idx < COUNT_OF(morse_flipper_tones))
         return &morse_flipper_tones[app->vail_tone_idx];
 
     if(app->tone_idx >= COUNT_OF(morse_flipper_tones))
-        return &morse_flipper_tones[0];
+        return &morse_flipper_tones[MORSE_FLIPPER_DEFAULT_TONE_IDX];
 
     return &morse_flipper_tones[app->tone_idx];
 }
@@ -22,7 +22,7 @@ static const MorseFlipperTone* morse_flipper_current_audible_tone(const MorseFli
     const MorseFlipperTone* tone = morse_flipper_current_tone(app);
 
     if(tone->hz > 0.0f) return tone;
-    return &morse_flipper_tones[1];
+    return &morse_flipper_tones[MORSE_FLIPPER_DEFAULT_TONE_IDX];
 }
 
 static float morse_flipper_active_tone_hz(const MorseFlipperApp* app)

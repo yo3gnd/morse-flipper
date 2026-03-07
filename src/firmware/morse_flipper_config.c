@@ -217,7 +217,7 @@ static uint8_t morse_flipper_config_load_tone_idx(uint8_t stored_tone_idx)
 {
     if(stored_tone_idx == MORSE_FLIPPER_TONE_OFF_IDX) return MORSE_FLIPPER_TONE_OFF_IDX;
     if(stored_tone_idx < COUNT_OF(morse_flipper_tones)) return stored_tone_idx;
-    return 0U;
+    return MORSE_FLIPPER_DEFAULT_TONE_IDX;
 }
 
 static uint8_t morse_flipper_config_load_audio_path(uint8_t stored_audio_path)
