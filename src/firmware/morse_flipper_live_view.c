@@ -1,5 +1,6 @@
 #include "fonts/morse_flipper_terminus24.h"
 #include "morse_flipper_app_i.h"
+#include "morse_flipper_cw_token.h"
 #include "morse_flipper_run_layout.h"
 
 static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
@@ -991,6 +992,17 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenTrace) {
+        char tx_trace[48];
+        char gpio_trace[48];
+
+        morse_flipper_cw_token_expand_text(
+            tx_trace,
+            sizeof(tx_trace),
+            app->rf_tx_text[0] ? app->rf_tx_text : "-");
+        morse_flipper_cw_token_expand_text(
+            gpio_trace,
+            sizeof(gpio_trace),
+            app->gpio_text[0] ? app->gpio_text : "-");
         snprintf(
             trace_line1,
             sizeof(trace_line1),
@@ -1018,8 +1030,8 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             trace_line4,
             sizeof(trace_line4),
             "tx %.12s gp %.11s",
-            app->rf_tx_text[0] ? app->rf_tx_text : "-",
-            app->gpio_text[0] ? app->gpio_text : "-");
+            tx_trace,
+            gpio_trace);
 
         canvas_draw_str(canvas, 2, 10, trace_line1);
         canvas_draw_str(canvas, 2, 20, morse_flipper_input_line(app, input_line, sizeof(input_line)));

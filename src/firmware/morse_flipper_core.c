@@ -20,6 +20,7 @@
 #include "keyer.h"
 #include "morse_flipper_audio_pwm.h"
 #include "morse_flipper_cw_decoder.h"
+#include "morse_flipper_cw_token.h"
 #include "morse_flipper_gpio.h"
 #include "morse_flipper_gpio_probe.h"
 #include "morse_flipper_ham_keyer.h"
@@ -1937,12 +1938,14 @@ void morse_flipper_ham_log_append_text(
 {
     char date_key[MORSE_FLIPPER_HAM_KEYER_DATE_LEN + 1U];
     char stamp[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN + 1U];
+    char expanded[96];
 
     if(app == NULL || text == NULL || text[0] == '\0') return;
     if(app->screen != MorseFlipperScreenHamRun || !app->ham_keyer.logging_enabled) return;
 
+    morse_flipper_cw_token_expand_text(expanded, sizeof(expanded), text);
     morse_flipper_ham_log_now(date_key, sizeof(date_key), stamp, sizeof(stamp));
-    morse_flipper_ham_keyer_append_activity(&app->ham_keyer, text, now_ms, date_key, stamp);
+    morse_flipper_ham_keyer_append_activity(&app->ham_keyer, expanded, now_ms, date_key, stamp);
 }
 
 void morse_flipper_ham_log_append_marker(
