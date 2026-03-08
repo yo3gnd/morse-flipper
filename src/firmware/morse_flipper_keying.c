@@ -11,7 +11,7 @@ static const MorseFlipperTone* morse_flipper_current_tone(const MorseFlipperApp*
     return &morse_flipper_tones[app->tone_idx];
 }
 
-static const char* morse_flipper_current_tone_name(const MorseFlipperApp* app)
+const char* morse_flipper_current_tone_name(const MorseFlipperApp* app)
 {
     if(app != NULL && app->tone_idx == MORSE_FLIPPER_TONE_OFF_IDX) return "Off";
     return morse_flipper_current_tone(app)->name;
@@ -25,7 +25,7 @@ static const MorseFlipperTone* morse_flipper_current_audible_tone(const MorseFli
     return &morse_flipper_tones[MORSE_FLIPPER_DEFAULT_TONE_IDX];
 }
 
-static float morse_flipper_active_tone_hz(const MorseFlipperApp* app)
+float morse_flipper_active_tone_hz(const MorseFlipperApp* app)
 {
     float hz = morse_flipper_current_audible_tone(app)->hz;
 
@@ -52,7 +52,7 @@ static bool morse_flipper_ham_silent_audio(const MorseFlipperApp* app)
            app->ham_keyer.break_in_enabled;
 }
 
-static bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app)
+bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app)
 {
     if(app == NULL) return false;
     return app->tone_idx != MORSE_FLIPPER_TONE_OFF_IDX;
@@ -111,7 +111,7 @@ static void morse_flipper_tone_start(MorseFlipperApp* app)
     app->speaker_busy = false;
 }
 
-static void morse_flipper_update_sidetone(MorseFlipperApp* app)
+void morse_flipper_update_sidetone(MorseFlipperApp* app)
 {
     bool use_pwm;
     bool use_vibro;
@@ -292,7 +292,7 @@ static void morse_flipper_set_paddle_source( MorseFlipperApp* app, uint8_t paddl
     morse_flipper_drain_keyer_events(app);
 }
 
-static void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms)
+void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms)
 {
     morse_keyer_reset(&app->keyer);
     morse_flipper_drain_keyer_events(app);
@@ -315,7 +315,7 @@ static void morse_flipper_clear_button_paddles(MorseFlipperApp* app, uint32_t no
     morse_flipper_set_paddle_source( app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_BTN_BACK, false, now_ms);
 }
 
-static void morse_flipper_resync_button_paddles(MorseFlipperApp* app, uint32_t now_ms)
+void morse_flipper_resync_button_paddles(MorseFlipperApp* app, uint32_t now_ms)
 {
     uint8_t ok_paddle = morse_flipper_ok_button_paddle(app);
     uint8_t back_paddle = morse_flipper_back_button_paddle(app);

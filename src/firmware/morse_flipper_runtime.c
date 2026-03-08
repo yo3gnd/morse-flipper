@@ -278,7 +278,7 @@ static const char* morse_flipper_input_line(const MorseFlipperApp* app, char* bu
     return buf;
 }
 
-static void morse_flipper_poll(MorseFlipperApp* app) {
+void morse_flipper_poll(MorseFlipperApp* app) {
     uint32_t now_ms = furi_get_tick();
     bool old_tone = app->tone_on;
     bool old_busy = app->speaker_busy;

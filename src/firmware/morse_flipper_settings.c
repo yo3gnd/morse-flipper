@@ -1,4 +1,6 @@
-static uint32_t morse_flipper_settings_list_state(VariableItemList* list) {
+#include "morse_flipper_app_i.h"
+
+uint32_t morse_flipper_settings_list_state(VariableItemList* list) {
     MorseFlipperVilModel* model;
     View* view;
     uint8_t row;
@@ -17,7 +19,7 @@ static uint32_t morse_flipper_settings_list_state(VariableItemList* list) {
     return state;
 }
 
-static void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state) {
+void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state) {
     View* view;
     uint8_t pos;
     uint8_t row;
@@ -76,7 +78,7 @@ static void morse_flipper_trainer_sync_farn_item(MorseFlipperApp* app) {
     variable_item_set_current_value_text(it, txt);
 }
 
-static void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
+void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
     VariableItem* it;
     char txt[16];
     uint8_t idx;
@@ -144,18 +146,18 @@ static void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
     }
 }
 
-static void morse_flipper_settings_enter_callback(void* context, uint32_t index) {
+void morse_flipper_settings_enter_callback(void* context, uint32_t index) {
     MorseFlipperApp* app = context;
 
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
-static void morse_flipper_settings_noop_enter(void* context, uint32_t index) {
+void morse_flipper_settings_noop_enter(void* context, uint32_t index) {
     UNUSED(context);
     UNUSED(index);
 }
 
-static void morse_flipper_settings_wpm_changed(VariableItem* item) {
+void morse_flipper_settings_wpm_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     uint8_t wpm = (uint8_t)(10U + idx);
@@ -168,7 +170,7 @@ static void morse_flipper_settings_wpm_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_input_changed(VariableItem* item) {
+void morse_flipper_settings_input_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     uint32_t now_ms = furi_get_tick();
@@ -181,7 +183,7 @@ static void morse_flipper_settings_input_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_keyer_changed(VariableItem* item) {
+void morse_flipper_settings_keyer_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     uint32_t now_ms = furi_get_tick();
@@ -193,7 +195,7 @@ static void morse_flipper_settings_keyer_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_swap_changed(VariableItem* item) {
+void morse_flipper_settings_swap_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     uint32_t now_ms = furi_get_tick();
@@ -206,7 +208,7 @@ static void morse_flipper_settings_swap_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_tone_changed(VariableItem* item) {
+void morse_flipper_settings_tone_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -320,7 +322,7 @@ static uint8_t morse_flipper_gpio_pin_ui(uint8_t pin) {
     return 0U;
 }
 
-static void morse_flipper_settings_gpio_dit_changed(VariableItem* item) {
+void morse_flipper_settings_gpio_dit_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -328,7 +330,7 @@ static void morse_flipper_settings_gpio_dit_changed(VariableItem* item) {
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_dit_idx));
 }
 
-static void morse_flipper_settings_gpio_dah_changed(VariableItem* item) {
+void morse_flipper_settings_gpio_dah_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -352,7 +354,7 @@ static uint8_t morse_flipper_ground_choice_to_ui(uint8_t idx) {
     return (uint8_t)(morse_flipper_gpio_pin_ui(idx) + 1U);
 }
 
-static void morse_flipper_settings_gpio_ground_changed(VariableItem* item) {
+void morse_flipper_settings_gpio_ground_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = morse_flipper_ground_choice_from_ui(variable_item_get_current_value_index(item));
 
@@ -368,14 +370,14 @@ static uint8_t morse_flipper_ptt_choice_to_ui(uint8_t idx) {
     return idx == MorseFlipperGpioPinP15 ? 1U : 0U;
 }
 
-static void morse_flipper_settings_gpio_ptt_changed(VariableItem* item) {
+void morse_flipper_settings_gpio_ptt_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
 
     app->gpio_edit_ptt_idx = morse_flipper_ptt_choice_from_ui(variable_item_get_current_value_index(item));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ptt_idx));
 }
 
-static void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
+void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -387,7 +389,7 @@ static void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_usb_paddle_changed(VariableItem* item) {
+void morse_flipper_settings_usb_paddle_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t v = variable_item_get_current_value_index(item);
 
@@ -396,7 +398,7 @@ static void morse_flipper_settings_usb_paddle_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_usb_straight_changed(VariableItem* item) {
+void morse_flipper_settings_usb_straight_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t pick = variable_item_get_current_value_index(item);
 
@@ -405,7 +407,7 @@ static void morse_flipper_settings_usb_straight_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_settings_usb_mouse_swap_changed(VariableItem* item) {
+void morse_flipper_settings_usb_mouse_swap_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -414,7 +416,7 @@ static void morse_flipper_settings_usb_mouse_swap_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_lesson_changed(VariableItem* item) {
+void morse_flipper_trainer_lesson_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     char buf[16];
@@ -425,7 +427,7 @@ static void morse_flipper_trainer_lesson_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_wpm_changed(VariableItem* item) {
+void morse_flipper_trainer_wpm_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     uint8_t w = (uint8_t)(10U + idx);
@@ -435,7 +437,7 @@ static void morse_flipper_trainer_wpm_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_farnsworth_changed(VariableItem* item) {
+void morse_flipper_trainer_farnsworth_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
@@ -444,7 +446,7 @@ static void morse_flipper_trainer_farnsworth_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_answer_timeout_changed(VariableItem* item) {
+void morse_flipper_trainer_answer_timeout_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t i = variable_item_get_current_value_index(item);
 
@@ -453,7 +455,7 @@ static void morse_flipper_trainer_answer_timeout_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_group_pause_changed(VariableItem* item) {
+void morse_flipper_trainer_group_pause_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t i = variable_item_get_current_value_index(item);
 
@@ -528,7 +530,7 @@ static void morse_flipper_straight_next_changed(VariableItem* item)
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_group_size_changed(VariableItem* item) {
+void morse_flipper_trainer_group_size_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     char txt[4];
@@ -539,7 +541,7 @@ static void morse_flipper_trainer_group_size_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_groups_changed(VariableItem* item) {
+void morse_flipper_trainer_groups_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     char tmp[4];
@@ -550,7 +552,7 @@ static void morse_flipper_trainer_groups_changed(VariableItem* item) {
     morse_flipper_save_config(app);
 }
 
-static void morse_flipper_trainer_chars_changed(VariableItem* item) {
+void morse_flipper_trainer_chars_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 

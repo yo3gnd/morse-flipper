@@ -1,3 +1,5 @@
+#include "morse_flipper_app_i.h"
+
 typedef struct {
     uint32_t version;
     uint8_t tone_idx;
@@ -161,7 +163,7 @@ typedef struct {
     uint8_t spare1;
 } MorseFlipperConfigV1;
 
-static uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app)
+uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app)
 {
     uint16_t dit;
     uint8_t wpm;
@@ -174,7 +176,7 @@ static uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app)
     return wpm;
 }
 
-static void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app)
+void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app)
 {
     uint8_t w;
 
@@ -193,7 +195,7 @@ static void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app)
     if(app->trainer_group_pause_s > MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S) app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S;
 }
 
-static void morse_flipper_clamp_straight_settings(MorseFlipperApp* app)
+void morse_flipper_clamp_straight_settings(MorseFlipperApp* app)
 {
     uint8_t w;
 

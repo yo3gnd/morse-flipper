@@ -453,12 +453,12 @@ typedef struct {
     uint8_t window_position;
 } MorseFlipperVilModel;
 
-extern const char* const morse_flipper_usb_mode_names[];
-extern const char* const morse_flipper_input_names[];
-extern const char* const morse_flipper_audio_path_names[];
-extern const uint8_t morse_flipper_input_values[];
-extern const uint8_t morse_flipper_keyer_values[];
-extern const MorseFlipperTone morse_flipper_tones[];
+extern const char* const morse_flipper_usb_mode_names[4];
+extern const char* const morse_flipper_input_names[3];
+extern const char* const morse_flipper_audio_path_names[3];
+extern const uint8_t morse_flipper_input_values[3];
+extern const uint8_t morse_flipper_keyer_values[7];
+extern const MorseFlipperTone morse_flipper_tones[31];
 extern const SceneManagerHandlers morse_flipper_scene_handlers;
 
 void morse_flipper_set_paddle_source(
@@ -484,8 +484,10 @@ void morse_flipper_save_config(const MorseFlipperApp* app);
 void morse_flipper_load_rf_config(MorseFlipperApp* app);
 void morse_flipper_save_rf_config(const MorseFlipperApp* app);
 uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app);
+void morse_flipper_set_local_wpm(MorseFlipperApp* app, uint8_t wpm);
 void morse_flipper_set_run_wpm(MorseFlipperApp* app, uint8_t wpm);
 uint8_t morse_flipper_straight_wpm(const MorseFlipperApp* app);
+void morse_flipper_set_straight_wpm(MorseFlipperApp* app, uint8_t wpm);
 void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app);
 void morse_flipper_clamp_straight_settings(MorseFlipperApp* app);
 void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
@@ -583,6 +585,7 @@ uint8_t morse_flipper_keyer_value_index(uint8_t mode);
 uint16_t morse_flipper_wpm_to_dit_ms(uint8_t wpm);
 uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app);
 uint16_t morse_flipper_current_straight_dit_ms(const MorseFlipperApp* app);
+uint8_t morse_flipper_current_wpm(const MorseFlipperApp* app);
 uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle);
 uint8_t morse_flipper_note_for_paddle(uint8_t paddle);
 uint8_t morse_flipper_gpio_straight_idx(const MorseFlipperApp* app);
