@@ -1,3 +1,5 @@
+#include "morse_flipper_app_i.h"
+
 static const MorseFlipperTone* morse_flipper_current_tone(const MorseFlipperApp* app)
 {
     if(app == NULL) return &morse_flipper_tones[MORSE_FLIPPER_DEFAULT_TONE_IDX];
@@ -58,12 +60,12 @@ bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app)
     return app->tone_idx != MORSE_FLIPPER_TONE_OFF_IDX;
 }
 
-static bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app)
+bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app)
 {
     return morse_flipper_audio_output_is_pwm(app) && app->audio_pwm.running;
 }
 
-static bool morse_flipper_any_active_notes(const MorseFlipperApp* app)
+bool morse_flipper_any_active_notes(const MorseFlipperApp* app)
 {
     if(app == NULL) return false;
     return app->note_sources[0] != 0U || app->note_sources[1] != 0U || app->note_sources[2] != 0U;
@@ -184,17 +186,17 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app)
     morse_flipper_sync_ptt(app, furi_get_tick());
 }
 
-static uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle)
+uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle)
 {
     return (paddle == MorseKeyerPaddleDit) ? MORSE_SOURCE_KEYER_DIT : MORSE_SOURCE_KEYER_DAH;
 }
 
-static uint8_t morse_flipper_note_for_paddle(uint8_t paddle)
+uint8_t morse_flipper_note_for_paddle(uint8_t paddle)
 {
     return (paddle == MorseKeyerPaddleDit) ? 1U : 2U;
 }
 
-static void morse_flipper_set_note_source( MorseFlipperApp* app, uint8_t note, uint32_t source_mask, bool active)
+void morse_flipper_set_note_source( MorseFlipperApp* app, uint8_t note, uint32_t source_mask, bool active)
 {
     uint32_t now_ms;
 
@@ -277,7 +279,7 @@ void morse_flipper_drain_keyer_events(MorseFlipperApp* app)
     }
 }
 
-static void morse_flipper_set_paddle_source( MorseFlipperApp* app, uint8_t paddle, uint32_t source_mask, bool active, uint32_t now_ms)
+void morse_flipper_set_paddle_source( MorseFlipperApp* app, uint8_t paddle, uint32_t source_mask, bool active, uint32_t now_ms)
 {
     if(paddle >= MorseKeyerPaddleCount) return;
 
