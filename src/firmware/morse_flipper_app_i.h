@@ -31,6 +31,7 @@
 #include "morse_flipper_rf.h"
 #include "morse_flipper_straight_filter.h"
 #include "morse_flipper_straight_trainer.h"
+#include "morse_flipper_tx_groups.h"
 #include "pc_keys.h"
 #include "trainer.h"
 #include "trainer_files.h"
@@ -66,7 +67,6 @@
 #define MORSE_FLIPPER_STRAIGHT_NEXT_MAX_S        15U
 #define MORSE_FLIPPER_STRAIGHT_NEXT_DEFAULT_S    3U
 #define MORSE_FLIPPER_STRAIGHT_CHARSET           "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-#define MORSE_FLIPPER_TX_GROUP_LEN               5U
 #define MORSE_FLIPPER_RF_FREQ_DIGITS             6U
 #define MORSE_FLIPPER_TONE_OFF_IDX               0xFFU
 #define MORSE_FLIPPER_DEFAULT_TONE_IDX           20U
@@ -434,8 +434,6 @@ typedef struct MorseFlipperApp {
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
-    char txg_target[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
-    char txg_answer[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
     char ham_text_buffer[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
     char ham_macro_text[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
     char ham_notice[16];
@@ -448,6 +446,7 @@ typedef struct MorseFlipperApp {
     MorseFlipperCwDecoder tx_decoder;
     MorseFlipperCwDecoder gpio_decoder;
     MorseFlipperStraightTrainer straight_trainer;
+    MorseFlipperTxGroup tx_group;
 } MorseFlipperApp;
 
 typedef struct {

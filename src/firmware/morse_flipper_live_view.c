@@ -795,9 +795,10 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             }
         } else if(app->screen == MorseFlipperScreenTxGroups) {
             canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignCenter, app->txg_target);
+            canvas_draw_str_aligned(canvas, 64, 28, AlignCenter, AlignCenter, app->tx_group.target);
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 56, AlignCenter, AlignCenter, "sending...");
+            canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter,
+                                    app->tx_group.answer[0] ? app->tx_group.answer : "sending...");
             if(morse_flipper_live_left_hint(app)) morse_flipper_draw_left_exit_hint(canvas);
         } else {
             canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "not yet");

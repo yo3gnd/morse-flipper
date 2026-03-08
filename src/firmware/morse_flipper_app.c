@@ -155,8 +155,6 @@ MorseFlipperApp* morse_flipper_boot(void)
         .rf_rx_text = {0},
         .rf_tx_text = {0},
         .gpio_text = {0},
-        .txg_target = {0},
-        .txg_answer = {0},
         .ham_text_buffer = {0},
         .ham_macro_text = {0},
         .ham_notice = {0},
@@ -179,6 +177,7 @@ MorseFlipperApp* morse_flipper_boot(void)
     morse_flipper_cw_decoder_init(&app.gpio_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_run_history_reset(&app.run_history);
     morse_flipper_straight_trainer_init(&app.straight_trainer);
+    morse_flipper_tx_group_init(&app.tx_group);
     morse_trainer_load_custom_sets(&app.custom_sets);
    morse_trainer_load_straight_stats(&app.straight_stats);
     morse_flipper_apply_trainer_charset_choice(&app);

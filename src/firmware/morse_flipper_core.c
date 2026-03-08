@@ -29,6 +29,7 @@
 #include "morse_flipper_rf.h"
 #include "morse_flipper_straight_filter.h"
 #include "morse_flipper_straight_trainer.h"
+#include "morse_flipper_tx_groups.h"
 #include "pc_keys.h"
 #include "trainer.h"
 #include "trainer_files.h"
@@ -64,7 +65,6 @@
 #define MORSE_FLIPPER_STRAIGHT_NEXT_MAX_S        15U
 #define MORSE_FLIPPER_STRAIGHT_NEXT_DEFAULT_S    3U
 #define MORSE_FLIPPER_STRAIGHT_CHARSET           "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-#define MORSE_FLIPPER_TX_GROUP_LEN               5U
 #define MORSE_FLIPPER_RF_FREQ_DIGITS             6U
 #define MORSE_FLIPPER_TONE_OFF_IDX               0xFFU
 #define MORSE_FLIPPER_DEFAULT_TONE_IDX           20U
@@ -557,8 +557,6 @@ typedef struct {
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
-    char txg_target[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
-    char txg_answer[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
     char ham_text_buffer[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
     char ham_macro_text[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
     char ham_notice[16];
@@ -571,6 +569,7 @@ typedef struct {
     MorseFlipperCwDecoder tx_decoder;
     MorseFlipperCwDecoder gpio_decoder;
     MorseFlipperStraightTrainer straight_trainer;
+    MorseFlipperTxGroup tx_group;
 } MorseFlipperApp;
 
 typedef struct {
@@ -2165,8 +2164,7 @@ void morse_flipper_reset_tx_groups_state(MorseFlipperApp* app, uint32_t now_ms)
     app->txg_repeated_timeouts = 0U;
     app->txg_session_total = 0U;
     app->txg_session_good = 0U;
-    memcpy(app->txg_target, "ABCDE", 6U);
-    app->txg_answer[0] = '\0';
+    morse_flipper_tx_group_init(&app->tx_group);
     morse_flipper_cw_decoder_init(&app->tx_decoder, morse_flipper_current_dit_ms(app));
     morse_flipper_clear_button_keying(app, furi_get_tick());
 }
@@ -2187,8 +2185,7 @@ void morse_flipper_start_tx_groups_round(MorseFlipperApp* app, uint32_t now_ms)
     app->txg_sk = morse_flipper_tx_groups_sk_now(app);
     app->txg_wait_started_at = now_ms;
     app->txg_last_input_at = now_ms;
-    app->txg_answer[0] = '\0';
-    memcpy(app->txg_target, "ABCDE", 6U);
+    morse_flipper_tx_group_start(&app->tx_group, app->txg_sk);
     morse_flipper_cw_decoder_init(&app->tx_decoder, morse_flipper_current_dit_ms(app));
     morse_flipper_refresh_keyer(app, now_ms);
     morse_flipper_view_dirty(app);

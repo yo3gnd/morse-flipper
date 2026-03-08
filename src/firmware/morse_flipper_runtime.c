@@ -75,6 +75,16 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     out = morse_flipper_cw_decoder_output(&app->tx_decoder);
     if(out[0] == '\0') return;
 
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer) {
+        morse_flipper_tx_group_feed_text(&app->tx_group, out);
+        app->txg_last_input_at = furi_get_tick();
+        if(morse_flipper_tx_group_complete(&app->tx_group)) {
+            app->txg_wait_answer = false;
+            app->txg_done = true;
+            app->txg_session_total++;
+        }
+    }
+
     morse_flipper_append_text(app->rf_tx_text, sizeof(app->rf_tx_text), out);
     if(app->screen == MorseFlipperScreenHamRun) {
         morse_flipper_ham_log_append_text(app, out, furi_get_tick());
@@ -112,8 +122,12 @@ static void morse_flipper_feed_tx_edge(MorseFlipperApp* app, bool level, uint32_
         if(dt != 0U && morse_flipper_tx_decoder_allowed(app)) {
             if(app->rf_tx_level) {
                 morse_flipper_cw_decoder_feed_mark(&app->tx_decoder, (uint16_t)dt);
+                if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer)
+                    morse_flipper_tx_group_feed_mark(&app->tx_group, (uint16_t)dt);
             } else {
                 morse_flipper_cw_decoder_feed_space(&app->tx_decoder, (uint16_t)dt);
+                if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer)
+                    morse_flipper_tx_group_feed_space(&app->tx_group, (uint16_t)dt);
             }
             morse_flipper_drain_tx_decoder(app);
         }
