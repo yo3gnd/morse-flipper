@@ -334,6 +334,30 @@ static uint16_t morse_flipper_canvas_glyph_width(uint8_t ch, void* ctx)
     return (uint16_t)canvas_glyph_width(canvas, ch);
 }
 
+static void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text)
+{
+    if(canvas == NULL || text == NULL) return;
+
+    while(*text != '\0') {
+        uint8_t ch = (uint8_t)*text++;
+
+        if(morse_flipper_cw_token_is_private(ch)) {
+            const char* label = morse_flipper_cw_token_label(ch);
+            uint16_t w = (uint16_t)canvas_string_width(canvas, label);
+
+            canvas_draw_str(canvas, x, y, label);
+            if(w == 0U) w = 1U;
+            canvas_draw_line(canvas, x, y - 8, x + (int32_t)w - 2, y - 8);
+            x += w;
+            continue;
+        }
+
+        char s[2] = {(char)ch, '\0'};
+        canvas_draw_str(canvas, x, y, s);
+        x += (int32_t)canvas_glyph_width(canvas, ch);
+    }
+}
+
 static void morse_flipper_gpio_probe_pair_text( const MorseFlipperApp* app, uint8_t pin_idx, char* out, size_t out_sz) {
     if(app == NULL || out == NULL || out_sz == 0U) return;
     snprintf(
@@ -642,9 +666,9 @@ static void morse_flipper_draw_tx_history_screen_custom(
         morse_flipper_canvas_glyph_width,
         canvas,
         &layout);
-    canvas_draw_str(canvas, 1, row_y[0], layout.rows[0]);
-    canvas_draw_str(canvas, 1, row_y[1], layout.rows[1]);
-    canvas_draw_str(canvas, 1, row_y[2], layout.rows[2]);
+    morse_flipper_draw_run_text(canvas, 1, row_y[0], layout.rows[0]);
+    morse_flipper_draw_run_text(canvas, 1, row_y[1], layout.rows[1]);
+    morse_flipper_draw_run_text(canvas, 1, row_y[2], layout.rows[2]);
     if(layout.underline_valid && layout.underline_row < MORSE_FLIPPER_RUN_HISTORY_ROWS) {
         uint16_t underline_x = (uint16_t)(1U + layout.underline_x);
         uint8_t underline_w = layout.underline_w == 0U ? 1U : layout.underline_w;

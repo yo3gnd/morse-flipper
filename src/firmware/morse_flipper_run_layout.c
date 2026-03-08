@@ -1,4 +1,5 @@
 #include "morse_flipper_run_layout.h"
+#include "morse_flipper_cw_token.h"
 
 #include <string.h>
 
@@ -15,6 +16,29 @@ static void morse_flipper_run_layout_push_row( MorseFlipperRunLayout* layout, co
     memcpy(layout->rows[0], layout->rows[1], MORSE_FLIPPER_RUN_HISTORY_TEXT);
     memcpy(layout->rows[1], layout->rows[2], MORSE_FLIPPER_RUN_HISTORY_TEXT);
     memcpy(layout->rows[2], row, row_len + 1U);
+}
+
+static uint16_t morse_flipper_run_layout_ch_width(
+    uint8_t ch,
+    MorseFlipperGlyphWidthFn glyph_width,
+    void* glyph_ctx)
+{
+    const char* label;
+    uint16_t w = 0U;
+
+    if(!morse_flipper_cw_token_is_private(ch)) {
+        w = glyph_width(ch, glyph_ctx);
+        return w == 0U ? 1U : w;
+    }
+
+    label = morse_flipper_cw_token_label(ch);
+    while(*label != '\0') {
+        uint16_t part = glyph_width((uint8_t)*label++, glyph_ctx);
+
+        w = (uint16_t)(w + (part == 0U ? 1U : part));
+    }
+
+    return w == 0U ? 1U : w;
 }
 
 void morse_flipper_run_layout_build(
@@ -42,7 +66,7 @@ void morse_flipper_run_layout_build(
     row[0] = '\0';
 
     while(*text) {
-        char ch = *text++;
+        uint8_t ch = (uint8_t)*text++;
         uint16_t ch_w;
 
         if(ch == '\n') {
@@ -57,8 +81,7 @@ void morse_flipper_run_layout_build(
 
         if(ch == ' ' && row_len == 0U) continue;
 
-        ch_w = glyph_width((uint8_t)ch, glyph_ctx);
-        if(ch_w == 0U) ch_w = 1U;
+        ch_w = morse_flipper_run_layout_ch_width(ch, glyph_width, glyph_ctx);
 
         if(row_len != 0U && row_w + ch_w > max_w) {
             morse_flipper_run_layout_push_row(layout, row, row_len, &row_n);
