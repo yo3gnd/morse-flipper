@@ -421,6 +421,10 @@ static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneMana
        event.event != MorseFlipperCustomHamTextDone)
         return false;
 
+    for(size_t i = 0U; app->ham_text_buffer[i] != '\0'; i++) {
+        if(app->ham_text_buffer[i] == '_') app->ham_text_buffer[i] = ' ';
+    }
+
     if(app->ham_text_mode == MorseFlipperHamTextModeEdit) {
         morse_flipper_ham_keyer_edit_message(
             &app->ham_keyer,
