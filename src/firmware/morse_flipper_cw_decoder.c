@@ -1,13 +1,14 @@
 #include "morse_flipper_cw_decoder.h"
 #include "cw.h"
+#include "morse_flipper_cw_token.h"
 
 #include <string.h>
 
-static void decoder_emit(MorseFlipperCwDecoder* decoder, char ch)
+static void decoder_emit(MorseFlipperCwDecoder* decoder, uint8_t ch)
 {
     if(!decoder || !ch) return;
     if(decoder->output_len + 1u >= sizeof(decoder->output)) return;
-    decoder->output[decoder->output_len++] = ch;
+    decoder->output[decoder->output_len++] = (char)ch;
     decoder->output[decoder->output_len] = 0;
 }
 
@@ -45,50 +46,62 @@ static void decoder_push_dit_sample(MorseFlipperCwDecoder* decoder, uint16_t ms)
 
 static bool decoder_push_symbol(MorseFlipperCwDecoder* decoder, bool dash)
 {
-    uint8_t bit;
+    uint16_t bit;
 
     if(!decoder || decoder->symbol_count >= 7u) return false;
 
-    bit = (uint8_t)(1u << decoder->symbol_count);
+    bit = (uint16_t)(1u << decoder->symbol_count);
     if(dash) decoder->symbol_code |= bit;
-    else decoder->symbol_code &= (uint8_t)~bit;
+    else decoder->symbol_code &= (uint16_t)~bit;
 
     decoder->symbol_count++;
-    decoder->symbol_code |= (uint8_t)(1u << decoder->symbol_count);
+    decoder->symbol_code |= (uint16_t)(1u << decoder->symbol_count);
     return true;
 }
 
-static char decoder_lookup(uint8_t code)
+static uint8_t decoder_lookup(uint16_t code)
 {
     uint8_t i;
+    static const uint8_t prosigns[] = {
+        MORSE_FLIPPER_CW_TOKEN_SK,
+        MORSE_FLIPPER_CW_TOKEN_BK,
+        MORSE_FLIPPER_CW_TOKEN_CT_KA,
+        MORSE_FLIPPER_CW_TOKEN_VE_SN,
+        MORSE_FLIPPER_CW_TOKEN_AA,
+    };
 
     if(code <= 1u || code == CW_INVALID) return 0;
 
+    for(i = 0u; i < sizeof(prosigns) / sizeof(prosigns[0]); i++) {
+        if(morse_flipper_cw_token_code(prosigns[i]) == code) return prosigns[i];
+    }
+
+    if(code > 0xFFu) return '#';
     for(i = 0u; i < sizeof(cw_ascii); i++)
-        if(cw_ascii[i] == code) return (char)i;
+        if(cw_ascii[i] == (uint8_t)code) return i;
 
     return '#';
 }
 
-static bool decoder_preview_extendable(uint8_t code, size_t count)
+static bool decoder_preview_extendable(uint16_t code, size_t count)
 {
-    uint8_t bit;
-    uint8_t next_code;
-    char preview;
-    char next;
+    uint16_t bit;
+    uint16_t next_code;
+    uint8_t preview;
+    uint8_t next;
 
     if(code <= 1u || count >= 7u) return false;
 
     preview = decoder_lookup(code);
-    bit = (uint8_t)(1u << count);
+    bit = (uint16_t)(1u << count);
 
-    next_code = (uint8_t)(code & (uint8_t)~bit);
-    next_code |= (uint8_t)(1u << (count + 1u));
+    next_code = (uint16_t)(code & (uint16_t)~bit);
+    next_code |= (uint16_t)(1u << (count + 1u));
     next = decoder_lookup(next_code);
     if(next != 0 && next != '#' && next != preview) return true;
 
-    next_code = (uint8_t)(code | bit);
-    next_code |= (uint8_t)(1u << (count + 1u));
+    next_code = (uint16_t)(code | bit);
+    next_code |= (uint16_t)(1u << (count + 1u));
     next = decoder_lookup(next_code);
     if(next != 0 && next != '#' && next != preview) return true;
 
@@ -97,7 +110,7 @@ static bool decoder_preview_extendable(uint8_t code, size_t count)
 
 static void decoder_flush_symbol_buffer(MorseFlipperCwDecoder* decoder)
 {
-    char letter;
+    uint8_t letter;
 
     if(!decoder || !decoder->symbol_count) return;
     letter = decoder_lookup(decoder->symbol_code);
@@ -324,7 +337,7 @@ bool morse_flipper_cw_decoder_timing_reset(const MorseFlipperCwDecoder* decoder)
     return decoder ? decoder->timing_reset : false;
 }
 
-char morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
+uint8_t morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
 {
     if(!decoder || !decoder->symbol_count) return 0;
     return decoder_lookup(decoder->symbol_code);
