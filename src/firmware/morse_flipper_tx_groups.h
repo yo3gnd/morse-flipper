@@ -16,6 +16,8 @@ typedef struct
     uint8_t accuracy_pct;
     uint8_t dit_gap_pct;
     uint8_t variance_pct;
+    uint8_t dit_pct;
+    uint8_t dah_pct;
     bool correct_pass;
     bool speed_pass;
     bool letter_gap_pass;
@@ -25,6 +27,7 @@ typedef struct
     bool variance_pass;
     bool passed;
     bool timed_out;
+    const char* fault;
 } MorseFlipperTxGroupResult;
 
 typedef struct

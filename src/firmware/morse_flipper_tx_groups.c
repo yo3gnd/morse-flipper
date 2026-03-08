@@ -46,6 +46,27 @@ static uint8_t txg_consistency(uint32_t total_diff, uint32_t total_ref)
     return (uint8_t)(100U - pct);
 }
 
+static uint16_t txg_abs100(uint16_t v)
+{
+    return v > 100U ? (uint16_t)(v - 100U) : (uint16_t)(100U - v);
+}
+
+static void txg_fault_try(
+    const char** best,
+    uint16_t* best_sev,
+    uint16_t* best_delta,
+    const char* text,
+    uint16_t sev,
+    uint16_t delta)
+{
+    if(best == 0 || best_sev == 0 || best_delta == 0 || text == 0) return;
+    if(sev > *best_sev || (sev == *best_sev && delta > *best_delta)) {
+        *best = text;
+        *best_sev = sev;
+        *best_delta = delta;
+    }
+}
+
 static void txg_expected(
     const char* text,
     uint8_t* mark_units,
@@ -230,6 +251,8 @@ static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit
     }
 
     g->result.accuracy_pct = got_marks ? txg_pct(got_marks, want_marks) : 0U;
+    g->result.dit_pct = avg_dit ? txg_pct(avg_dit, dit_ms) : 100U;
+    g->result.dah_pct = avg_dah ? txg_pct(avg_dah, (uint32_t)dit_ms * 3U) : 100U;
     g->result.dit_gap_pct = ditgap_cnt ? txg_pct(got_ditgaps, ditgap_cnt * dit_ms) : 100U;
     g->result.variance_pct = txg_consistency(var_diff, var_ref);
 
@@ -241,11 +264,91 @@ static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit
         g->result.dit_gap_pass && g->result.variance_pass;
 }
 
+static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g)
+{
+    const char* best = "";
+    uint16_t sev = 0U;
+    uint16_t delta = 0U;
+    uint8_t len;
+
+    if(g == 0) return;
+    len = morse_flipper_tx_group_answer_len(g);
+
+    if(g->result.timed_out) {
+        txg_fault_try(&best, &sev, &delta, len == 0U ? "no answer" : "incomplete group", 220U, 100U);
+    }
+    if(!g->result.correct_pass)
+        txg_fault_try(&best, &sev, &delta, "wrong letter sent", 210U, (uint16_t)(5U - g->result.correct) * 20U);
+
+    if(!g->result.speed_pass)
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            g->result.speed_pct > 110U ? "too fast" : "too slow",
+            160U,
+            txg_abs100(g->result.speed_pct));
+
+    if(!g->result.letter_gap_pass)
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            g->result.letter_gap_pct > 110U ? "letter gaps long" : "letter gaps short",
+            150U,
+            txg_abs100(g->result.letter_gap_pct));
+
+    if(g->sk && !g->result.ratio_pass)
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            g->result.ratio_x100 > 315U ? "long dah ratio" : "short dah ratio",
+            130U,
+            g->result.ratio_x100 > 300U ? (uint16_t)(g->result.ratio_x100 - 300U) :
+                                           (uint16_t)(300U - g->result.ratio_x100));
+
+    if(g->sk && !g->result.accuracy_pass)
+    {
+        bool dit_worse = txg_abs100(g->result.dit_pct) >= txg_abs100(g->result.dah_pct);
+        uint8_t p = dit_worse ? g->result.dit_pct : g->result.dah_pct;
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            dit_worse ? (p > 110U ? "dits too long" : "dits too short") :
+                        (p > 110U ? "dahs too long" : "dahs too short"),
+            120U,
+            txg_abs100(p));
+    }
+
+    if(g->sk && !g->result.dit_gap_pass)
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            g->result.dit_gap_pct > 110U ? "symbol gaps long" : "symbol gaps short",
+            110U,
+            txg_abs100(g->result.dit_gap_pct));
+
+    if(g->sk && !g->result.variance_pass)
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            "inconsistent speed",
+            100U,
+            txg_abs100(g->result.variance_pct));
+
+    g->result.fault = best;
+}
+
 void morse_flipper_tx_group_score(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out)
 {
     if(g == 0) return;
     morse_flipper_tx_group_score_common(g, dit_ms, timed_out);
     if(g->sk) morse_flipper_tx_group_score_sk(g, dit_ms);
+    morse_flipper_tx_group_pick_fault(g);
 }
 
 bool morse_flipper_tx_group_complete(const MorseFlipperTxGroup* g)
