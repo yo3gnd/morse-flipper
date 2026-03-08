@@ -31,6 +31,7 @@ App(
         "src/firmware/morse_flipper_run_layout.c",
         "src/firmware/keyer.c",
         "src/firmware/cw.c",
+        "src/firmware/morse_flipper_cw_token.c",
         "src/firmware/morse_flipper_cw_decoder.c",
         "src/firmware/pc_keys.c",
         "src/firmware/morse_flipper_radio.c",
