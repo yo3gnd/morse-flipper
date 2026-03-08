@@ -1,8 +1,8 @@
-static void morse_flipper_gpio_init(MorseFlipperApp* app) {
+void morse_flipper_gpio_init(MorseFlipperApp* app) {
     morse_flipper_gpio_apply(app);
 }
 
-static void morse_flipper_gpio_deinit(void) {
+void morse_flipper_gpio_deinit(void) {
     morse_flipper_gpio_reset_candidates();
 }
 
@@ -387,7 +387,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
 }
 
 
-static void morse_flipper_tick_callback(void* context) {
+void morse_flipper_tick_callback(void* context) {
     MorseFlipperApp* app = context;
 
     morse_flipper_poll(app);

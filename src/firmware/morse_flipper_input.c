@@ -634,7 +634,7 @@ static void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir)
     morse_flipper_view_dirty(app);
 }
 
-static bool morse_flipper_live_input(InputEvent* event, void* ctx)
+bool morse_flipper_live_input(InputEvent* event, void* ctx)
 {
     MorseFlipperApp* app = ctx;
     uint32_t now_ms = furi_get_tick();
@@ -645,13 +645,13 @@ static bool morse_flipper_live_input(InputEvent* event, void* ctx)
     return false;
 }
 
-static bool morse_flipper_custom_event_callback(void* context, uint32_t event)
+bool morse_flipper_custom_event_callback(void* context, uint32_t event)
 {
     MorseFlipperApp* app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
-static bool morse_flipper_back_event_callback(void* context)
+bool morse_flipper_back_event_callback(void* context)
 {
     MorseFlipperApp* app = context;
     return scene_manager_handle_back_event(app->scene_manager);

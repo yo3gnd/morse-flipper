@@ -227,7 +227,7 @@ static void morse_flipper_midi_rx_ready(void* context)
     app->midi_rx_pending = true;
 }
 
-static void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode)
+void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode)
 {
     const char* prod = "Morse Flipper Kbd";
 

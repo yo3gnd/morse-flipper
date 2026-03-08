@@ -1,4 +1,4 @@
-static void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms) {
+void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms) {
     MorseFlipperApp* app = ctx;
 
     if(app == NULL || duration_ms == 0U) return;

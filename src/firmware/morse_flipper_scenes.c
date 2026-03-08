@@ -697,7 +697,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_live_on_exit,
 };
 
-static const SceneManagerHandlers morse_flipper_scene_handlers = {
+const SceneManagerHandlers morse_flipper_scene_handlers = {
     .on_enter_handlers = morse_flipper_scene_on_enter_handlers,
     .on_event_handlers = morse_flipper_scene_on_event_handlers,
     .on_exit_handlers = morse_flipper_scene_on_exit_handlers,

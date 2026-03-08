@@ -69,7 +69,7 @@ static bool morse_flipper_any_active_notes(const MorseFlipperApp* app)
     return app->note_sources[0] != 0U || app->note_sources[1] != 0U || app->note_sources[2] != 0U;
 }
 
-static void morse_flipper_tone_stop(MorseFlipperApp* app)
+void morse_flipper_tone_stop(MorseFlipperApp* app)
 {
     if(furi_hal_speaker_is_mine()) {
         furi_hal_speaker_stop();
@@ -230,7 +230,7 @@ static void morse_flipper_set_note_source( MorseFlipperApp* app, uint8_t note, u
     }
 }
 
-static void morse_flipper_release_all_notes(MorseFlipperApp* app)
+void morse_flipper_release_all_notes(MorseFlipperApp* app)
 {
     uint32_t note_sources[COUNT_OF(app->note_sources)];
 
@@ -253,7 +253,7 @@ static void morse_flipper_release_all_notes(MorseFlipperApp* app)
     }
 }
 
-static void morse_flipper_drain_keyer_events(MorseFlipperApp* app)
+void morse_flipper_drain_keyer_events(MorseFlipperApp* app)
 {
     MorseKeyerEvent event;
 
@@ -346,7 +346,7 @@ static void morse_flipper_resync_button_paddles(MorseFlipperApp* app, uint32_t n
         now_ms);
 }
 
-static void morse_flipper_clear_button_keying(MorseFlipperApp* app, uint32_t now_ms)
+void morse_flipper_clear_button_keying(MorseFlipperApp* app, uint32_t now_ms)
 {
     app->left_down = false;
     app->ok_down = false;

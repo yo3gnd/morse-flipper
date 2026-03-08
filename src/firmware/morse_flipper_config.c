@@ -267,7 +267,7 @@ static uint8_t morse_flipper_config_load_p2_volume(uint8_t stored_p2_volume_pct)
     return (uint8_t)(10U + ((((uint16_t)stored_p2_volume_pct - 10U) / 5U) * 5U));
 }
 
-static void morse_flipper_load_config(MorseFlipperApp* app)
+void morse_flipper_load_config(MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -533,7 +533,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-static void morse_flipper_load_rf_config(MorseFlipperApp* app)
+void morse_flipper_load_rf_config(MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -550,7 +550,7 @@ static void morse_flipper_load_rf_config(MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-static void morse_flipper_save_config(const MorseFlipperApp* app)
+void morse_flipper_save_config(const MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -597,7 +597,7 @@ static void morse_flipper_save_config(const MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-static void morse_flipper_save_rf_config(const MorseFlipperApp* app)
+void morse_flipper_save_rf_config(const MorseFlipperApp* app)
 {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);

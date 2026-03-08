@@ -1,3 +1,5 @@
+#include "morse_flipper_app_i.h"
+
 MorseFlipperApp* morse_flipper_boot(void)
 {
     static MorseFlipperApp app;

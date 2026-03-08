@@ -579,20 +579,20 @@ typedef struct {
 static void morse_flipper_set_paddle_source( MorseFlipperApp* app, uint8_t paddle, uint32_t source_mask, bool active, uint32_t now_ms);
 static void morse_flipper_set_note_source( MorseFlipperApp* app, uint8_t note, uint32_t source_mask, bool active);
 static void morse_flipper_resync_button_paddles(MorseFlipperApp* app, uint32_t now_ms);
-static void morse_flipper_clear_button_keying(MorseFlipperApp* app, uint32_t now_ms);
+void morse_flipper_clear_button_keying(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_poll(MorseFlipperApp* app);
-static void morse_flipper_release_all_notes(MorseFlipperApp* app);
-static void morse_flipper_load_config(MorseFlipperApp* app);
-static void morse_flipper_save_config(const MorseFlipperApp* app);
-static void morse_flipper_load_rf_config(MorseFlipperApp* app);
-static void morse_flipper_save_rf_config(const MorseFlipperApp* app);
+void morse_flipper_release_all_notes(MorseFlipperApp* app);
+void morse_flipper_load_config(MorseFlipperApp* app);
+void morse_flipper_save_config(const MorseFlipperApp* app);
+void morse_flipper_load_rf_config(MorseFlipperApp* app);
+void morse_flipper_save_rf_config(const MorseFlipperApp* app);
 static uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app);
 static void morse_flipper_set_run_wpm(MorseFlipperApp* app, uint8_t wpm);
 static uint8_t morse_flipper_straight_wpm(const MorseFlipperApp* app);
 static void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app);
 static void morse_flipper_clamp_straight_settings(MorseFlipperApp* app);
-static void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
+void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
 static void morse_flipper_handle_midi_rx(MorseFlipperApp* app);
 static void morse_flipper_update_sidetone(MorseFlipperApp* app);
 static void morse_flipper_midi_rx_ready(void* context);
@@ -618,7 +618,7 @@ static void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t n
 static void morse_flipper_help_open(MorseFlipperApp* app);
 static void morse_flipper_about_open(MorseFlipperApp* app);
 static void morse_flipper_cycle_trainer_value(MorseFlipperApp* app, int dir);
-static void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
+void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
 static void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms);
@@ -636,7 +636,7 @@ static bool morse_flipper_logical_dah_down(const MorseFlipperApp* app);
 static void morse_flipper_gpio_probe_reset(MorseFlipperApp* app);
 static void morse_flipper_gpio_probe_prepare(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_gpio_probe_tick(MorseFlipperApp* app, uint32_t now_ms);
-static uint8_t morse_flipper_gpio_probe_sample_raw(MorseFlipperApp* app);
+uint8_t morse_flipper_gpio_probe_sample_raw(MorseFlipperApp* app);
 static bool morse_flipper_gpio_probe_notice_active(const MorseFlipperApp* app);
 static bool morse_flipper_gpio_probe_blocks_start(const MorseFlipperApp* app);
 static bool morse_flipper_gpio_probe_use_straight(const MorseFlipperApp* app);
@@ -652,9 +652,9 @@ static void morse_flipper_ham_start_macro(
     MorseFlipperApp* app,
     const char* text,
     uint32_t now_ms);
-static void morse_flipper_ham_stop_macro(MorseFlipperApp* app);
+void morse_flipper_ham_stop_macro(MorseFlipperApp* app);
 static void morse_flipper_ham_gpio_apply(MorseFlipperApp* app);
-static void morse_flipper_ham_gpio_release(MorseFlipperApp* app);
+void morse_flipper_ham_gpio_release(MorseFlipperApp* app);
 static void morse_flipper_ham_log_append_text(
     MorseFlipperApp* app,
     const char* text,
@@ -663,15 +663,15 @@ static void morse_flipper_ham_log_append_marker(
     MorseFlipperApp* app,
     const char* marker,
     uint32_t now_ms);
-static void morse_flipper_ham_log_flush(MorseFlipperApp* app);
+void morse_flipper_ham_log_flush(MorseFlipperApp* app);
 static void morse_flipper_ham_log_flush_if_idle(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms);
-static void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
+void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
 static void morse_flipper_draw(Canvas* canvas, void* ctx);
 static void morse_flipper_view_dirty(MorseFlipperApp* app);
 static void morse_flipper_scene_open(MorseFlipperApp* app, uint32_t scene);
 static void morse_flipper_scene_back(MorseFlipperApp* app);
-static void morse_flipper_live_draw(Canvas* canvas, void* model);
+void morse_flipper_live_draw(Canvas* canvas, void* model);
 static uint8_t morse_flipper_backlight_mode(const MorseFlipperApp* app);
 static void morse_flipper_sync_backlight(MorseFlipperApp* app, uint32_t now_ms);
 static uint32_t morse_flipper_settings_list_state(VariableItemList* list);
@@ -679,7 +679,7 @@ static void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t
 static uint8_t morse_flipper_input_value_index(uint8_t source);
 static uint8_t morse_flipper_keyer_value_index(uint8_t mode);
 static uint16_t morse_flipper_wpm_to_dit_ms(uint8_t wpm);
-static uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app);
+uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app);
 static uint16_t morse_flipper_current_straight_dit_ms(const MorseFlipperApp* app);
 static uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle);
 static uint8_t morse_flipper_note_for_paddle(uint8_t paddle);
@@ -1124,7 +1124,7 @@ static uint8_t morse_flipper_current_keyer_mode(const MorseFlipperApp* app) {
     return app->keyer_mode;
 }
 
-static uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app) {
+uint16_t morse_flipper_current_dit_ms(const MorseFlipperApp* app) {
     if(app != NULL &&
        (app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenHamRun) &&
        app->run_dit_ms != 0U) {
@@ -1181,7 +1181,7 @@ static uint8_t morse_flipper_gpio_probe_sample(const MorseFlipperApp* app) {
     return morse_flipper_gpio_probe_sample_raw((MorseFlipperApp*)app);
 }
 
-static uint8_t morse_flipper_gpio_probe_sample_raw(MorseFlipperApp* app) {
+uint8_t morse_flipper_gpio_probe_sample_raw(MorseFlipperApp* app) {
     bool dit_follows = true;
     bool dah_follows = true;
 
@@ -1693,7 +1693,7 @@ static void morse_flipper_ham_gpio_apply(MorseFlipperApp* app)
     app->ptt_tail_until = 0U;
 }
 
-static void morse_flipper_ham_gpio_release(MorseFlipperApp* app)
+void morse_flipper_ham_gpio_release(MorseFlipperApp* app)
 {
     if(app == NULL) return;
 
@@ -1705,7 +1705,7 @@ static void morse_flipper_ham_gpio_release(MorseFlipperApp* app)
     morse_flipper_gpio_apply(app);
 }
 
-static void morse_flipper_ham_stop_macro(MorseFlipperApp* app)
+void morse_flipper_ham_stop_macro(MorseFlipperApp* app)
 {
     if(app == NULL) return;
 
@@ -1852,7 +1852,7 @@ static void morse_flipper_ham_log_append_marker(
     morse_flipper_ham_keyer_append_marker(&app->ham_keyer, marker, now_ms, date_key, stamp);
 }
 
-static void morse_flipper_ham_log_flush(MorseFlipperApp* app)
+void morse_flipper_ham_log_flush(MorseFlipperApp* app)
 {
     Storage* storage;
     File* file;
@@ -2437,7 +2437,7 @@ static void morse_flipper_leave_live_screen(MorseFlipperApp* app, uint32_t now_m
     morse_flipper_scene_back(app);
 }
 
-static void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app) {
+void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app) {
     if(app == NULL) {
         return;
     }
@@ -2495,4 +2495,3 @@ static void morse_flipper_toggle_handedness(MorseFlipperApp* app) {
 #include "morse_flipper_flow.c"
 #include "morse_flipper_settings.c"
 #include "morse_flipper_scenes.c"
-#include "morse_flipper_app.c"

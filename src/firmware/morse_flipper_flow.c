@@ -5,7 +5,7 @@ static void morse_flipper_view_dirty(MorseFlipperApp* app)
         with_view_model(app->live_view, MorseFlipperLiveModel * m, { m->bump++; }, true);
 }
 
-static void morse_flipper_live_draw(Canvas* canvas, void* model)
+void morse_flipper_live_draw(Canvas* canvas, void* model)
 {
     MorseFlipperLiveModel* m = model;
 
