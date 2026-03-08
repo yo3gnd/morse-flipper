@@ -67,6 +67,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .trainer_mark_idx = 0U,
         .session_wait_draw_s = 0xFFU,
         .about_ok_count = 0U,
+        .ham_selected_message = 0U,
         .rf_freq_focus = 0U,
         .vail_mode_active = false,
         .vail_speed_active = false,

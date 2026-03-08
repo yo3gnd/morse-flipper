@@ -42,10 +42,56 @@ static bool morse_flipper_startup_probe_input(MorseFlipperApp* app, const InputE
     return false;
 }
 
+static uint8_t morse_flipper_ham_dir_from_key(InputKey key)
+{
+    switch(key) {
+    case InputKeyUp:
+        return MorseFlipperHamKeyerDirUp;
+    case InputKeyDown:
+        return MorseFlipperHamKeyerDirDown;
+    case InputKeyLeft:
+        return MorseFlipperHamKeyerDirLeft;
+    case InputKeyRight:
+        return MorseFlipperHamKeyerDirRight;
+    default:
+        return MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS;
+    }
+}
+
+static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent* event)
+{
+    uint8_t dir;
+
+    if(app->screen != MorseFlipperScreenHamStartRefusal &&
+       app->screen != MorseFlipperScreenHamAssign &&
+       app->screen != MorseFlipperScreenHamAssignments &&
+       app->screen != MorseFlipperScreenHamRun)
+        return false;
+
+    if(app->screen == MorseFlipperScreenHamAssign && event->type == InputTypeShort) {
+        dir = morse_flipper_ham_dir_from_key(event->key);
+        if(dir < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) {
+            morse_flipper_ham_keyer_assign(&app->ham_keyer, dir, app->ham_selected_message);
+            morse_flipper_save_config(app);
+            morse_flipper_scene_back(app);
+            return true;
+        }
+    }
+
+    if(event->key == InputKeyBack &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        morse_flipper_scene_back(app);
+        return true;
+    }
+
+    return true;
+}
+
 static bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event)
 {
     if(morse_flipper_about_input(app, event)) return true;
     if(morse_flipper_startup_probe_input(app, event)) return true;
+    if(morse_flipper_ham_shell_input(app, event)) return true;
     return false;
 }
 

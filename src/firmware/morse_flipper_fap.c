@@ -131,6 +131,10 @@ typedef enum {
     MorseFlipperScreenHelp = 11,
     MorseFlipperScreenAbout = 12,
     MorseFlipperScreenStartupProbe = 13,
+    MorseFlipperScreenHamRun = 14,
+    MorseFlipperScreenHamStartRefusal = 15,
+    MorseFlipperScreenHamAssign = 16,
+    MorseFlipperScreenHamAssignments = 17,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -146,6 +150,7 @@ typedef enum {
     MorseFlipperSceneMenuSettings,
     MorseFlipperSceneMenuHelp,
     MorseFlipperSceneMenuRf,
+    MorseFlipperSceneMenuHam,
     MorseFlipperSceneRun,
     MorseFlipperSceneRf,
     MorseFlipperSceneRfRx,
@@ -163,8 +168,32 @@ typedef enum {
     MorseFlipperSceneHelp,
     MorseFlipperSceneAbout,
     MorseFlipperSceneStartupProbe,
+    MorseFlipperSceneHamRun,
+    MorseFlipperSceneHamStartRefusal,
+    MorseFlipperSceneHamConfigure,
+    MorseFlipperSceneHamMessageActions,
+    MorseFlipperSceneHamAssign,
+    MorseFlipperSceneHamAssignments,
     MorseFlipperSceneNum,
 } MorseFlipperScene;
+
+typedef enum {
+    MorseFlipperHamMenuStart = 1,
+    MorseFlipperHamMenuLogging,
+    MorseFlipperHamMenuConfigure,
+    MorseFlipperHamMenuAssignments,
+} MorseFlipperHamMenuItem;
+
+typedef enum {
+    MorseFlipperHamConfigureAdd = 1,
+    MorseFlipperHamConfigureMessageBase = 32,
+} MorseFlipperHamConfigureItem;
+
+typedef enum {
+    MorseFlipperHamActionAssign = 1,
+    MorseFlipperHamActionEdit,
+    MorseFlipperHamActionDelete,
+} MorseFlipperHamActionItem;
 
 typedef enum {
     MorseFlipperHelpFirstSteps = 0,
@@ -399,6 +428,7 @@ typedef struct {
     uint8_t help_topic;
     uint8_t help_page;
     uint8_t about_ok_count;
+    uint8_t ham_selected_message;
     uint8_t rf_freq_focus;
     uint8_t trainer_farnsworth_wpm;
     uint8_t trainer_answer_timeout_s;

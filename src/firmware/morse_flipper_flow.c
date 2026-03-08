@@ -61,6 +61,14 @@ static uint8_t morse_flipper_scene_screen(uint32_t scene)
         return MorseFlipperScreenAbout;
     case MorseFlipperSceneStartupProbe:
         return MorseFlipperScreenStartupProbe;
+    case MorseFlipperSceneHamRun:
+        return MorseFlipperScreenHamRun;
+    case MorseFlipperSceneHamStartRefusal:
+        return MorseFlipperScreenHamStartRefusal;
+    case MorseFlipperSceneHamAssign:
+        return MorseFlipperScreenHamAssign;
+    case MorseFlipperSceneHamAssignments:
+        return MorseFlipperScreenHamAssignments;
     default:
         return MorseFlipperScreenMenu;
     }
@@ -83,6 +91,9 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
     case MorseFlipperSceneMenuSettings:
     case MorseFlipperSceneMenuHelp:
     case MorseFlipperSceneMenuRf:
+    case MorseFlipperSceneMenuHam:
+    case MorseFlipperSceneHamConfigure:
+    case MorseFlipperSceneHamMessageActions:
         return MorseFlipperViewMenu;
     default:
         return MorseFlipperViewLive;

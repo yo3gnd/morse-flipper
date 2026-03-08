@@ -577,6 +577,52 @@ static void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
+    if(app->screen == MorseFlipperScreenHamStartRefusal) {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, "Please connect");
+        canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "your paddle or SK");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Bk back");
+        return;
+    }
+
+    if(app->screen == MorseFlipperScreenHamAssign) {
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, "Press Up, Down,");
+        canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "Left or Right");
+        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "to assign this message");
+        canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, "Bk cancel");
+        return;
+    }
+
+    if(app->screen == MorseFlipperScreenHamAssignments) {
+        char line[64];
+
+        canvas_set_font(canvas, FontSecondary);
+        for(uint8_t i = 0U; i < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS; i++) {
+            const char* text = morse_flipper_ham_keyer_assignment_text(&app->ham_keyer, i);
+
+            snprintf(
+                line,
+                sizeof(line),
+                "%s: %.42s",
+                morse_flipper_ham_keyer_dir_label(i),
+                text[0] ? text : "-");
+            canvas_draw_str(canvas, 3, (int32_t)(12U + (i * 12U)), line);
+        }
+        canvas_draw_str(canvas, 3, 64, "Bk back");
+        return;
+    }
+
+    if(app->screen == MorseFlipperScreenHamRun) {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 22, AlignCenter, AlignCenter, "Ham Keyer");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Live shell");
+        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Bk back");
+        return;
+    }
+
     if(app->screen == MorseFlipperScreenRun) {
         morse_flipper_draw_tx_history_screen(canvas, app, morse_flipper_run_usb_name(app));
         return;
