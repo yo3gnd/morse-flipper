@@ -81,7 +81,9 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
         if(morse_flipper_tx_group_complete(&app->tx_group)) {
             app->txg_wait_answer = false;
             app->txg_done = true;
+            morse_flipper_tx_group_score_common(&app->tx_group, morse_flipper_current_dit_ms(app), false);
             app->txg_session_total++;
+            if(app->tx_group.result.passed) app->txg_session_good++;
         }
     }
 
