@@ -86,6 +86,8 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
         return MorseFlipperViewSettings;
     case MorseFlipperSceneHelp:
         return MorseFlipperViewWidget;
+    case MorseFlipperSceneHamTextInput:
+        return MorseFlipperViewTextInput;
     case MorseFlipperSceneMenuMain:
     case MorseFlipperSceneMenuTraining:
     case MorseFlipperSceneMenuSettings:

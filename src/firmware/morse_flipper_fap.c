@@ -3,6 +3,7 @@
 
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/text_input.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
 #include <gui/scene_manager.h>
@@ -142,6 +143,7 @@ typedef enum {
     MorseFlipperViewLive,
     MorseFlipperViewSettings,
     MorseFlipperViewWidget,
+    MorseFlipperViewTextInput,
 } MorseFlipperView;
 
 typedef enum {
@@ -172,6 +174,7 @@ typedef enum {
     MorseFlipperSceneHamStartRefusal,
     MorseFlipperSceneHamConfigure,
     MorseFlipperSceneHamMessageActions,
+    MorseFlipperSceneHamTextInput,
     MorseFlipperSceneHamAssign,
     MorseFlipperSceneHamAssignments,
     MorseFlipperSceneNum,
@@ -194,6 +197,16 @@ typedef enum {
     MorseFlipperHamActionEdit,
     MorseFlipperHamActionDelete,
 } MorseFlipperHamActionItem;
+
+typedef enum {
+    MorseFlipperHamTextModeNone = 0,
+    MorseFlipperHamTextModeAdd,
+    MorseFlipperHamTextModeEdit,
+} MorseFlipperHamTextMode;
+
+typedef enum {
+    MorseFlipperCustomHamTextDone = 0x1A00,
+} MorseFlipperCustomEvent;
 
 typedef enum {
     MorseFlipperHelpFirstSteps = 0,
@@ -379,6 +392,7 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
     Submenu* submenu;
+    TextInput* text_input;
     VariableItemList* settings_list;
     Widget* widget;
     VariableItem* audio_cfg_items[MorseFlipperAudioSettingP2Volume + 1U];
@@ -429,6 +443,7 @@ typedef struct {
     uint8_t help_page;
     uint8_t about_ok_count;
     uint8_t ham_selected_message;
+    uint8_t ham_text_mode;
     uint8_t rf_freq_focus;
     uint8_t trainer_farnsworth_wpm;
     uint8_t trainer_answer_timeout_s;
@@ -515,6 +530,7 @@ typedef struct {
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
+    char ham_text_buffer[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
     MorseFlipperRunHistory run_history;
     MorseFlipperAudioPwm audio_pwm;
     MorseFlipperStraightFilter straight_filter;

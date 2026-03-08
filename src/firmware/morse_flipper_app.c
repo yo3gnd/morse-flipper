@@ -7,6 +7,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .view_dispatcher = NULL,
         .scene_manager = NULL,
         .submenu = NULL,
+        .text_input = NULL,
         .settings_list = NULL,
         .widget = NULL,
         .live_view = NULL,
@@ -68,6 +69,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .session_wait_draw_s = 0xFFU,
         .about_ok_count = 0U,
         .ham_selected_message = 0U,
+        .ham_text_mode = MorseFlipperHamTextModeNone,
         .rf_freq_focus = 0U,
         .vail_mode_active = false,
         .vail_speed_active = false,
@@ -133,6 +135,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .rf_rx_text = {0},
         .rf_tx_text = {0},
         .gpio_text = {0},
+        .ham_text_buffer = {0},
         .rf = {0},
         .radio = {0},
         .rf_decoder = {0},
@@ -176,6 +179,12 @@ MorseFlipperApp* morse_flipper_boot(void)
 
     app.submenu = submenu_alloc();
     view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewMenu, submenu_get_view(app.submenu));
+
+    app.text_input = text_input_alloc();
+    view_dispatcher_add_view(
+        app.view_dispatcher,
+        MorseFlipperViewTextInput,
+        text_input_get_view(app.text_input));
 
     app.settings_list = variable_item_list_alloc();
     view_dispatcher_add_view( app.view_dispatcher, MorseFlipperViewSettings, variable_item_list_get_view(app.settings_list));
@@ -241,12 +250,14 @@ void morse_flipper_shutdown(MorseFlipperApp* app)
     morse_flipper_gpio_deinit();
     if(app->view_dispatcher) {
         view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewWidget);
+        view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewTextInput);
         view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewSettings);
         view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewLive);
         view_dispatcher_remove_view(app->view_dispatcher, MorseFlipperViewMenu);
     }
     if(app->help_text) furi_string_free(app->help_text);
     if(app->widget) widget_free(app->widget);
+    if(app->text_input) text_input_free(app->text_input);
     if(app->settings_list) variable_item_list_free(app->settings_list);
     if(app->live_view) view_free(app->live_view);
     if(app->submenu) submenu_free(app->submenu);
