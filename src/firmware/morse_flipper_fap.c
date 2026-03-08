@@ -702,15 +702,15 @@ bool morse_flipper_gpio_try_apply(
     uint8_t ptt,
     MorseFlipperGpioRule* out_rule);
 void morse_flipper_sync_ptt(MorseFlipperApp* app, uint32_t now_ms);
-static const char* morse_flipper_status_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
-static const char* morse_flipper_run_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
-static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
-static const char* morse_flipper_run_input_name(const MorseFlipperApp* app);
-static const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app);
-static const char* morse_flipper_run_usb_name(const MorseFlipperApp* app);
-static const char* morse_flipper_rf_khz_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_status_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_run_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_run_input_name(const MorseFlipperApp* app);
+const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app);
+const char* morse_flipper_run_usb_name(const MorseFlipperApp* app);
+const char* morse_flipper_rf_khz_line( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 void morse_flipper_reset_run_state(MorseFlipperApp* app);
-static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz);
 void morse_flipper_settings_noop_enter(void* context, uint32_t index);
 void morse_flipper_settings_enter_callback(void* context, uint32_t index);
 void morse_flipper_settings_wpm_changed(VariableItem* item);
@@ -1330,16 +1330,16 @@ MorseFlipperInputGate morse_flipper_input_gate(const MorseFlipperApp* app) {
     return g;
 }
 
-static bool morse_flipper_live_back_is_key(const MorseFlipperApp* app) {
+bool morse_flipper_live_back_is_key(const MorseFlipperApp* app) {
     return morse_flipper_input_gate(app).back_key;
 }
 
-static bool morse_flipper_live_left_hint(const MorseFlipperApp* app) {
+bool morse_flipper_live_left_hint(const MorseFlipperApp* app) {
     if(app != NULL && app->screen == MorseFlipperScreenHamRun) return true;
     return morse_flipper_input_gate(app).left_hint;
 }
 
-static const char* morse_flipper_status_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_status_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     if(app->speaker_busy) {
         snprintf(buf, buf_sz, "speaker busy");
         return buf;
@@ -1381,7 +1381,7 @@ static const char* morse_flipper_status_line(const MorseFlipperApp* app, char* b
     return buf;
 }
 
-static const char* morse_flipper_hand_name(const MorseFlipperApp* app) {
+const char* morse_flipper_hand_name(const MorseFlipperApp* app) {
     return (app->handedness == MorseFlipperHandednessSwapped) ? "swp" : "norm";
 }
 
@@ -1395,7 +1395,7 @@ uint8_t morse_flipper_back_button_paddle(const MorseFlipperApp* app) {
                                                                 MorseKeyerPaddleDit;
 }
 
-static const char* morse_flipper_run_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_run_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     if(app->input_source == MorseFlipperInputSourceButtons) {
         snprintf(
             buf,
@@ -1423,7 +1423,7 @@ int8_t morse_flipper_rf_clamp_dbm(int8_t dbm)
     return dbm;
 }
 
-static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     const char* input;
     const char* keyer;
 
@@ -1446,14 +1446,14 @@ static const char* morse_flipper_run_mode_line( const MorseFlipperApp* app, char
     return buf;
 }
 
-static const char* morse_flipper_run_input_name(const MorseFlipperApp* app) {
+const char* morse_flipper_run_input_name(const MorseFlipperApp* app) {
     if(app == NULL) return "---";
     if(app->input_source == MorseFlipperInputSourceButtons) return "buttons";
     if(app->input_source == MorseFlipperInputSourcePaddle) return "paddles";
     return "straight";
 }
 
-static const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app) {
+const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app) {
     uint8_t mode;
 
     if(app == NULL) return "---";
@@ -1482,7 +1482,7 @@ static const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app) {
     }
 }
 
-static const char* morse_flipper_run_usb_name(const MorseFlipperApp* app) {
+const char* morse_flipper_run_usb_name(const MorseFlipperApp* app) {
     if(app == NULL) return "USB off";
 
     switch(app->pc_mode) {
@@ -1502,7 +1502,7 @@ static bool morse_flipper_rf_tx_allowed_hz(uint32_t hz)
     return furi_hal_subghz_is_frequency_valid(hz) && furi_hal_region_is_frequency_allowed(hz);
 }
 
-static bool morse_flipper_rf_tx_allowed_khz(uint32_t khz)
+bool morse_flipper_rf_tx_allowed_khz(uint32_t khz)
 {
     return morse_flipper_rf_tx_allowed_hz(khz * 1000U);
 }
@@ -1568,7 +1568,7 @@ void morse_flipper_rf_commit_edit(MorseFlipperApp* app)
     morse_flipper_save_rf_config(app);
 }
 
-static const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     unsigned long khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
 
     if(buf == NULL || buf_sz == 0U) return "433150 khz";
@@ -1577,7 +1577,7 @@ static const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* b
     return buf;
 }
 
-static const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, size_t buf_sz)
+const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, size_t buf_sz)
 {
     if(buf == NULL || buf_sz == 0U) return "";
 
@@ -1596,7 +1596,7 @@ static const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* 
     return buf;
 }
 
-static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     if(app->input_source == MorseFlipperInputSourceButtons) {
         snprintf( buf, buf_sz, "%s", morse_flipper_live_back_is_key(app) ? "key live hold L" : "OK str Bk back");
         return buf;
@@ -1606,7 +1606,7 @@ static const char* morse_flipper_trace_hint( const MorseFlipperApp* app, char* b
     return buf;
 }
 
-static const char* morse_flipper_source_short_name( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
+const char* morse_flipper_source_short_name( const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     if(app->input_source == MorseFlipperInputSourceButtons) {
         snprintf(buf, buf_sz, "btn");
         return buf;
@@ -2490,5 +2490,3 @@ void morse_flipper_toggle_handedness(MorseFlipperApp* app) {
     morse_flipper_poll(app);
     morse_flipper_view_dirty(app);
 }
-
-#include "morse_flipper_live_view.c"

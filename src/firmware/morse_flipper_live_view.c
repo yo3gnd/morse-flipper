@@ -1,4 +1,5 @@
 #include "fonts/morse_flipper_terminus24.h"
+#include "morse_flipper_app_i.h"
 #include "morse_flipper_run_layout.h"
 
 static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
