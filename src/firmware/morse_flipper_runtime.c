@@ -84,6 +84,9 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
             morse_flipper_tx_group_score(&app->tx_group, morse_flipper_current_dit_ms(app), false);
             app->txg_session_total++;
             if(app->tx_group.result.passed) app->txg_session_good++;
+            app->txg_repeated_timeouts = 0U;
+            if(app->tx_group.result.passed) morse_flipper_feedback_pass(app);
+            else morse_flipper_feedback_fail(app);
             app->txg_result_until = furi_get_tick() + ((uint32_t)app->straight_next_delay_s * 1000U);
             scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
         }
@@ -99,6 +102,50 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
         morse_flipper_view_dirty(app);
     }
     morse_flipper_cw_decoder_clear_output(&app->tx_decoder);
+}
+
+static void morse_flipper_finish_tx_group_timeout(MorseFlipperApp* app, uint32_t now_ms)
+{
+    if(app == NULL) return;
+    app->txg_wait_answer = false;
+    app->txg_done = true;
+    morse_flipper_tx_group_score(&app->tx_group, morse_flipper_current_dit_ms(app), true);
+    app->txg_session_total++;
+    app->txg_repeated_timeouts++;
+    morse_flipper_feedback_timeout(app);
+
+    if(app->txg_repeated_timeouts >= 3U) {
+        morse_flipper_clear_button_keying(app, now_ms);
+        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
+        return;
+    }
+
+    app->txg_result_until = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
+    scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
+}
+
+static void morse_flipper_tick_tx_groups(MorseFlipperApp* app, uint32_t now_ms)
+{
+    if(app == NULL) return;
+
+    if(app->session_result_tone && now_ms >= app->session_result_until &&
+       (app->screen == MorseFlipperScreenTxGroups || app->screen == MorseFlipperScreenTxGroupsResult)) {
+        app->session_result_tone = false;
+        morse_flipper_update_sidetone(app);
+    }
+
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer &&
+       app->txg_wait_started_at != 0U &&
+       now_ms - app->txg_wait_started_at >= ((uint32_t)app->straight_answer_timeout_s * 1000U)) {
+        morse_flipper_finish_tx_group_timeout(app, now_ms);
+        return;
+    }
+
+    if(app->screen == MorseFlipperScreenTxGroupsResult && app->txg_result_until != 0U &&
+       now_ms >= app->txg_result_until) {
+        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneTxGroups);
+        morse_flipper_start_tx_groups_round(app, now_ms);
+    }
 }
 
 static char morse_flipper_tx_symbol(const MorseFlipperApp* app) {
@@ -327,6 +374,7 @@ void morse_flipper_poll(MorseFlipperApp* app) {
 
     morse_flipper_tick_session(app, now_ms);
     morse_flipper_tick_straight(app, now_ms);
+    morse_flipper_tick_tx_groups(app, now_ms);
     morse_flipper_tick_ham_macro(app, now_ms);
     morse_flipper_gpio_probe_tick(app, now_ms);
 

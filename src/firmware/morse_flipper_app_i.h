@@ -497,6 +497,7 @@ extern const SceneManagerHandlers morse_flipper_scene_handlers;
 extern const NotificationSequence morse_flipper_led_good_twice;
 extern const NotificationSequence morse_flipper_led_bad_twice;
 extern const NotificationSequence morse_flipper_led_miss_twice;
+extern const NotificationSequence morse_flipper_led_timeout_twice;
 
 void morse_flipper_set_paddle_source(
     MorseFlipperApp* app,
@@ -598,6 +599,9 @@ void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_reset_tx_groups_state(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_start_tx_groups_round(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_leave_tx_groups(MorseFlipperApp* app, uint32_t now_ms);
+void morse_flipper_feedback_pass(MorseFlipperApp* app);
+void morse_flipper_feedback_fail(MorseFlipperApp* app);
+void morse_flipper_feedback_timeout(MorseFlipperApp* app);
 void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_ham_start_macro(MorseFlipperApp* app, const char* text, uint32_t now_ms);
 void morse_flipper_ham_stop_macro(MorseFlipperApp* app);

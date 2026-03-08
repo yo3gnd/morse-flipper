@@ -309,6 +309,21 @@ static bool morse_flipper_tx_groups_input( MorseFlipperApp* app, const InputEven
     return false;
 }
 
+static bool morse_flipper_tx_groups_result_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms)
+{
+    if(app->screen != MorseFlipperScreenTxGroupsResult) return false;
+
+    if(event->type == InputTypePress || event->type == InputTypeShort || event->type == InputTypeLong) {
+        if(app->txg_result_until > now_ms + 1000U) {
+            app->txg_result_until = now_ms + 1000U;
+            morse_flipper_view_dirty(app);
+        }
+        return true;
+    }
+
+    return true;
+}
+
 static bool morse_flipper_session_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms)
 {
     MorseFlipperInputGate g;
@@ -527,6 +542,7 @@ bool morse_flipper_input_chunk_b( MorseFlipperApp* app, InputEvent* event, uint3
     if(morse_flipper_trainer_input(app, event)) return true;
     if(morse_flipper_straight_input(app, event, now_ms)) return true;
     if(morse_flipper_tx_groups_input(app, event, now_ms)) return true;
+    if(morse_flipper_tx_groups_result_input(app, event, now_ms)) return true;
     if(morse_flipper_session_input(app, event, now_ms)) return true;
     if(morse_flipper_session_end_input(app, event, now_ms)) return true;
     if(morse_flipper_rf_freq_input(app, event)) return true;

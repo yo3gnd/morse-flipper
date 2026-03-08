@@ -333,6 +333,21 @@ const NotificationSequence morse_flipper_led_miss_twice = {
     NULL,
 };
 
+const NotificationSequence morse_flipper_led_timeout_twice = {
+    &message_red_255,
+    &morse_flipper_msg_green_96,
+    &message_delay_50,
+    &message_red_0,
+    &message_green_0,
+    &message_delay_50,
+    &message_red_255,
+    &morse_flipper_msg_green_96,
+    &message_delay_50,
+    &message_red_0,
+    &message_green_0,
+    NULL,
+};
+
 const uint8_t morse_flipper_input_values[] = {
     MorseFlipperInputSourceButtons,
     MorseFlipperInputSourceStraight,
@@ -807,6 +822,30 @@ void morse_flipper_sync_backlight(MorseFlipperApp* app, uint32_t now_ms) {
         if(want != MorseFlipperBacklightAuto)
             notification_message(app->notifications, &sequence_display_backlight_enforce_on);
     }
+}
+
+static void morse_flipper_feedback_do(MorseFlipperApp* app, const NotificationSequence* seq)
+{
+    if(app == NULL) return;
+    if(app->notifications && seq) notification_message(app->notifications, seq);
+    app->session_result_tone = true;
+    app->session_result_until = furi_get_tick() + MORSE_FLIPPER_SESSION_RESULT_MS;
+    morse_flipper_update_sidetone(app);
+}
+
+void morse_flipper_feedback_pass(MorseFlipperApp* app)
+{
+    morse_flipper_feedback_do(app, &morse_flipper_led_good_twice);
+}
+
+void morse_flipper_feedback_fail(MorseFlipperApp* app)
+{
+    morse_flipper_feedback_do(app, &morse_flipper_led_bad_twice);
+}
+
+void morse_flipper_feedback_timeout(MorseFlipperApp* app)
+{
+    morse_flipper_feedback_do(app, &morse_flipper_led_timeout_twice);
 }
 
 uint8_t morse_flipper_input_value_index(uint8_t source) {
