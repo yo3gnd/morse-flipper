@@ -36,6 +36,16 @@ static uint8_t txg_pct(uint32_t got, uint32_t want)
     return (uint8_t)got;
 }
 
+static uint8_t txg_consistency(uint32_t total_diff, uint32_t total_ref)
+{
+    uint32_t pct;
+
+    if(total_ref == 0U) return 100U;
+    pct = (total_diff * 100U + (total_ref / 2U)) / total_ref;
+    if(pct >= 100U) return 0U;
+    return (uint8_t)(100U - pct);
+}
+
 static void txg_expected(
     const char* text,
     uint8_t* mark_units,
@@ -163,6 +173,79 @@ void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms
         g->result.letter_gap_pct >= 90U && g->result.letter_gap_pct <= 110U;
     g->result.passed =
         !timed_out && g->result.correct_pass && g->result.speed_pass && g->result.letter_gap_pass;
+}
+
+static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit_ms)
+{
+    uint8_t mu[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
+    uint8_t su[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
+    uint8_t mc;
+    uint8_t sc;
+    uint32_t want_marks = 0U;
+    uint32_t got_marks = 0U;
+    uint32_t got_dits = 0U;
+    uint32_t got_dahs = 0U;
+    uint32_t dit_cnt = 0U;
+    uint32_t dah_cnt = 0U;
+    uint32_t got_ditgaps = 0U;
+    uint32_t ditgap_cnt = 0U;
+    uint32_t var_ref = 0U;
+    uint32_t var_diff = 0U;
+    uint32_t avg_dit = 0U;
+    uint32_t avg_dah = 0U;
+
+    if(g == 0) return;
+    txg_expected(g->target, mu, &mc, su, &sc);
+
+    for(uint8_t i = 0U; i < mc && i < g->mark_count; i++) {
+        uint32_t want = (uint32_t)mu[i] * dit_ms;
+        want_marks += want;
+        got_marks += g->marks[i];
+        if(mu[i] == 3U) {
+            got_dahs += g->marks[i];
+            dah_cnt++;
+        } else {
+            got_dits += g->marks[i];
+            dit_cnt++;
+        }
+    }
+
+    if(dit_cnt) avg_dit = got_dits / dit_cnt;
+    if(dah_cnt) avg_dah = got_dahs / dah_cnt;
+    if(avg_dit && avg_dah) g->result.ratio_x100 = (uint16_t)((avg_dah * 100U) / avg_dit);
+    else g->result.ratio_x100 = 300U;
+
+    for(uint8_t i = 0U; i < sc && i < g->space_count; i++) {
+        if(su[i] == 1U) {
+            got_ditgaps += g->spaces[i];
+            ditgap_cnt++;
+        }
+    }
+
+    for(uint8_t i = 0U; i < mc && i < g->mark_count; i++) {
+        uint32_t ref = mu[i] == 3U ? avg_dah : avg_dit;
+        if(ref == 0U) continue;
+        var_ref += ref;
+        var_diff += g->marks[i] > ref ? (g->marks[i] - ref) : (ref - g->marks[i]);
+    }
+
+    g->result.accuracy_pct = got_marks ? txg_pct(got_marks, want_marks) : 0U;
+    g->result.dit_gap_pct = ditgap_cnt ? txg_pct(got_ditgaps, ditgap_cnt * dit_ms) : 100U;
+    g->result.variance_pct = txg_consistency(var_diff, var_ref);
+
+    g->result.ratio_pass = g->result.ratio_x100 >= 285U && g->result.ratio_x100 <= 315U;
+    g->result.accuracy_pass = g->result.accuracy_pct >= 90U && g->result.accuracy_pct <= 110U;
+    g->result.dit_gap_pass = g->result.dit_gap_pct >= 90U && g->result.dit_gap_pct <= 110U;
+    g->result.variance_pass = g->result.variance_pct >= 90U && g->result.variance_pct <= 110U;
+    g->result.passed = g->result.passed && g->result.ratio_pass && g->result.accuracy_pass &&
+        g->result.dit_gap_pass && g->result.variance_pass;
+}
+
+void morse_flipper_tx_group_score(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out)
+{
+    if(g == 0) return;
+    morse_flipper_tx_group_score_common(g, dit_ms, timed_out);
+    if(g->sk) morse_flipper_tx_group_score_sk(g, dit_ms);
 }
 
 bool morse_flipper_tx_group_complete(const MorseFlipperTxGroup* g)
