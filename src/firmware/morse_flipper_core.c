@@ -1846,7 +1846,9 @@ void morse_flipper_ham_start_macro(
 void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms)
 {
     const char* morse;
-    char ch;
+    uint8_t ch;
+    uint8_t token = 0U;
+    size_t consumed = 1U;
     uint32_t dit_ms;
 
     if(app == NULL || !app->ham_macro_active) return;
@@ -1859,7 +1861,15 @@ void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms)
     if(now_ms < app->ham_macro_next_at) return;
 
     dit_ms = morse_flipper_current_dit_ms(app);
-    ch = morse_flipper_ham_upper(app->ham_macro_text[app->ham_macro_char_idx]);
+    if(morse_flipper_cw_token_parse(
+           &app->ham_macro_text[app->ham_macro_char_idx],
+           &token,
+           &consumed)) {
+        ch = token;
+    } else {
+        ch = (uint8_t)morse_flipper_ham_upper(app->ham_macro_text[app->ham_macro_char_idx]);
+        consumed = 1U;
+    }
 
     if(ch == '\0') {
         morse_flipper_ham_stop_macro(app);
@@ -1868,15 +1878,15 @@ void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms)
     }
 
     if(!app->ham_macro_mark && ch == ' ') {
-        app->ham_macro_char_idx++;
+        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
         app->ham_macro_mark_idx = 0U;
         app->ham_macro_next_at = now_ms + (dit_ms * 7U);
         return;
     }
 
-    morse = morse_trainer_char_morse(ch);
+    morse = token ? morse_flipper_cw_token_morse(token) : morse_trainer_char_morse((char)ch);
     if(morse == NULL || morse[0] == '\0') {
-        app->ham_macro_char_idx++;
+        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
         app->ham_macro_mark_idx = 0U;
         app->ham_macro_next_at = now_ms + (dit_ms * 3U);
         return;
@@ -1897,7 +1907,7 @@ void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms)
         app->ham_macro_mark_idx++;
         app->ham_macro_next_at = now_ms + dit_ms;
     } else {
-        app->ham_macro_char_idx++;
+        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
         app->ham_macro_mark_idx = 0U;
         app->ham_macro_next_at = now_ms + (dit_ms * 3U);
     }
