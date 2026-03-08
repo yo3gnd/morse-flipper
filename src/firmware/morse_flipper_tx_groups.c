@@ -23,9 +23,11 @@ static char txg_up(char ch)
     return ch;
 }
 
-static bool txg_ok(char ch)
+static bool txg_answer_ok(char ch)
 {
-    return (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+    if(ch == '#') return true;
+    if(ch == ' ' || ch == '|') return false;
+    return cw(ch) != CW_INVALID;
 }
 
 static uint8_t txg_pct(uint32_t got, uint32_t want)
@@ -145,7 +147,7 @@ void morse_flipper_tx_group_feed_text(MorseFlipperTxGroup* g, const char* text)
 
     while(*text != '\0' && n < MORSE_FLIPPER_TX_GROUP_LEN) {
         ch = txg_up(*text++);
-        if(!txg_ok(ch)) continue;
+        if(!txg_answer_ok(ch)) continue;
         g->answer[n++] = ch;
         g->answer[n] = '\0';
     }
