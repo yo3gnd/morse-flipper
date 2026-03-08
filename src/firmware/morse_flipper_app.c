@@ -103,6 +103,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .paddle_sources = {0U, 0U},
         .note_sources = {0U, 0U, 0U},
         .trainer = {0},
+        .ham_keyer = {0},
         .custom_sets = {0},
         .straight_stats = {0},
         .straight_hist_cnt = {0},
@@ -143,6 +144,7 @@ MorseFlipperApp* morse_flipper_boot(void)
     morse_flipper_audio_pwm_reset(&app.audio_pwm);
     morse_flipper_rf_init(&app.rf);
     morse_flipper_radio_init(&app.radio);
+    morse_flipper_ham_keyer_reset(&app.ham_keyer);
     morse_flipper_radio_set_rx_callback(&app.radio, morse_flipper_rf_rx_edge, &app);
     morse_flipper_cw_decoder_init(&app.rf_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_cw_decoder_init(&app.tx_decoder, morse_flipper_current_dit_ms(&app));

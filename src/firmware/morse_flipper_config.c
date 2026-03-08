@@ -26,7 +26,42 @@ typedef struct {
     uint8_t straight_next_delay_s;
     uint8_t audio_path;
     uint8_t p2_volume_pct;
+    uint8_t ham_logging_enabled;
+    uint8_t ham_message_count;
+    uint8_t ham_assignments[MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS];
+    char ham_messages[MORSE_FLIPPER_HAM_KEYER_MAX_MESSAGES]
+                     [MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
 } MorseFlipperConfig;
+
+typedef struct {
+    uint32_t version;
+    uint8_t tone_idx;
+    uint8_t keyer_mode;
+    uint8_t handedness;
+    uint8_t trainer_lesson;
+    uint8_t trainer_group_size;
+    uint8_t trainer_session_groups;
+    uint8_t spare0;
+    uint16_t local_dit_ms;
+    uint8_t gpio_straight_idx;
+    uint8_t gpio_dit_idx;
+    uint8_t gpio_dah_idx;
+    uint8_t gpio_ground_idx;
+    uint8_t gpio_ptt_idx;
+    uint8_t trainer_custom_set_idx;
+    uint8_t usb_mode;
+    uint8_t usb_paddle_preset;
+    uint8_t usb_straight_preset;
+    uint8_t usb_mouse_invert;
+    uint8_t trainer_farnsworth_wpm;
+    uint8_t trainer_answer_timeout_s;
+    uint8_t trainer_group_pause_s;
+    uint16_t straight_dit_ms;
+    uint8_t straight_answer_timeout_s;
+    uint8_t straight_next_delay_s;
+    uint8_t audio_path;
+    uint8_t p2_volume_pct;
+} MorseFlipperConfigV10;
 
 typedef struct {
     uint32_t version;
@@ -237,6 +272,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config;
+    MorseFlipperConfigV10 config_v10;
     MorseFlipperConfigV6 config_v6;
     MorseFlipperConfigV5 config_v5;
     MorseFlipperConfigV4 config_v4;
@@ -286,6 +322,53 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
             app->straight_next_delay_s = config.straight_next_delay_s;
             app->audio_path = morse_flipper_config_load_audio_path(config.audio_path);
             app->p2_volume_pct = morse_flipper_config_load_p2_volume(config.p2_volume_pct);
+            app->ham_keyer.logging_enabled = config.ham_logging_enabled != 0U;
+            app->ham_keyer.message_count = config.ham_message_count;
+            memcpy(app->ham_keyer.assignments, config.ham_assignments, sizeof(app->ham_keyer.assignments));
+            memcpy(app->ham_keyer.messages, config.ham_messages, sizeof(app->ham_keyer.messages));
+        } else if(got == sizeof(config_v10)) {
+            memcpy(&config_v10, &config, sizeof(config_v10));
+            if(config_v10.version == 10U) {
+                app->tone_idx = morse_flipper_config_load_tone_idx(config_v10.tone_idx);
+
+                if(config_v10.keyer_mode >= MorseKeyerModeStraight &&
+                   config_v10.keyer_mode <= MorseKeyerModeKeyahead)
+                    app->keyer_mode = config_v10.keyer_mode;
+
+                if(config_v10.handedness <= MorseFlipperHandednessSwapped)
+                    app->handedness = config_v10.handedness;
+                if(config_v10.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v10.spare0;
+
+                morse_trainer_set_lesson(&app->trainer, config_v10.trainer_lesson);
+                morse_trainer_set_group_size(&app->trainer, config_v10.trainer_group_size);
+                morse_trainer_set_session_groups(&app->trainer, config_v10.trainer_session_groups);
+                if(config_v10.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v10.local_dit_ms;
+
+                morse_flipper_config_apply_gpio(
+                    app,
+                    config_v10.gpio_dit_idx,
+                    config_v10.gpio_dah_idx,
+                    config_v10.gpio_ground_idx,
+                    config_v10.gpio_ptt_idx);
+
+                if(config_v10.trainer_custom_set_idx <= app->custom_sets.count)
+                    app->trainer.custom_set_idx = config_v10.trainer_custom_set_idx;
+                if(config_v10.usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config_v10.usb_mode;
+                if(config_v10.usb_paddle_preset < morse_pc_paddle_preset_count())
+                    app->pc_paddle_preset = config_v10.usb_paddle_preset;
+                if(config_v10.usb_straight_preset < morse_pc_straight_preset_count())
+                    app->pc_straight_preset = config_v10.usb_straight_preset;
+
+                app->mouse_invert = config_v10.usb_mouse_invert != 0U;
+                app->trainer_farnsworth_wpm = config_v10.trainer_farnsworth_wpm;
+                app->trainer_answer_timeout_s = config_v10.trainer_answer_timeout_s;
+                app->trainer_group_pause_s = config_v10.trainer_group_pause_s;
+                app->straight_dit_ms = config_v10.straight_dit_ms;
+                app->straight_answer_timeout_s = config_v10.straight_answer_timeout_s;
+                app->straight_next_delay_s = config_v10.straight_next_delay_s;
+                app->audio_path = morse_flipper_config_load_audio_path(config_v10.audio_path);
+                app->p2_volume_pct = morse_flipper_config_load_p2_volume(config_v10.p2_volume_pct);
+            }
         } else if(got == sizeof(config_v6)) {
             memcpy(&config_v6, &config, sizeof(config_v6));
             if(config_v6.version == 6U) {
@@ -443,6 +526,7 @@ static void morse_flipper_load_config(MorseFlipperApp* app)
 
     morse_flipper_clamp_trainer_settings(app);
     morse_flipper_clamp_straight_settings(app);
+    morse_flipper_ham_keyer_normalize(&app->ham_keyer);
 
     storage_file_close(file);
     storage_file_free(file);
@@ -498,7 +582,12 @@ static void morse_flipper_save_config(const MorseFlipperApp* app)
         .straight_next_delay_s = app->straight_next_delay_s,
         .audio_path = app->audio_path,
         .p2_volume_pct = app->p2_volume_pct,
+        .ham_logging_enabled = app->ham_keyer.logging_enabled ? 1U : 0U,
+        .ham_message_count = app->ham_keyer.message_count,
     };
+
+    memcpy(config.ham_assignments, app->ham_keyer.assignments, sizeof(config.ham_assignments));
+    memcpy(config.ham_messages, app->ham_keyer.messages, sizeof(config.ham_messages));
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS))
         storage_file_write(file, &config, sizeof(config));

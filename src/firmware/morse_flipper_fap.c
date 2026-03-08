@@ -20,6 +20,7 @@
 #include "morse_flipper_cw_decoder.h"
 #include "morse_flipper_gpio.h"
 #include "morse_flipper_gpio_probe.h"
+#include "morse_flipper_ham_keyer.h"
 #include "morse_flipper_paths.h"
 #include "morse_flipper_radio.h"
 #include "morse_flipper_run_history.h"
@@ -36,7 +37,7 @@
 #define MORSE_FLIPPER_PREVIEW_TICKS 8
 #define MORSE_FLIPPER_CONFIG_PATH APP_DATA_PATH("config.bin")
 #define MORSE_FLIPPER_RF_CONFIG_PATH APP_DATA_PATH("rf.bin")
-#define MORSE_FLIPPER_CONFIG_VERSION 10
+#define MORSE_FLIPPER_CONFIG_VERSION 11
 #define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 #define MORSE_FLIPPER_SESSION_SETTLE_MS 1000U
 #define MORSE_FLIPPER_SESSION_RESULT_MS 160U
@@ -449,6 +450,7 @@ typedef struct {
     uint32_t paddle_sources[MorseKeyerPaddleCount];
     uint32_t note_sources[3];
     MorseTrainer trainer;
+    MorseFlipperHamKeyer ham_keyer;
     MorseTrainerCustomSets custom_sets;
     MorseTrainerStraightStats straight_stats;
     uint8_t straight_hist_cnt[36];
