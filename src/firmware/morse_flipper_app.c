@@ -229,6 +229,11 @@ void morse_flipper_shutdown(MorseFlipperApp* app)
 {
     if(app == NULL) return;
 
+    if(app->screen == MorseFlipperScreenHamRun) {
+        morse_flipper_ham_log_flush(app);
+        morse_flipper_ham_stop_macro(app);
+        morse_flipper_ham_gpio_release(app);
+    }
     morse_flipper_clear_button_keying(app, furi_get_tick());
     morse_flipper_set_pc_mode(app, MorseFlipperPcModeOff);
     morse_flipper_radio_sync_live(

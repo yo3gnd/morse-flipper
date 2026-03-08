@@ -10,6 +10,7 @@
 #define MORSE_FLIPPER_HAM_KEYER_UNASSIGNED 0xFFU
 #define MORSE_FLIPPER_HAM_KEYER_PENDING_LEN 384U
 #define MORSE_FLIPPER_HAM_KEYER_DATE_LEN 10U
+#define MORSE_FLIPPER_HAM_KEYER_STAMP_LEN 16U
 #define MORSE_FLIPPER_HAM_KEYER_INACTIVITY_MS 4000U
 
 typedef enum {
@@ -31,6 +32,7 @@ typedef struct {
     uint32_t pending_started_at_ms;
     uint32_t last_activity_at_ms;
     char current_log_date[MORSE_FLIPPER_HAM_KEYER_DATE_LEN + 1U];
+    char pending_stamp[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN + 1U];
 } MorseFlipperHamKeyer;
 
 void morse_flipper_ham_keyer_reset(MorseFlipperHamKeyer* keyer);
@@ -49,3 +51,19 @@ const char* morse_flipper_ham_keyer_assignment_text(
     const MorseFlipperHamKeyer* keyer,
     uint8_t dir);
 const char* morse_flipper_ham_keyer_dir_label(uint8_t dir);
+bool morse_flipper_ham_keyer_append_activity(
+    MorseFlipperHamKeyer* keyer,
+    const char* text,
+    uint32_t now_ms,
+    const char* date_key,
+    const char* stamp);
+bool morse_flipper_ham_keyer_append_marker(
+    MorseFlipperHamKeyer* keyer,
+    const char* marker,
+    uint32_t now_ms,
+    const char* date_key,
+    const char* stamp);
+bool morse_flipper_ham_keyer_should_flush(
+    const MorseFlipperHamKeyer* keyer,
+    uint32_t now_ms);
+void morse_flipper_ham_keyer_clear_pending(MorseFlipperHamKeyer* keyer);

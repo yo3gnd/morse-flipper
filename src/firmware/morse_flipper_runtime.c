@@ -74,6 +74,9 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     if(out[0] == '\0') return;
 
     morse_flipper_append_text(app->rf_tx_text, sizeof(app->rf_tx_text), out);
+    if(app->screen == MorseFlipperScreenHamRun) {
+        morse_flipper_ham_log_append_text(app, out, furi_get_tick());
+    }
     if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf ||
        app->screen == MorseFlipperScreenHamRun) {
         morse_flipper_run_history_append(&app->run_history, out);
@@ -363,6 +366,7 @@ static void morse_flipper_poll(MorseFlipperApp* app) {
             app->rf_tx_gap_flushed = true;
         }
     }
+    morse_flipper_ham_log_flush_if_idle(app, now_ms);
 
     morse_flipper_tick_live_rf(app, now_ms);
 #if MORSE_FLIPPER_RF_LIVE_DECODERS

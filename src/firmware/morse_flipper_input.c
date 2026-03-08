@@ -79,6 +79,13 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
             if(!app->ham_keyer.break_in_enabled) {
                 app->ptt_tail_until = 0U;
             }
+            if(app->ham_keyer.break_in_enabled) {
+                morse_flipper_run_history_append(&app->run_history, " [BKON] ");
+                morse_flipper_ham_log_append_marker(app, "[BKON]", furi_get_tick());
+            } else {
+                morse_flipper_run_history_append(&app->run_history, " [BKOFF] ");
+                morse_flipper_ham_log_append_marker(app, "[BKOFF]", furi_get_tick());
+            }
             morse_flipper_sync_audio_output(app);
             morse_flipper_view_dirty(app);
             return true;

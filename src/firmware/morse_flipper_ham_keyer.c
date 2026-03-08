@@ -100,6 +100,7 @@ void morse_flipper_ham_keyer_normalize(MorseFlipperHamKeyer* keyer)
     keyer->pending_started_at_ms = 0U;
     keyer->last_activity_at_ms = 0U;
     keyer->current_log_date[0] = '\0';
+    keyer->pending_stamp[0] = '\0';
 }
 
 bool morse_flipper_ham_keyer_add_message(MorseFlipperHamKeyer* keyer, const char* message)
@@ -179,4 +180,92 @@ const char* morse_flipper_ham_keyer_dir_label(uint8_t dir)
 {
     if(dir >= MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) return "?";
     return morse_flipper_ham_keyer_dir_labels[dir];
+}
+
+static bool morse_flipper_ham_keyer_pending_append(MorseFlipperHamKeyer* keyer, const char* text)
+{
+    size_t len;
+    size_t left;
+    size_t add_len;
+
+    if(keyer == NULL || text == NULL || text[0] == '\0') return false;
+    if(keyer->pending_len >= MORSE_FLIPPER_HAM_KEYER_PENDING_LEN - 1U) return false;
+
+    len = strlen(text);
+    left = (MORSE_FLIPPER_HAM_KEYER_PENDING_LEN - 1U) - keyer->pending_len;
+    add_len = len < left ? len : left;
+    memcpy(keyer->pending + keyer->pending_len, text, add_len);
+    keyer->pending_len += add_len;
+    keyer->pending[keyer->pending_len] = '\0';
+    return add_len == len;
+}
+
+static void morse_flipper_ham_keyer_begin_pending(
+    MorseFlipperHamKeyer* keyer,
+    uint32_t now_ms,
+    const char* date_key,
+    const char* stamp)
+{
+    if(keyer == NULL || keyer->pending_len != 0U) return;
+
+    keyer->pending_started_at_ms = now_ms;
+    keyer->last_activity_at_ms = now_ms;
+    strncpy(keyer->current_log_date, date_key ? date_key : "", MORSE_FLIPPER_HAM_KEYER_DATE_LEN);
+    strncpy(keyer->pending_stamp, stamp ? stamp : "", MORSE_FLIPPER_HAM_KEYER_STAMP_LEN);
+    keyer->current_log_date[MORSE_FLIPPER_HAM_KEYER_DATE_LEN] = '\0';
+    keyer->pending_stamp[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN] = '\0';
+}
+
+bool morse_flipper_ham_keyer_append_activity(
+    MorseFlipperHamKeyer* keyer,
+    const char* text,
+    uint32_t now_ms,
+    const char* date_key,
+    const char* stamp)
+{
+    if(keyer == NULL || text == NULL || text[0] == '\0') return false;
+
+    morse_flipper_ham_keyer_begin_pending(keyer, now_ms, date_key, stamp);
+    keyer->last_activity_at_ms = now_ms;
+    return morse_flipper_ham_keyer_pending_append(keyer, text);
+}
+
+bool morse_flipper_ham_keyer_append_marker(
+    MorseFlipperHamKeyer* keyer,
+    const char* marker,
+    uint32_t now_ms,
+    const char* date_key,
+    const char* stamp)
+{
+    bool ok = true;
+
+    if(keyer == NULL || marker == NULL || marker[0] == '\0') return false;
+
+    morse_flipper_ham_keyer_begin_pending(keyer, now_ms, date_key, stamp);
+    keyer->last_activity_at_ms = now_ms;
+    if(keyer->pending_len != 0U && keyer->pending[keyer->pending_len - 1U] != '\n')
+        ok = morse_flipper_ham_keyer_pending_append(keyer, "\n");
+    ok = morse_flipper_ham_keyer_pending_append(keyer, marker) && ok;
+    ok = morse_flipper_ham_keyer_pending_append(keyer, "\n") && ok;
+    return ok;
+}
+
+bool morse_flipper_ham_keyer_should_flush(
+    const MorseFlipperHamKeyer* keyer,
+    uint32_t now_ms)
+{
+    if(keyer == NULL || keyer->pending_len == 0U) return false;
+    return now_ms - keyer->last_activity_at_ms >= MORSE_FLIPPER_HAM_KEYER_INACTIVITY_MS;
+}
+
+void morse_flipper_ham_keyer_clear_pending(MorseFlipperHamKeyer* keyer)
+{
+    if(keyer == NULL) return;
+
+    keyer->pending[0] = '\0';
+    keyer->pending_len = 0U;
+    keyer->pending_started_at_ms = 0U;
+    keyer->last_activity_at_ms = 0U;
+    keyer->current_log_date[0] = '\0';
+    keyer->pending_stamp[0] = '\0';
 }

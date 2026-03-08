@@ -1,5 +1,6 @@
 #include <furi.h>
 #include <furi_hal.h>
+#include <furi_hal_rtc.h>
 
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
@@ -651,6 +652,16 @@ static void morse_flipper_ham_start_macro(
 static void morse_flipper_ham_stop_macro(MorseFlipperApp* app);
 static void morse_flipper_ham_gpio_apply(MorseFlipperApp* app);
 static void morse_flipper_ham_gpio_release(MorseFlipperApp* app);
+static void morse_flipper_ham_log_append_text(
+    MorseFlipperApp* app,
+    const char* text,
+    uint32_t now_ms);
+static void morse_flipper_ham_log_append_marker(
+    MorseFlipperApp* app,
+    const char* marker,
+    uint32_t now_ms);
+static void morse_flipper_ham_log_flush(MorseFlipperApp* app);
+static void morse_flipper_ham_log_flush_if_idle(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
 static void morse_flipper_draw(Canvas* canvas, void* ctx);
@@ -1780,6 +1791,112 @@ static void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms)
     morse_flipper_view_dirty(app);
 }
 
+static void morse_flipper_ham_log_now(char* date_key, size_t date_sz, char* stamp, size_t stamp_sz)
+{
+    DateTime dt = {0};
+
+    furi_hal_rtc_get_datetime(&dt);
+    if(date_key != NULL && date_sz != 0U) {
+        snprintf(
+            date_key,
+            date_sz,
+            "%04u-%02u-%02u",
+            (unsigned)dt.year,
+            (unsigned)dt.month,
+            (unsigned)dt.day);
+    }
+    if(stamp != NULL && stamp_sz != 0U) {
+        snprintf(
+            stamp,
+            stamp_sz,
+            "%04u-%02u-%02u %02u:%02u",
+            (unsigned)dt.year,
+            (unsigned)dt.month,
+            (unsigned)dt.day,
+            (unsigned)dt.hour,
+            (unsigned)dt.minute);
+    }
+}
+
+static void morse_flipper_ham_log_append_text(
+    MorseFlipperApp* app,
+    const char* text,
+    uint32_t now_ms)
+{
+    char date_key[MORSE_FLIPPER_HAM_KEYER_DATE_LEN + 1U];
+    char stamp[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN + 1U];
+
+    if(app == NULL || text == NULL || text[0] == '\0') return;
+    if(app->screen != MorseFlipperScreenHamRun || !app->ham_keyer.logging_enabled) return;
+
+    morse_flipper_ham_log_now(date_key, sizeof(date_key), stamp, sizeof(stamp));
+    morse_flipper_ham_keyer_append_activity(&app->ham_keyer, text, now_ms, date_key, stamp);
+}
+
+static void morse_flipper_ham_log_append_marker(
+    MorseFlipperApp* app,
+    const char* marker,
+    uint32_t now_ms)
+{
+    char date_key[MORSE_FLIPPER_HAM_KEYER_DATE_LEN + 1U];
+    char stamp[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN + 1U];
+
+    if(app == NULL || marker == NULL || marker[0] == '\0') return;
+    if(app->screen != MorseFlipperScreenHamRun || !app->ham_keyer.logging_enabled) return;
+
+    morse_flipper_ham_log_now(date_key, sizeof(date_key), stamp, sizeof(stamp));
+    morse_flipper_ham_keyer_append_marker(&app->ham_keyer, marker, now_ms, date_key, stamp);
+}
+
+static void morse_flipper_ham_log_flush(MorseFlipperApp* app)
+{
+    Storage* storage;
+    File* file;
+    char path[96];
+    char header[MORSE_FLIPPER_HAM_KEYER_STAMP_LEN + 3U];
+    bool ok;
+
+    if(app == NULL || app->ham_keyer.pending_len == 0U) return;
+
+    if(!app->ham_keyer.logging_enabled) {
+        morse_flipper_ham_keyer_clear_pending(&app->ham_keyer);
+        return;
+    }
+
+    snprintf(
+        path,
+        sizeof(path),
+        "%s%s.txt",
+        MORSE_FLIPPER_HAM_KEYER_LOG_PREFIX,
+        app->ham_keyer.current_log_date[0] ? app->ham_keyer.current_log_date : "unknown");
+    snprintf(header, sizeof(header), "%s\n", app->ham_keyer.pending_stamp);
+
+    storage = furi_record_open(RECORD_STORAGE);
+    file = storage_file_alloc(storage);
+    storage_common_mkdir(storage, MORSE_FLIPPER_HAM_DIR);
+    ok = storage_file_open(file, path, FSAM_WRITE, FSOM_OPEN_APPEND);
+    if(ok) {
+        storage_file_write(file, header, strlen(header));
+        storage_file_write(file, app->ham_keyer.pending, app->ham_keyer.pending_len);
+        if(app->ham_keyer.pending[app->ham_keyer.pending_len - 1U] != '\n')
+            storage_file_write(file, "\n", 1U);
+        storage_file_write(file, "\n", 1U);
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    morse_flipper_ham_keyer_clear_pending(&app->ham_keyer);
+}
+
+static void morse_flipper_ham_log_flush_if_idle(MorseFlipperApp* app, uint32_t now_ms)
+{
+    if(app == NULL || app->screen != MorseFlipperScreenHamRun) return;
+    if(morse_flipper_any_active_notes(app) || app->ham_macro_active) return;
+    if(morse_flipper_ham_keyer_should_flush(&app->ham_keyer, now_ms))
+        morse_flipper_ham_log_flush(app);
+}
+
 static void morse_flipper_enter_screen(
     MorseFlipperApp* app,
     uint8_t screen,
@@ -1826,6 +1943,7 @@ static void morse_flipper_enter_screen(
     }
 
     if(app->screen == MorseFlipperScreenHamRun && screen != MorseFlipperScreenHamRun) {
+        morse_flipper_ham_log_flush(app);
         morse_flipper_ham_stop_macro(app);
         morse_flipper_ham_gpio_release(app);
         app->run_dit_ms = 0U;
