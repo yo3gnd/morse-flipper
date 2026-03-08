@@ -48,7 +48,7 @@ static bool decoder_push_symbol(MorseFlipperCwDecoder* decoder, bool dash)
 {
     uint16_t bit;
 
-    if(!decoder || decoder->symbol_count >= 7u) return false;
+    if(!decoder || decoder->symbol_count >= 9u) return false;
 
     bit = (uint16_t)(1u << decoder->symbol_count);
     if(dash) decoder->symbol_code |= bit;
@@ -72,6 +72,10 @@ static uint8_t decoder_lookup(uint16_t code)
 
     if(code <= 1u || code == CW_INVALID) return 0;
 
+    if(code == morse_flipper_cw_token_code(MORSE_FLIPPER_CW_TOKEN_SOS)) {
+        return MORSE_FLIPPER_CW_TOKEN_SOS;
+    }
+
     for(i = 0u; i < sizeof(prosigns) / sizeof(prosigns[0]); i++) {
         if(morse_flipper_cw_token_code(prosigns[i]) == code) return prosigns[i];
     }
@@ -90,7 +94,7 @@ static bool decoder_preview_extendable(uint16_t code, size_t count)
     uint8_t preview;
     uint8_t next;
 
-    if(code <= 1u || count >= 7u) return false;
+    if(code <= 1u || count >= 9u) return false;
 
     preview = decoder_lookup(code);
     bit = (uint16_t)(1u << count);
