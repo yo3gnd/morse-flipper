@@ -46,6 +46,7 @@
 #define MORSE_FLIPPER_DEFAULT_DIT_MS 100U
 #define MORSE_FLIPPER_SESSION_SETTLE_MS 1000U
 #define MORSE_FLIPPER_SESSION_RESULT_MS 160U
+#define MORSE_FLIPPER_TXG_RESULT_DELAY_MS 500U
 #define MORSE_FLIPPER_STRAIGHT_SETTLE_MS 700U
 #define MORSE_FLIPPER_STRAIGHT_RELEASE_DEBOUNCE_MS 15U
 #define MORSE_FLIPPER_AUDIO_WAIT_DRAW_MS 30U
@@ -363,7 +364,9 @@ typedef struct MorseFlipperApp {
     uint32_t straight_mark_started_at;
     uint32_t txg_wait_started_at;
     uint32_t txg_last_input_at;
+    uint32_t txg_result_open_at;
     uint32_t txg_result_until;
+    uint8_t txg_result_draw_s;
     uint16_t run_dit_ms;
     uint16_t straight_dit_ms;
     uint16_t straight_session_total;

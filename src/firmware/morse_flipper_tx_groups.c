@@ -186,7 +186,7 @@ void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms
         }
     }
 
-    g->result.speed_pct = got_ms ? txg_pct(want_ms, got_ms) : 0U;
+    g->result.speed_pct = got_ms ? txg_pct(got_ms, want_ms) : 0U;
     g->result.letter_gap_pct = lgcnt ? txg_pct(got_lgap, want_lgap) : 0U;
     g->result.correct_pass = g->result.correct == MORSE_FLIPPER_TX_GROUP_LEN;
     g->result.speed_pass = g->result.speed_pct >= 90U && g->result.speed_pct <= 110U;
@@ -285,7 +285,7 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g)
             &best,
             &sev,
             &delta,
-            g->result.speed_pct > 110U ? "too fast" : "too slow",
+            g->result.speed_pct > 110U ? "too slow" : "too fast",
             160U,
             txg_abs100(g->result.speed_pct));
 

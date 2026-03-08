@@ -72,6 +72,7 @@ static void morse_flipper_decoder_drain_into( MorseFlipperCwDecoder* decoder, ch
 
 static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     const char* out;
+    uint32_t now;
 
     if(app == NULL) return;
     out = morse_flipper_cw_decoder_output(&app->tx_decoder);
@@ -80,7 +81,9 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer) {
         morse_flipper_tx_group_feed_text(&app->tx_group, out);
         app->txg_last_input_at = furi_get_tick();
+        morse_flipper_view_dirty(app);
         if(morse_flipper_tx_group_complete(&app->tx_group)) {
+            now = furi_get_tick();
             app->txg_wait_answer = false;
             app->txg_done = true;
             morse_flipper_tx_group_score(&app->tx_group, morse_flipper_current_dit_ms(app), false);
@@ -88,9 +91,10 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
             app->txg_repeated_timeouts = 0U;
             if(app->tx_group.result.passed) morse_flipper_feedback_pass(app);
             else morse_flipper_feedback_fail(app);
-            app->txg_result_until = furi_get_tick() + ((uint32_t)app->straight_next_delay_s * 1000U);
-            morse_flipper_drop_live_keying_for_playback(app, furi_get_tick());
-            scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
+            app->txg_result_open_at = now + MORSE_FLIPPER_TXG_RESULT_DELAY_MS;
+            app->txg_result_until = 0U;
+            app->txg_result_draw_s = 0xFFU;
+            morse_flipper_drop_live_keying_for_playback(app, now);
         }
     }
 
@@ -114,16 +118,23 @@ static void morse_flipper_finish_tx_group_timeout(MorseFlipperApp* app, uint32_t
     morse_flipper_tx_group_score(&app->tx_group, morse_flipper_current_dit_ms(app), true);
     morse_flipper_note_tx_group_result(app);
     app->txg_repeated_timeouts++;
-    morse_flipper_feedback_timeout(app);
-    morse_flipper_drop_live_keying_for_playback(app, now_ms);
 
     if(app->txg_repeated_timeouts >= 3U) {
+        morse_flipper_drop_live_keying_for_playback(app, now_ms);
         morse_flipper_clear_button_keying(app, now_ms);
+        morse_flipper_release_all_notes(app);
+        app->session_result_tone = false;
+        app->session_result_until = 0U;
+        morse_flipper_update_sidetone(app);
         scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
         return;
     }
 
+    morse_flipper_feedback_timeout(app);
+    morse_flipper_drop_live_keying_for_playback(app, now_ms);
+    app->txg_result_open_at = 0U;
     app->txg_result_until = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
+    app->txg_result_draw_s = 0xFFU;
     scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
 }
 
@@ -148,6 +159,10 @@ static void morse_flipper_note_tx_group_result(MorseFlipperApp* app)
 
 static void morse_flipper_tick_tx_groups(MorseFlipperApp* app, uint32_t now_ms)
 {
+    uint32_t timeout_from;
+    uint32_t left_ms;
+    uint8_t left_s;
+
     if(app == NULL) return;
 
     if(app->session_result_tone && now_ms >= app->session_result_until &&
@@ -156,17 +171,41 @@ static void morse_flipper_tick_tx_groups(MorseFlipperApp* app, uint32_t now_ms)
         morse_flipper_update_sidetone(app);
     }
 
-    if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer &&
-       app->txg_wait_started_at != 0U &&
-       now_ms - app->txg_wait_started_at >= ((uint32_t)app->straight_answer_timeout_s * 1000U)) {
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_done && !app->txg_wait_answer &&
+       app->txg_result_open_at != 0U) {
+        if(now_ms >= app->txg_result_open_at) {
+            app->txg_result_open_at = 0U;
+            app->txg_result_until = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
+            app->txg_result_draw_s = 0xFFU;
+            scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
+        }
+        return;
+    }
+
+    timeout_from = app->txg_last_input_at ? app->txg_last_input_at : app->txg_wait_started_at;
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer && timeout_from != 0U &&
+       now_ms - timeout_from >= ((uint32_t)app->straight_answer_timeout_s * 1000U)) {
         morse_flipper_finish_tx_group_timeout(app, now_ms);
         return;
     }
 
-    if(app->screen == MorseFlipperScreenTxGroupsResult && app->txg_result_until != 0U &&
-       now_ms >= app->txg_result_until) {
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneTxGroups);
-        morse_flipper_start_tx_groups_round(app, now_ms);
+    if(app->screen == MorseFlipperScreenTxGroupsResult && app->txg_result_until != 0U) {
+        if(app->txg_result_until > now_ms + 1000U && morse_flipper_straight_answer_down(app)) {
+            app->txg_result_until = now_ms + 1000U;
+            app->txg_result_draw_s = 0xFFU;
+            morse_flipper_view_dirty(app);
+        }
+        if(now_ms >= app->txg_result_until) {
+            scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneTxGroups);
+            morse_flipper_start_tx_groups_round(app, now_ms);
+        } else {
+            left_ms = app->txg_result_until - now_ms;
+            left_s = (uint8_t)((left_ms + 999U) / 1000U);
+            if(left_s != app->txg_result_draw_s) {
+                app->txg_result_draw_s = left_s;
+                morse_flipper_view_dirty(app);
+            }
+        }
     }
 }
 
@@ -192,6 +231,8 @@ static void morse_flipper_feed_tx_edge(MorseFlipperApp* app, bool level, uint32_
 
     if(app == NULL) return;
     if(level == app->rf_tx_level) return;
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer)
+        app->txg_last_input_at = now_ms;
 
     if(app->rf_tx_edge_at != 0U) {
         dt = now_ms - app->rf_tx_edge_at;

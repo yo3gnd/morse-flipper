@@ -9,6 +9,8 @@ static void morse_flipper_draw_left_exit_hint(Canvas* canvas) {
     canvas_draw_box(canvas, 127, 29, 1, 7);
 }
 
+static void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, char ch);
+
 static void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint) {
     if(canvas == NULL) return;
 
@@ -26,35 +28,64 @@ static void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint
 
 static void morse_flipper_txg_score_line(const MorseFlipperApp* app, char* out, size_t out_sz)
 {
-    unsigned pct = 0U;
+    unsigned pct;
 
     if(out == NULL || out_sz == 0U) return;
-    if(app != NULL && app->txg_session_total != 0U)
-        pct = ((unsigned)app->txg_session_good * 100U) / app->txg_session_total;
+    pct = app != NULL && app->txg_session_total != 0U ?
+              ((unsigned)app->txg_session_good * 100U) / app->txg_session_total :
+              0U;
     snprintf(
         out,
         out_sz,
-        "%u/%u %u%%",
+        "%u/%u  %u%%",
         app ? (unsigned)app->txg_session_good : 0U,
         app ? (unsigned)app->txg_session_total : 0U,
         pct);
 }
 
+static void morse_flipper_txg_score_pct(const MorseFlipperApp* app, char* out, size_t out_sz)
+{
+    unsigned pct;
+
+    if(out == NULL || out_sz == 0U) return;
+    pct = app != NULL && app->txg_session_total != 0U ?
+              ((unsigned)app->txg_session_good * 100U) / app->txg_session_total :
+              0U;
+    snprintf(out, out_sz, "%u%%", pct);
+}
+
+static void morse_flipper_draw_txg_big_slots(Canvas* canvas, int32_t cy, const char* text)
+{
+    const int32_t gap = 3;
+    const int32_t cell = (int32_t)MORSE_FLIPPER_TERMINUS24_WIDTH;
+    const int32_t total = (cell * 5) + (gap * 4);
+    int32_t cx = ((128 - total) / 2) + (cell / 2);
+
+    if(canvas == NULL || text == NULL) return;
+
+    for(uint8_t i = 0U; i < MORSE_FLIPPER_TX_GROUP_LEN; i++) {
+        if(text[i] == '\0') break;
+        morse_flipper_draw_straight_prompt(
+            canvas,
+            cx + ((cell + gap) * (int32_t)i),
+            cy,
+            text[i]);
+    }
+}
+
 static void morse_flipper_draw_tx_groups_practice(Canvas* canvas, MorseFlipperApp* app)
 {
-    char score[18];
+    char score[8];
     uint8_t x;
 
     if(canvas == NULL || app == NULL) return;
 
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 12, AlignCenter, AlignCenter, "TX Groups of 5");
-    canvas_draw_str_aligned(canvas, 64, 27, AlignCenter, AlignCenter, app->tx_group.target);
+    morse_flipper_draw_txg_big_slots(canvas, 18, app->tx_group.target);
     morse_flipper_draw_tx_history_divider(canvas, morse_flipper_live_left_hint(app));
+    morse_flipper_draw_txg_big_slots(canvas, 49, app->tx_group.answer);
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 3, 47, app->tx_group.answer[0] ? app->tx_group.answer : "");
-    morse_flipper_txg_score_line(app, score, sizeof(score));
+    morse_flipper_txg_score_pct(app, score, sizeof(score));
     x = (uint8_t)(126U - canvas_string_width(canvas, score));
     canvas_draw_str(canvas, x, 64, score);
 }
@@ -116,7 +147,7 @@ static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp*
     snprintf(a, sizeof(a), "%u/5", (unsigned)r->correct);
     morse_flipper_draw_txg_metric(canvas, 1, 20, "Corr", a, !r->correct_pass);
     snprintf(a, sizeof(a), "%u%%", (unsigned)r->speed_pct);
-    morse_flipper_draw_txg_metric(canvas, 1, 29, "Spd", a, !r->speed_pass);
+    morse_flipper_draw_txg_metric(canvas, 1, 29, "Time", a, !r->speed_pass);
     snprintf(a, sizeof(a), "%u%%", (unsigned)r->letter_gap_pct);
     morse_flipper_draw_txg_metric(canvas, 1, 38, "LGap", a, !r->letter_gap_pass);
 
@@ -157,14 +188,14 @@ static void morse_flipper_draw_tx_groups_final(Canvas* canvas, MorseFlipperApp* 
         pct = ((unsigned)app->txg_session_good * 100U) / app->txg_session_total;
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 9, AlignCenter, AlignCenter, "Final score");
+    canvas_draw_str_aligned(canvas, 64, 6, AlignCenter, AlignCenter, "Final score");
     canvas_set_font(canvas, FontKeyboard);
 
-    snprintf(v, sizeof(v), "%u/%u %u%%", (unsigned)app->txg_session_good, (unsigned)app->txg_session_total, pct);
+    snprintf(v, sizeof(v), "%u/%u  %u%%", (unsigned)app->txg_session_good, (unsigned)app->txg_session_total, pct);
     morse_flipper_draw_txg_metric(canvas, 1, y, "Pass", v, false);
     y += 9U;
     snprintf(v, sizeof(v), "%u%%", (unsigned)morse_flipper_txg_avg_u16(app->txg_sum_speed, app->txg_session_total));
-    morse_flipper_draw_txg_metric(canvas, 1, y, "Spd", v, false);
+    morse_flipper_draw_txg_metric(canvas, 1, y, "Time", v, false);
     y += 9U;
     snprintf(v, sizeof(v), "%u%%", (unsigned)morse_flipper_txg_avg_u16(app->txg_sum_lgap, app->txg_session_total));
     morse_flipper_draw_txg_metric(canvas, 1, y, "LGap", v, false);
@@ -867,7 +898,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenStraight) {
-        if(morse_flipper_gpio_probe_blocks_start(app)) {
+        if(morse_flipper_gpio_probe_notice_active(app) || morse_flipper_gpio_probe_blocks_start(app)) {
             morse_flipper_draw_gpio_probe_overlay(canvas, app);
             return;
         }
@@ -939,17 +970,15 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     if(app->screen == MorseFlipperScreenTxGroups ||
        app->screen == MorseFlipperScreenTxGroupsResult ||
        app->screen == MorseFlipperScreenTxGroupsFinal) {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter,
-                                app->screen == MorseFlipperScreenTxGroupsFinal ? "Final score" :
-                                app->screen == MorseFlipperScreenTxGroupsResult ? "Results" :
-                                "TX Groups of 5");
         canvas_set_font(canvas, FontSecondary);
         if(app->screen == MorseFlipperScreenTxGroups && !app->txg_started) {
-            if(morse_flipper_gpio_probe_blocks_start(app)) {
+            if(morse_flipper_gpio_probe_notice_active(app) || morse_flipper_gpio_probe_blocks_start(app)) {
                 morse_flipper_draw_gpio_probe_overlay(canvas, app);
                 return;
             }
+            canvas_set_font(canvas, FontPrimary);
+            canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "TX Groups of 5");
+            canvas_set_font(canvas, FontSecondary);
             if(app->input_source == MorseFlipperInputSourceButtons) {
                 canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
             } else {

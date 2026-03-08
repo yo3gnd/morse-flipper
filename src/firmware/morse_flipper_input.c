@@ -316,6 +316,7 @@ static bool morse_flipper_tx_groups_result_input( MorseFlipperApp* app, const In
     if(event->type == InputTypePress || event->type == InputTypeShort || event->type == InputTypeLong) {
         if(app->txg_result_until > now_ms + 1000U) {
             app->txg_result_until = now_ms + 1000U;
+            app->txg_result_draw_s = 0xFFU;
             morse_flipper_view_dirty(app);
         }
         return true;
