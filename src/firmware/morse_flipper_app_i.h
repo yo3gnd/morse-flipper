@@ -412,6 +412,7 @@ typedef struct MorseFlipperApp {
     bool txg_wait_answer;
     bool txg_done;
     bool txg_sk;
+    bool txg_start_holdoff;
     bool rf_live_active;
     bool rf_tx_level;
     bool rf_tx_gap_flushed;
@@ -424,6 +425,7 @@ typedef struct MorseFlipperApp {
     bool gpio_level;
     bool gpio_gap_flushed;
     uint8_t straight_mark_idx;
+    uint8_t straight_next_draw_s;
     uint8_t txg_repeated_timeouts;
     uint8_t straight_return_screen;
     uint8_t backlight_mode;
@@ -603,6 +605,8 @@ void morse_flipper_feed_straight_mark(MorseFlipperApp* app, uint16_t mark_ms, ui
 void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_reset_straight_session(MorseFlipperApp* app);
 void morse_flipper_note_straight_session(MorseFlipperApp* app);
+bool morse_flipper_straight_countdown_active(const MorseFlipperApp* app);
+void morse_flipper_start_straight_countdown(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_start_straight_round(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms);

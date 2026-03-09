@@ -551,6 +551,7 @@ typedef struct {
     bool txg_wait_answer;
     bool txg_done;
     bool txg_sk;
+    bool txg_start_holdoff;
     bool rf_live_active;
     bool rf_tx_level;
     bool rf_tx_gap_flushed;
@@ -563,6 +564,7 @@ typedef struct {
     bool gpio_level;
     bool gpio_gap_flushed;
     uint8_t straight_mark_idx;
+    uint8_t straight_next_draw_s;
     uint8_t txg_repeated_timeouts;
     uint8_t straight_return_screen;
     uint8_t backlight_mode;
@@ -691,6 +693,8 @@ void morse_flipper_feed_straight_mark(MorseFlipperApp* app, uint16_t mark_ms, ui
 static void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_reset_straight_session(MorseFlipperApp* app);
 static void morse_flipper_note_straight_session(MorseFlipperApp* app);
+bool morse_flipper_straight_countdown_active(const MorseFlipperApp* app);
+void morse_flipper_start_straight_countdown(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_start_straight_round(MorseFlipperApp* app, uint32_t now_ms);
 static void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms);
@@ -2244,6 +2248,7 @@ void morse_flipper_reset_tx_groups_state(MorseFlipperApp* app, uint32_t now_ms)
     app->txg_wait_answer = false;
     app->txg_done = false;
     app->txg_sk = morse_flipper_tx_groups_sk_now(app);
+    app->txg_start_holdoff = false;
     app->txg_wait_started_at = 0U;
     app->txg_last_input_at = 0U;
     app->txg_result_open_at = 0U;
@@ -2278,6 +2283,7 @@ void morse_flipper_start_tx_groups_round(MorseFlipperApp* app, uint32_t now_ms)
     app->txg_wait_answer = true;
     app->txg_done = false;
     app->txg_sk = morse_flipper_tx_groups_sk_now(app);
+    app->txg_start_holdoff = false;
     app->txg_wait_started_at = now_ms;
     app->txg_last_input_at = now_ms;
     app->txg_result_open_at = 0U;
@@ -2299,6 +2305,7 @@ void morse_flipper_leave_tx_groups(MorseFlipperApp* app, uint32_t now_ms)
     app->txg_result_open_at = 0U;
     app->txg_result_until = 0U;
     app->txg_result_draw_s = 0xFFU;
+    app->txg_start_holdoff = false;
     morse_flipper_clear_button_keying(app, now_ms);
     morse_flipper_release_all_notes(app);
     scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneTxGroupsFinal);
@@ -2318,6 +2325,7 @@ static void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t no
     app->straight_wait_started_at = 0U;
     app->straight_last_input_at = 0U;
     app->straight_mark_started_at = 0U;
+    app->straight_next_draw_s = 0xFFU;
     app->straight_trainer.active = false;
     app->straight_trainer.answer[0] = '\0';
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_BTN, false);
@@ -2436,6 +2444,26 @@ static void morse_flipper_note_straight_session(MorseFlipperApp* app)
     morse_flipper_straight_refresh_worst(app);
 }
 
+bool morse_flipper_straight_countdown_active(const MorseFlipperApp* app)
+{
+    if(app == NULL) return false;
+    return app->screen == MorseFlipperScreenStraight && app->straight_started &&
+           !app->straight_playback_active && !app->straight_wait_answer && !app->straight_done &&
+           app->straight_next_at != 0U;
+}
+
+void morse_flipper_start_straight_countdown(MorseFlipperApp* app, uint32_t now_ms)
+{
+    if(app == NULL) return;
+
+    if(!app->straight_started) morse_flipper_reset_straight_session(app);
+    morse_flipper_reset_straight_state(app, now_ms);
+    app->straight_started = true;
+    app->straight_next_at = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
+    app->straight_next_draw_s = 0xFFU;
+    morse_flipper_view_dirty(app);
+}
+
 static void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t now_ms)
 {
     const char* answer;
@@ -2449,6 +2477,7 @@ static void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t n
     app->straight_done = true;
     app->straight_trainer.active = false;
     app->straight_next_at = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
+    app->straight_next_draw_s = 0xFFU;
     morse_flipper_note_straight_session(app);
     answer = morse_flipper_straight_trainer_answer(&app->straight_trainer);
     hard_fail = answer[0] == '\0' ||
@@ -2530,9 +2559,25 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
 void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms) {
     const char* morse;
     uint32_t dit_ms;
+    uint32_t left_ms;
     size_t len;
+    uint8_t left_s;
 
     if(app == NULL) return;
+
+    if(morse_flipper_straight_countdown_active(app)) {
+        if(now_ms >= app->straight_next_at) {
+            morse_flipper_start_straight_round(app, now_ms);
+        } else {
+            left_ms = app->straight_next_at - now_ms;
+            left_s = (uint8_t)((left_ms + 999U) / 1000U);
+            if(left_s != app->straight_next_draw_s) {
+                app->straight_next_draw_s = left_s;
+                morse_flipper_view_dirty(app);
+            }
+        }
+        return;
+    }
 
     if(app->straight_playback_active && now_ms >= app->straight_next_at) {
         morse = morse_flipper_straight_trainer_target_morse(&app->straight_trainer);
@@ -2593,8 +2638,17 @@ void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms) {
         }
     }
 
-    if(app->straight_done && app->straight_next_at != 0U && now_ms >= app->straight_next_at) {
-        morse_flipper_start_straight_round(app, now_ms);
+    if(app->straight_done && app->straight_next_at != 0U) {
+        if(now_ms >= app->straight_next_at) {
+            morse_flipper_start_straight_round(app, now_ms);
+        } else {
+            left_ms = app->straight_next_at - now_ms;
+            left_s = (uint8_t)((left_ms + 999U) / 1000U);
+            if(left_s != app->straight_next_draw_s) {
+                app->straight_next_draw_s = left_s;
+                morse_flipper_view_dirty(app);
+            }
+        }
     }
 }
 

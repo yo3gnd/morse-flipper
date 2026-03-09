@@ -222,6 +222,17 @@ static bool morse_flipper_straight_input( MorseFlipperApp* app, const InputEvent
         return true;
     }
 
+    if((app->straight_done || morse_flipper_straight_countdown_active(app)) &&
+       (event->type == InputTypePress || event->type == InputTypeShort ||
+        event->type == InputTypeLong)) {
+        if(app->straight_next_at > now_ms + 1000U) {
+            app->straight_next_at = now_ms + 1000U;
+            app->straight_next_draw_s = 0xFFU;
+            morse_flipper_view_dirty(app);
+        }
+        return true;
+    }
+
     if(app->straight_wait_answer && app->input_source == MorseFlipperInputSourceButtons &&
        event->key == InputKeyOk) {
         if(event->type == InputTypePress) {
@@ -250,7 +261,7 @@ static bool morse_flipper_straight_input( MorseFlipperApp* app, const InputEvent
     if(!app->straight_playback_active && !app->straight_wait_answer && !app->straight_done &&
        event->key == InputKeyOk &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        morse_flipper_start_straight_round(app, now_ms);
+        morse_flipper_start_straight_countdown(app, now_ms);
         return true;
     }
 
@@ -312,6 +323,13 @@ static bool morse_flipper_tx_groups_input( MorseFlipperApp* app, const InputEven
 static bool morse_flipper_tx_groups_result_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms)
 {
     if(app->screen != MorseFlipperScreenTxGroupsResult) return false;
+
+    if((event->key == InputKeyBack &&
+        (event->type == InputTypeShort || event->type == InputTypeLong)) ||
+       (event->key == InputKeyLeft && event->type == InputTypeLong)) {
+        morse_flipper_leave_tx_groups(app, now_ms);
+        return true;
+    }
 
     if(event->type == InputTypePress || event->type == InputTypeShort || event->type == InputTypeLong) {
         if(app->txg_result_until > now_ms + 1000U) {

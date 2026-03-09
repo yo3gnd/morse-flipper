@@ -142,7 +142,7 @@ static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp*
     r = &app->tx_group.result;
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 9, AlignCenter, AlignCenter, "Results");
+    canvas_draw_str_aligned(canvas, 64, 7, AlignCenter, AlignCenter, "Results");
     canvas_set_font(canvas, FontKeyboard);
 
     snprintf(a, sizeof(a), "%u/5", (unsigned)r->correct);
@@ -169,6 +169,8 @@ static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp*
     canvas_draw_str(canvas, 2, 64, c);
     morse_flipper_txg_score_line(app, b, sizeof(b));
     canvas_draw_str(canvas, 126 - canvas_string_width(canvas, b), 64, b);
+    if(app->input_source == MorseFlipperInputSourceButtons && !app->txg_sk)
+        morse_flipper_draw_left_exit_hint(canvas);
 }
 
 static uint16_t morse_flipper_txg_avg_u16(uint32_t sum, uint16_t n)
@@ -569,6 +571,21 @@ static void morse_flipper_draw_straight_strip(
     canvas_draw_line(canvas, pos, low_y, pos + unit_px, low_y);
 }
 
+static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFlipperApp* app)
+{
+    char wait_txt[12];
+    uint32_t now;
+    uint32_t left_ms;
+
+    if(canvas == NULL || app == NULL || app->straight_next_at == 0U) return;
+    now = furi_get_tick();
+    if(now >= app->straight_next_at) return;
+
+    left_ms = app->straight_next_at - now;
+    snprintf(wait_txt, sizeof(wait_txt), "%u", (unsigned)((left_ms + 999U) / 1000U));
+    canvas_draw_str(canvas, 2, 64, wait_txt);
+}
+
 static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipperApp* app)
 {
     char s_txt[8];
@@ -649,6 +666,7 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
 
     canvas_set_font(canvas, FontKeyboard);
     canvas_draw_str(canvas, 2, 56, app->straight_worst_line[0] ? app->straight_worst_line : "Wo: -");
+    if(app->straight_done) morse_flipper_draw_straight_countdown(canvas, app);
     x = (uint8_t)(126U - canvas_string_width(canvas, cnt));
     canvas_draw_str(canvas, x, 64, cnt);
 }
@@ -935,11 +953,14 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             return;
         }
 
-        if(!app->straight_started) {
+        if(!app->straight_started || morse_flipper_straight_countdown_active(app)) {
             canvas_set_font(canvas, FontPrimary);
             canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "Straight trainer");
             canvas_set_font(canvas, FontSecondary);
-            if(app->input_source == MorseFlipperInputSourceButtons) {
+            if(morse_flipper_straight_countdown_active(app)) {
+                canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Starting");
+                morse_flipper_draw_straight_countdown(canvas, app);
+            } else if(app->input_source == MorseFlipperInputSourceButtons) {
                 canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
             } else {
                 canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Press OK to start");

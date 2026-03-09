@@ -362,10 +362,22 @@ static void morse_flipper_sync_gpio_inputs(MorseFlipperApp* app, uint32_t now_ms
         morse_flipper_straight_filter_reset(&app->straight_filter);
     }
 
+    if(app->screen == MorseFlipperScreenTxGroups && app->txg_start_holdoff) {
+        if(morse_flipper_straight_answer_down(app)) {
+            morse_flipper_straight_filter_reset(&app->straight_filter);
+            straight_active = false;
+            dit_active = false;
+            dah_active = false;
+        } else {
+            app->txg_start_holdoff = false;
+        }
+    }
+
     if(morse_flipper_training_playback_active(app) || app->screen == MorseFlipperScreenSessionEnd ||
        app->screen == MorseFlipperScreenRfRx ||
        app->screen == MorseFlipperScreenTxGroupsResult ||
        app->screen == MorseFlipperScreenTxGroupsFinal ||
+       (app->screen == MorseFlipperScreenStraight && !app->straight_wait_answer) ||
        (app->screen == MorseFlipperScreenTxGroups && !app->txg_wait_answer) ||
        (app->screen == MorseFlipperScreenSession && !morse_flipper_session_repeat_active(app))) {
         morse_flipper_straight_filter_reset(&app->straight_filter);
@@ -498,12 +510,21 @@ void morse_flipper_poll(MorseFlipperApp* app) {
     }
     if(app->screen == MorseFlipperScreenStraight && !app->straight_started && !app->straight_playback_active &&
        !app->straight_wait_answer && !app->straight_done && raw_straight) {
-        morse_flipper_start_straight_round(app, now_ms);
+        morse_flipper_start_straight_countdown(app, now_ms);
         raw_straight = false;
     }
     if(app->screen == MorseFlipperScreenTxGroups && !app->txg_started &&
        app->input_source != MorseFlipperInputSourceButtons && raw_straight) {
         morse_flipper_start_tx_groups_round(app, now_ms);
+        app->txg_start_holdoff = true;
+        raw_straight = false;
+    }
+    if(app->screen == MorseFlipperScreenStraight &&
+       (app->straight_done || morse_flipper_straight_countdown_active(app)) &&
+       app->straight_next_at > now_ms + 1000U && raw_straight) {
+        app->straight_next_at = now_ms + 1000U;
+        app->straight_next_draw_s = 0xFFU;
+        morse_flipper_view_dirty(app);
         raw_straight = false;
     }
     if(app->screen == MorseFlipperScreenStraight && !raw_straight &&
