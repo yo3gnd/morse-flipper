@@ -1,7 +1,6 @@
 #include "morse_flipper_app_i.h"
 
-MorseFlipperApp* morse_flipper_boot(void)
-{
+MorseFlipperApp* morse_flipper_boot(void) {
     static MorseFlipperApp app;
     app = (MorseFlipperApp){
         .q = NULL,
@@ -19,8 +18,7 @@ MorseFlipperApp* morse_flipper_boot(void)
         .help_text = NULL,
         .exit_requested = false,
         .previous_usb_config = NULL,
-        .hid_cfg =
-            {
+        .hid_cfg = {
                 .vid = 0x6666U,
                 .pid = 0x434BU,
                 .manuf = "YO3GND",
@@ -248,14 +246,12 @@ MorseFlipperApp* morse_flipper_boot(void)
     return &app;
 }
 
-ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app)
-{
+ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app) {
     if(app == NULL) return NULL;
     return app->view_dispatcher;
 }
 
-void morse_flipper_shutdown(MorseFlipperApp* app)
-{
+void morse_flipper_shutdown(MorseFlipperApp* app) {
     if(app == NULL) return;
 
     if(app->screen == MorseFlipperScreenHamRun) {

@@ -27,8 +27,7 @@ static const int16_t morse_flipper_audio_pwm_sine_q15[MORSE_FLIPPER_AUDIO_PWM_SI
     -23170, -20787, -18204, -15446, -12539, -9512,  -6393,  -3212,
 };
 
-static uint16_t morse_flipper_audio_pwm_clamp_fade_len(uint32_t samples)
-{
+static uint16_t morse_flipper_audio_pwm_clamp_fade_len(uint32_t samples) {
     if(samples > MORSE_FLIPPER_AUDIO_PWM_SINE_SAMPLES) {
         return MORSE_FLIPPER_AUDIO_PWM_SINE_SAMPLES;
     }
@@ -36,14 +35,12 @@ static uint16_t morse_flipper_audio_pwm_clamp_fade_len(uint32_t samples)
     return (uint16_t)samples;
 }
 
-static uint16_t morse_flipper_audio_pwm_progress_q15(uint16_t idx, uint16_t len)
-{
+static uint16_t morse_flipper_audio_pwm_progress_q15(uint16_t idx, uint16_t len) {
     if(len <= 1U) return MORSE_FLIPPER_AUDIO_PWM_Q15;
     return (uint16_t)(((uint32_t)idx * MORSE_FLIPPER_AUDIO_PWM_Q15) / (uint32_t)(len - 1U));
 }
 
-static uint16_t morse_flipper_audio_pwm_current_env_q15(const MorseFlipperAudioPwm* audio)
-{
+static uint16_t morse_flipper_audio_pwm_current_env_q15(const MorseFlipperAudioPwm* audio) {
     uint32_t delta;
 
     if(audio == NULL) return 0U;
@@ -71,8 +68,7 @@ static uint16_t morse_flipper_audio_pwm_current_env_q15(const MorseFlipperAudioP
     }
 }
 
-static void morse_flipper_audio_pwm_apply_gate(MorseFlipperAudioPwm* audio)
-{
+static void morse_flipper_audio_pwm_apply_gate(MorseFlipperAudioPwm* audio) {
     if(audio == NULL || audio->gate_applied == audio->gate_requested) return;
 
     if(audio->gate_requested) {
@@ -99,8 +95,7 @@ static void morse_flipper_audio_pwm_apply_gate(MorseFlipperAudioPwm* audio)
     audio->gate_applied = audio->gate_requested;
 }
 
-static uint16_t morse_flipper_audio_pwm_next_sample(MorseFlipperAudioPwm* audio)
-{
+static uint16_t morse_flipper_audio_pwm_next_sample(MorseFlipperAudioPwm* audio) {
     uint16_t env_q15;
     uint8_t sine_idx;
     int32_t mixed_q15;
@@ -144,8 +139,7 @@ static uint16_t morse_flipper_audio_pwm_next_sample(MorseFlipperAudioPwm* audio)
     return sample;
 }
 
-void morse_flipper_audio_pwm_reset(MorseFlipperAudioPwm* audio)
-{
+void morse_flipper_audio_pwm_reset(MorseFlipperAudioPwm* audio) {
     if(audio == NULL) return;
     memset(audio, 0, sizeof(*audio));
 }
@@ -157,8 +151,7 @@ void morse_flipper_audio_pwm_prepare(
     uint32_t tone_hz,
     uint8_t volume_pct,
     uint16_t attack_ms,
-    uint16_t release_ms)
-{
+    uint16_t release_ms) {
     uint32_t i;
     uint32_t attack_samples;
     uint32_t release_samples;
@@ -212,8 +205,7 @@ void morse_flipper_audio_pwm_prepare(
     audio->prepared = true;
 }
 
-void morse_flipper_audio_pwm_set_tone_hz(MorseFlipperAudioPwm* audio, uint32_t tone_hz)
-{
+void morse_flipper_audio_pwm_set_tone_hz(MorseFlipperAudioPwm* audio, uint32_t tone_hz) {
     if(audio == NULL || !audio->prepared || audio->sample_rate_hz == 0U) return;
 
     tone_hz = tone_hz == 0U ? MORSE_FLIPPER_AUDIO_PWM_TONE_HZ : tone_hz;
@@ -224,14 +216,12 @@ void morse_flipper_audio_pwm_set_tone_hz(MorseFlipperAudioPwm* audio, uint32_t t
         (uint32_t)(((uint64_t)tone_hz << 32U) / (uint64_t)audio->sample_rate_hz);
 }
 
-void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate)
-{
+void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate) {
     if(audio == NULL || !audio->prepared) return;
     audio->gate_requested = gate;
 }
 
-void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst, size_t count)
-{
+void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst, size_t count) {
     size_t i;
 
     if(audio == NULL || dst == NULL || !audio->prepared) return;
@@ -241,8 +231,7 @@ void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst,
     }
 }
 
-bool morse_flipper_audio_pwm_sound_active(const MorseFlipperAudioPwm* audio)
-{
+bool morse_flipper_audio_pwm_sound_active(const MorseFlipperAudioPwm* audio) {
     if(audio == NULL) return false;
     return audio->env_state != MorseFlipperAudioPwmEnvIdle;
 }
@@ -254,8 +243,7 @@ bool morse_flipper_audio_pwm_sound_active(const MorseFlipperAudioPwm* audio)
 #define MORSE_FLIPPER_AUDIO_PWM_DMA_DEF MORSE_FLIPPER_AUDIO_PWM_DMA, MORSE_FLIPPER_AUDIO_PWM_DMA_CH
 #define MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ FuriHalInterruptIdDma1Ch1
 
-static void morse_flipper_audio_pwm_ramp_midpoint(bool up, uint32_t carrier_hz)
-{
+static void morse_flipper_audio_pwm_ramp_midpoint(bool up, uint32_t carrier_hz) {
     uint32_t step_delay_ms = MORSE_FLIPPER_AUDIO_PWM_RAMP_MS / MORSE_FLIPPER_AUDIO_PWM_RAMP_STEPS;
 
     if(step_delay_ms == 0U) step_delay_ms = 1U;
@@ -277,8 +265,7 @@ static void morse_flipper_audio_pwm_ramp_midpoint(bool up, uint32_t carrier_hz)
     }
 }
 
-static void morse_flipper_audio_pwm_clear_dma_flags(void)
-{
+static void morse_flipper_audio_pwm_clear_dma_flags(void) {
 #if MORSE_FLIPPER_AUDIO_PWM_DMA_CH == LL_DMA_CHANNEL_1
     LL_DMA_ClearFlag_HT1(MORSE_FLIPPER_AUDIO_PWM_DMA);
     LL_DMA_ClearFlag_TC1(MORSE_FLIPPER_AUDIO_PWM_DMA);
@@ -288,8 +275,7 @@ static void morse_flipper_audio_pwm_clear_dma_flags(void)
 #endif
 }
 
-static void morse_flipper_audio_pwm_dma_isr(void* context)
-{
+static void morse_flipper_audio_pwm_dma_isr(void* context) {
     MorseFlipperAudioPwm* audio = context;
 
 #if MORSE_FLIPPER_AUDIO_PWM_DMA_CH == LL_DMA_CHANNEL_1
@@ -315,8 +301,7 @@ static void morse_flipper_audio_pwm_dma_isr(void* context)
 #endif
 }
 
-bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
-{
+bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio) {
     LL_DMA_InitTypeDef dma_cfg = {0};
 
     if(audio == NULL || !audio->prepared) return false;
@@ -398,8 +383,7 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio)
     return true;
 }
 
-void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio)
-{
+void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio) {
     if(audio == NULL) return;
     if(!audio->prepared) return;
     if(!audio->running) {

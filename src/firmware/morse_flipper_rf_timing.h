@@ -5,8 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
     bool marks[32];
     uint16_t durations_ms[32];
     size_t start;

@@ -1,7 +1,6 @@
 #include "morse_flipper_app_i.h"
 
-int32_t morse_flipper_fap(void* p)
-{
+int32_t morse_flipper_fap(void* p) {
     MorseFlipperApp* app;
     UNUSED(p);
 

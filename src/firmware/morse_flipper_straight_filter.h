@@ -4,8 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
     bool active;
     bool release_pending;
     uint32_t release_started_at;

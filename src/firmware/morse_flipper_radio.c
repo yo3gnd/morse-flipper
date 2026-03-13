@@ -54,8 +54,7 @@ static const uint8_t morse_flipper_carrier_ook_650khz_no_autocal_regs[] = {
     0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static void radio_rx_capture(bool level, uint32_t duration, void* context)
-{
+static void radio_rx_capture(bool level, uint32_t duration, void* context) {
     MorseFlipperRadio* radio = context;
     uint8_t next;
     uint16_t ms;
@@ -71,15 +70,13 @@ static void radio_rx_capture(bool level, uint32_t duration, void* context)
     radio->rx_wr = next;
 }
 
-static void radio_apply_frequency(MorseFlipperRadio* radio)
-{
+static void radio_apply_frequency(MorseFlipperRadio* radio) {
     if(!radio || !radio->freq_hz) return;
     radio->freq_hz = furi_hal_subghz_set_frequency_and_path(radio->freq_hz);
     radio->tuned_hz = radio->freq_hz;
 }
 
-static void radio_prepare_preset(MorseFlipperRadio* radio)
-{
+static void radio_prepare_preset(MorseFlipperRadio* radio) {
     const uint8_t* preset;
 
     if(!radio || radio->ready) return;
@@ -94,8 +91,7 @@ static void radio_prepare_preset(MorseFlipperRadio* radio)
     radio->tuned_hz = 0;
 }
 
-static void radio_prepare_rx(MorseFlipperRadio* radio)
-{
+static void radio_prepare_rx(MorseFlipperRadio* radio) {
     const GpioPin* data_gpio;
 
     if(!radio) return;
@@ -109,8 +105,7 @@ static void radio_prepare_rx(MorseFlipperRadio* radio)
     }
 }
 
-static bool radio_prepare_tx(MorseFlipperRadio* radio)
-{
+static bool radio_prepare_tx(MorseFlipperRadio* radio) {
     const GpioPin* data_gpio;
 
     if(!radio) return false;
@@ -126,8 +121,7 @@ static bool radio_prepare_tx(MorseFlipperRadio* radio)
 }
 #endif
 
-static void radio_stop_rx(MorseFlipperRadio* radio)
-{
+static void radio_stop_rx(MorseFlipperRadio* radio) {
     if(!radio || !radio->rx_on) return;
 
 #ifdef MORSE_FLIPPER_FAP
@@ -143,8 +137,7 @@ static void radio_stop_rx(MorseFlipperRadio* radio)
     radio->rx_rd = radio->rx_wr;
 }
 
-static void radio_stop_tx(MorseFlipperRadio* radio)
-{
+static void radio_stop_tx(MorseFlipperRadio* radio) {
     if(!radio) return;
 
 #ifdef MORSE_FLIPPER_FAP
@@ -158,15 +151,13 @@ static void radio_stop_tx(MorseFlipperRadio* radio)
     radio->tx_level = false;
 }
 
-void morse_flipper_radio_init(MorseFlipperRadio* radio)
-{
+void morse_flipper_radio_init(MorseFlipperRadio* radio) {
     if(!radio) return;
     memset(radio, 0, sizeof(*radio));
     radio->profile = MorseFlipperRadioProfileOokData;
 }
 
-void morse_flipper_radio_deinit(MorseFlipperRadio* radio)
-{
+void morse_flipper_radio_deinit(MorseFlipperRadio* radio) {
     if(!radio) return;
 
 #ifdef MORSE_FLIPPER_FAP
@@ -185,20 +176,17 @@ void morse_flipper_radio_deinit(MorseFlipperRadio* radio)
 void morse_flipper_radio_set_rx_callback(
     MorseFlipperRadio* radio,
     void (*cb)(void* ctx, bool level, uint16_t duration_ms),
-    void* ctx)
-{
+    void* ctx) {
     if(!radio) return;
     radio->rx_cb = cb;
     radio->rx_ctx = ctx;
 }
 
-void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, bool active, bool tx_on, MorseFlipperRadioProfile profile)
-{
+void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, bool active, bool tx_on, MorseFlipperRadioProfile profile) {
     if(!radio) return;
 
 #ifdef MORSE_FLIPPER_FAP
-    if(radio->profile != profile)
-    {
+    if(radio->profile != profile) {
         radio_stop_rx(radio);
         radio_stop_tx(radio);
         radio->ready = false;
@@ -206,23 +194,20 @@ void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, 
         radio->profile = profile;
     }
 
-    if(freq_hz && radio->freq_hz != freq_hz)
-    {
+    if(freq_hz && radio->freq_hz != freq_hz) {
         radio_stop_rx(radio);
         radio_stop_tx(radio);
         radio->freq_hz = freq_hz;
         radio->tuned_hz = 0;
     }
 
-    if(!active)
-    {
+    if(!active) {
         radio_stop_rx(radio);
         radio_stop_tx(radio);
         return;
     }
 
-    if(tx_on)
-    {
+    if(tx_on) {
         radio_stop_rx(radio);
         if(radio->tx_on) return;
         if(!radio->freq_hz && freq_hz) radio->freq_hz = freq_hz;
@@ -231,8 +216,7 @@ void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, 
     }
 
     radio_stop_tx(radio);
-    if(!radio->rx_on)
-    {
+    if(!radio->rx_on) {
         if(!radio->freq_hz && freq_hz) radio->freq_hz = freq_hz;
         radio_prepare_rx(radio);
         if(radio->profile != MorseFlipperRadioProfileCarrierSense) {
@@ -249,22 +233,19 @@ void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, 
 #endif
 }
 
-void morse_flipper_radio_drain_rx(MorseFlipperRadio* radio)
-{
+void morse_flipper_radio_drain_rx(MorseFlipperRadio* radio) {
     uint8_t n = 0;
 
     if(!radio || !radio->rx_cb) return;
 
-    while(radio->rx_rd != radio->rx_wr && n < MORSE_FLIPPER_RADIO_RX_DRAIN_MAX)
-    {
+    while(radio->rx_rd != radio->rx_wr && n < MORSE_FLIPPER_RADIO_RX_DRAIN_MAX) {
         radio->rx_cb(radio->rx_ctx, radio->rx_mark[radio->rx_rd], radio->rx_ms[radio->rx_rd]);
         radio->rx_rd = (uint8_t)((radio->rx_rd + 1u) % MORSE_FLIPPER_RADIO_RX_RING);
         n++;
     }
 }
 
-void morse_flipper_radio_set_tx_level(MorseFlipperRadio* radio, bool level)
-{
+void morse_flipper_radio_set_tx_level(MorseFlipperRadio* radio, bool level) {
     if(!radio || !radio->tx_on) return;
     if(radio->tx_level == level) return;
 
@@ -276,8 +257,7 @@ void morse_flipper_radio_set_tx_level(MorseFlipperRadio* radio, bool level)
     radio->tx_level = level;
 }
 
-bool morse_flipper_radio_read_rx_level(const MorseFlipperRadio* radio)
-{
+bool morse_flipper_radio_read_rx_level(const MorseFlipperRadio* radio) {
     if(!radio || !radio->rx_on) return false;
 
 #ifdef MORSE_FLIPPER_FAP

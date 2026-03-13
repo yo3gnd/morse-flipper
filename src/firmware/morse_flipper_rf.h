@@ -10,8 +10,7 @@
 #define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ  433150000u
 #define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ 433150u
 
-typedef struct
-{
+typedef struct {
     uint32_t frequency_hz;
     bool tx_active;
     uint32_t tx_edges;

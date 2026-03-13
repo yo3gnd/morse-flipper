@@ -4,8 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
     char target_char;
     char target_morse[8];
     char answer[16];

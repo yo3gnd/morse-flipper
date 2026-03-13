@@ -2,16 +2,14 @@
 
 #include <stddef.h>
 
-void morse_flipper_straight_filter_reset(MorseFlipperStraightFilter* filter)
-{
+void morse_flipper_straight_filter_reset(MorseFlipperStraightFilter* filter) {
     if(filter == NULL) return;
     filter->active = false;
     filter->release_pending = false;
     filter->release_started_at = 0U;
 }
 
-bool morse_flipper_straight_filter_update( MorseFlipperStraightFilter* filter, bool raw_down, uint32_t now_ms, uint16_t release_debounce_ms)
-{
+bool morse_flipper_straight_filter_update( MorseFlipperStraightFilter* filter, bool raw_down, uint32_t now_ms, uint16_t release_debounce_ms) {
     if(filter == NULL) return raw_down;
 
     if(raw_down) {

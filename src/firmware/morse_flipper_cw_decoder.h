@@ -5,8 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
     uint16_t dit_ms;
     uint16_t dit_samples[8];
     size_t dit_sample_count;

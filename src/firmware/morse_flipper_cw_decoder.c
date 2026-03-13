@@ -4,36 +4,29 @@
 
 #include <string.h>
 
-static void decoder_emit(MorseFlipperCwDecoder* decoder, uint8_t ch)
-{
+static void decoder_emit(MorseFlipperCwDecoder* decoder, uint8_t ch) {
     if(!decoder || !ch) return;
     if(decoder->output_len + 1u >= sizeof(decoder->output)) return;
     decoder->output[decoder->output_len++] = (char)ch;
     decoder->output[decoder->output_len] = 0;
 }
 
-static void decoder_clear_symbol(MorseFlipperCwDecoder* decoder)
-{
+static void decoder_clear_symbol(MorseFlipperCwDecoder* decoder) {
     if(!decoder) return;
     decoder->symbol_code = 1u;
     decoder->symbol_count = 0u;
 }
 
-static void decoder_push_dit_sample(MorseFlipperCwDecoder* decoder, uint16_t ms)
-{
+static void decoder_push_dit_sample(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     size_t i;
     uint32_t total;
 
     if(!decoder || !ms) return;
 
-    if(decoder->dit_sample_count < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0]))
-    {
+    if(decoder->dit_sample_count < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0])) {
         decoder->dit_samples[decoder->dit_sample_count++] = ms;
-    }
-    else
-    {
-        for(i = 1; i < decoder->dit_sample_count; i++)
-        {
+    } else {
+        for(i = 1; i < decoder->dit_sample_count; i++) {
             decoder->dit_samples[i - 1] = decoder->dit_samples[i];
         }
         decoder->dit_samples[decoder->dit_sample_count - 1u] = ms;
@@ -44,8 +37,7 @@ static void decoder_push_dit_sample(MorseFlipperCwDecoder* decoder, uint16_t ms)
     decoder->dit_ms = (uint16_t)(total / decoder->dit_sample_count);
 }
 
-static bool decoder_push_symbol(MorseFlipperCwDecoder* decoder, bool dash)
-{
+static bool decoder_push_symbol(MorseFlipperCwDecoder* decoder, bool dash) {
     uint16_t bit;
 
     if(!decoder || decoder->symbol_count >= 9u) return false;
@@ -59,8 +51,7 @@ static bool decoder_push_symbol(MorseFlipperCwDecoder* decoder, bool dash)
     return true;
 }
 
-static uint8_t decoder_lookup(uint16_t code)
-{
+static uint8_t decoder_lookup(uint16_t code) {
     uint8_t i;
     static const uint8_t prosigns[] = {
         MORSE_FLIPPER_CW_TOKEN_SK,
@@ -87,8 +78,7 @@ static uint8_t decoder_lookup(uint16_t code)
     return '#';
 }
 
-static bool decoder_preview_extendable(uint16_t code, size_t count)
-{
+static bool decoder_preview_extendable(uint16_t code, size_t count) {
     uint16_t bit;
     uint16_t next_code;
     uint8_t preview;
@@ -112,8 +102,7 @@ static bool decoder_preview_extendable(uint16_t code, size_t count)
     return false;
 }
 
-static void decoder_flush_symbol_buffer(MorseFlipperCwDecoder* decoder)
-{
+static void decoder_flush_symbol_buffer(MorseFlipperCwDecoder* decoder) {
     uint8_t letter;
 
     if(!decoder || !decoder->symbol_count) return;
@@ -122,8 +111,7 @@ static void decoder_flush_symbol_buffer(MorseFlipperCwDecoder* decoder)
     decoder_clear_symbol(decoder);
 }
 
-static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder)
-{
+static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder) {
     uint16_t marks[32];
     size_t mark_count;
     size_t i;
@@ -136,18 +124,14 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder)
     if(!decoder) return false;
 
     mark_count = 0;
-    for(i = 0; i < decoder->pending_count && mark_count < sizeof(marks) / sizeof(marks[0]); i++)
-    {
+    for(i = 0; i < decoder->pending_count && mark_count < sizeof(marks) / sizeof(marks[0]); i++) {
         if(decoder->pending_samples[i] > 0) marks[mark_count++] = (uint16_t)decoder->pending_samples[i];
     }
     if(mark_count < 8) return false;
 
-    for(i = 0; i < mark_count; i++)
-    {
-        for(j = i + 1; j < mark_count; j++)
-        {
-            if(marks[j] < marks[i])
-            {
+    for(i = 0; i < mark_count; i++) {
+        for(j = i + 1; j < mark_count; j++) {
+            if(marks[j] < marks[i]) {
                 tmp = marks[i];
                 marks[i] = marks[j];
                 marks[j] = tmp;
@@ -157,10 +141,8 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder)
 
     split_idx = 0;
     largest_gap = 0;
-    for(i = 1; i < mark_count; i++)
-    {
-        if((uint16_t)(marks[i] - marks[i - 1u]) > largest_gap)
-        {
+    for(i = 1; i < mark_count; i++) {
+        if((uint16_t)(marks[i] - marks[i - 1u]) > largest_gap) {
             largest_gap = (uint16_t)(marks[i] - marks[i - 1u]);
             split_idx = i;
         }
@@ -172,15 +154,13 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder)
     for(i = 0; i < split_idx; i++) lower_total += marks[i];
     decoder->dit_ms = (uint16_t)(lower_total / split_idx);
     decoder->dit_sample_count = 0;
-    for(i = 0; i < split_idx && i < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0]); i++)
-    {
+    for(i = 0; i < split_idx && i < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0]); i++) {
         decoder->dit_samples[decoder->dit_sample_count++] = marks[i];
     }
     return true;
 }
 
-static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms)
-{
+static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     uint32_t dit_min;
     uint32_t dit_max;
     uint32_t dah_min;
@@ -188,10 +168,8 @@ static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms)
 
     if(!decoder || !ms) return;
 
-    if(!decoder->dit_ms)
-    {
-        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0]))
-        {
+    if(!decoder->dit_ms) {
+        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
             decoder->pending_samples[decoder->pending_count++] = (int16_t)ms;
         }
         return;
@@ -202,30 +180,24 @@ static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms)
     dah_min = decoder->dit_ms * 2u;
     dah_max = decoder->dit_ms * 5u;
 
-    if(ms >= dit_min && ms <= dit_max)
-    {
+    if(ms >= dit_min && ms <= dit_max) {
         if(decoder_push_symbol(decoder, false)) {
             decoder_push_dit_sample(decoder, ms);
         }
-    }
-    else if(ms >= dah_min && ms <= dah_max)
-    {
+    } else if(ms >= dah_min && ms <= dah_max) {
         decoder_push_symbol(decoder, true);
     }
 }
 
-static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms)
-{
+static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     uint32_t letter_min;
     uint32_t word_min;
     uint32_t reset_min;
 
     if(!decoder || !ms) return;
 
-    if(!decoder->dit_ms)
-    {
-        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0]))
-        {
+    if(!decoder->dit_ms) {
+        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
             decoder->pending_samples[decoder->pending_count++] = -(int16_t)ms;
         }
         return;
@@ -235,17 +207,12 @@ static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms)
     word_min = decoder->dit_ms * 6u;
     reset_min = decoder->dit_ms * 12u;
 
-    if(ms >= letter_min && ms < word_min)
-    {
+    if(ms >= letter_min && ms < word_min) {
         decoder_flush_symbol_buffer(decoder);
-    }
-    else if(ms >= word_min && ms < reset_min)
-    {
+    } else if(ms >= word_min && ms < reset_min) {
         decoder_flush_symbol_buffer(decoder);
         decoder_emit(decoder, ' ');
-    }
-    else if(ms >= reset_min)
-    {
+    } else if(ms >= reset_min) {
         decoder_flush_symbol_buffer(decoder);
         decoder_emit(decoder, '|');
         decoder->timing_reset = true;
@@ -254,8 +221,7 @@ static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms)
     }
 }
 
-static void decoder_replay_pending(MorseFlipperCwDecoder* decoder)
-{
+static void decoder_replay_pending(MorseFlipperCwDecoder* decoder) {
     int16_t samples[64];
     size_t count;
     size_t i;
@@ -266,23 +232,20 @@ static void decoder_replay_pending(MorseFlipperCwDecoder* decoder)
     for(i = 0; i < count; i++) samples[i] = decoder->pending_samples[i];
     decoder->pending_count = 0;
 
-    for(i = 0; i < count; i++)
-    {
+    for(i = 0; i < count; i++) {
         if(samples[i] > 0) decoder_process_mark(decoder, (uint16_t)samples[i]);
         else decoder_process_space(decoder, (uint16_t)(-samples[i]));
     }
 }
 
-void morse_flipper_cw_decoder_init(MorseFlipperCwDecoder* decoder, uint16_t starting_dit_ms)
-{
+void morse_flipper_cw_decoder_init(MorseFlipperCwDecoder* decoder, uint16_t starting_dit_ms) {
     if(!decoder) return;
     memset(decoder, 0, sizeof(*decoder));
     decoder->dit_ms = starting_dit_ms;
     decoder_clear_symbol(decoder);
 }
 
-void morse_flipper_cw_decoder_reset(MorseFlipperCwDecoder* decoder)
-{
+void morse_flipper_cw_decoder_reset(MorseFlipperCwDecoder* decoder) {
     uint16_t starting_dit_ms;
 
     if(!decoder) return;
@@ -292,63 +255,52 @@ void morse_flipper_cw_decoder_reset(MorseFlipperCwDecoder* decoder)
     decoder_clear_symbol(decoder);
 }
 
-void morse_flipper_cw_decoder_feed_mark(MorseFlipperCwDecoder* decoder, uint16_t ms)
-{
+void morse_flipper_cw_decoder_feed_mark(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     if(!decoder || !ms) return;
     decoder->timing_reset = false;
     decoder_process_mark(decoder, ms);
-    if(!decoder->dit_ms && decoder_guess_timing(decoder))
-    {
+    if(!decoder->dit_ms && decoder_guess_timing(decoder)) {
         decoder_replay_pending(decoder);
     }
 }
 
-void morse_flipper_cw_decoder_feed_space(MorseFlipperCwDecoder* decoder, uint16_t ms)
-{
+void morse_flipper_cw_decoder_feed_space(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     if(!decoder || !ms) return;
     decoder->timing_reset = false;
     decoder_process_space(decoder, ms);
-    if(!decoder->dit_ms && decoder_guess_timing(decoder))
-    {
+    if(!decoder->dit_ms && decoder_guess_timing(decoder)) {
         decoder_replay_pending(decoder);
     }
 }
 
-bool morse_flipper_cw_decoder_timing_ready(const MorseFlipperCwDecoder* decoder)
-{
+bool morse_flipper_cw_decoder_timing_ready(const MorseFlipperCwDecoder* decoder) {
     return decoder ? decoder->dit_ms != 0 : false;
 }
 
-uint16_t morse_flipper_cw_decoder_dit_ms(const MorseFlipperCwDecoder* decoder)
-{
+uint16_t morse_flipper_cw_decoder_dit_ms(const MorseFlipperCwDecoder* decoder) {
     return decoder ? decoder->dit_ms : 0;
 }
 
-const char* morse_flipper_cw_decoder_output(const MorseFlipperCwDecoder* decoder)
-{
+const char* morse_flipper_cw_decoder_output(const MorseFlipperCwDecoder* decoder) {
     return decoder ? decoder->output : "";
 }
 
-void morse_flipper_cw_decoder_clear_output(MorseFlipperCwDecoder* decoder)
-{
+void morse_flipper_cw_decoder_clear_output(MorseFlipperCwDecoder* decoder) {
     if(!decoder) return;
     decoder->output_len = 0;
     decoder->output[0] = 0;
 }
 
-bool morse_flipper_cw_decoder_timing_reset(const MorseFlipperCwDecoder* decoder)
-{
+bool morse_flipper_cw_decoder_timing_reset(const MorseFlipperCwDecoder* decoder) {
     return decoder ? decoder->timing_reset : false;
 }
 
-uint8_t morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder)
-{
+uint8_t morse_flipper_cw_decoder_preview(const MorseFlipperCwDecoder* decoder) {
     if(!decoder || !decoder->symbol_count) return 0;
     return decoder_lookup(decoder->symbol_code);
 }
 
-bool morse_flipper_cw_decoder_preview_extendable(const MorseFlipperCwDecoder* decoder)
-{
+bool morse_flipper_cw_decoder_preview_extendable(const MorseFlipperCwDecoder* decoder) {
     if(!decoder || !decoder->symbol_count) return false;
     return decoder_preview_extendable(decoder->symbol_code, decoder->symbol_count);
 }

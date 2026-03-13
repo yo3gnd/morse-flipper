@@ -27,8 +27,7 @@ static void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint
     canvas_draw_box(canvas, 127, 31, 1, 7);
 }
 
-static void morse_flipper_txg_score_line(const MorseFlipperApp* app, char* out, size_t out_sz)
-{
+static void morse_flipper_txg_score_line(const MorseFlipperApp* app, char* out, size_t out_sz) {
     unsigned pct;
 
     if(out == NULL || out_sz == 0U) return;
@@ -44,8 +43,7 @@ static void morse_flipper_txg_score_line(const MorseFlipperApp* app, char* out, 
         pct);
 }
 
-static void morse_flipper_txg_score_pct(const MorseFlipperApp* app, char* out, size_t out_sz)
-{
+static void morse_flipper_txg_score_pct(const MorseFlipperApp* app, char* out, size_t out_sz) {
     unsigned pct;
 
     if(out == NULL || out_sz == 0U) return;
@@ -56,8 +54,7 @@ static void morse_flipper_txg_score_pct(const MorseFlipperApp* app, char* out, s
     snprintf(out, out_sz, "%u%%", pct);
 }
 
-static void morse_flipper_draw_txg_big_slots(Canvas* canvas, int32_t cy, const char* text)
-{
+static void morse_flipper_draw_txg_big_slots(Canvas* canvas, int32_t cy, const char* text) {
     const int32_t gap = 3;
     const int32_t cell = (int32_t)MORSE_FLIPPER_TERMINUS24_WIDTH;
     const int32_t total = (cell * 5) + (gap * 4);
@@ -75,8 +72,7 @@ static void morse_flipper_draw_txg_big_slots(Canvas* canvas, int32_t cy, const c
     }
 }
 
-static void morse_flipper_draw_tx_groups_practice(Canvas* canvas, MorseFlipperApp* app)
-{
+static void morse_flipper_draw_tx_groups_practice(Canvas* canvas, MorseFlipperApp* app) {
     char score[8];
     uint8_t x;
 
@@ -92,8 +88,7 @@ static void morse_flipper_draw_tx_groups_practice(Canvas* canvas, MorseFlipperAp
     canvas_draw_str(canvas, x, 64, score);
 }
 
-static void morse_flipper_draw_txg_label(Canvas* canvas, int32_t x, int32_t y, const char* s, bool bad)
-{
+static void morse_flipper_draw_txg_label(Canvas* canvas, int32_t x, int32_t y, const char* s, bool bad) {
     uint16_t w;
 
     if(!bad) {
@@ -114,14 +109,12 @@ static void morse_flipper_draw_txg_metric(
     int32_t y,
     const char* label,
     const char* value,
-    bool bad)
-{
+    bool bad) {
     morse_flipper_draw_txg_label(canvas, x, y, label, bad);
     canvas_draw_str(canvas, x + 28, y, value);
 }
 
-static uint8_t morse_flipper_txg_countdown_s(const MorseFlipperApp* app)
-{
+static uint8_t morse_flipper_txg_countdown_s(const MorseFlipperApp* app) {
     uint32_t now;
     uint32_t left;
 
@@ -132,8 +125,7 @@ static uint8_t morse_flipper_txg_countdown_s(const MorseFlipperApp* app)
     return (uint8_t)((left + 999U) / 1000U);
 }
 
-static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp* app)
-{
+static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp* app) {
     char a[12];
     char b[12];
     char c[4];
@@ -174,14 +166,12 @@ static void morse_flipper_draw_tx_groups_result(Canvas* canvas, MorseFlipperApp*
         morse_flipper_draw_left_exit_hint(canvas);
 }
 
-static uint16_t morse_flipper_txg_avg_u16(uint32_t sum, uint16_t n)
-{
+static uint16_t morse_flipper_txg_avg_u16(uint32_t sum, uint16_t n) {
     if(n == 0U) return 0U;
     return (uint16_t)((sum + (n / 2U)) / n);
 }
 
-static void morse_flipper_draw_tx_groups_final(Canvas* canvas, MorseFlipperApp* app)
-{
+static void morse_flipper_draw_tx_groups_final(Canvas* canvas, MorseFlipperApp* app) {
     char v[24];
     uint16_t avg;
     uint8_t y = 20U;
@@ -221,14 +211,12 @@ static void morse_flipper_draw_tx_groups_final(Canvas* canvas, MorseFlipperApp* 
         morse_flipper_draw_left_exit_hint(canvas);
 }
 
-static void morse_flipper_rf_edit_text(char* out, size_t out_sz, uint32_t khz)
-{
+static void morse_flipper_rf_edit_text(char* out, size_t out_sz, uint32_t khz) {
     if(out == NULL || out_sz == 0U) return;
     snprintf(out, out_sz, "%06lu", (unsigned long)(khz % 1000000U));
 }
 
-static void morse_flipper_draw_rf_freq_digit( Canvas* canvas, int32_t x, int32_t y, size_t w, size_t h, bool focused, char digit)
-{
+static void morse_flipper_draw_rf_freq_digit( Canvas* canvas, int32_t x, int32_t y, size_t w, size_t h, bool focused, char digit) {
     char text[2] = {digit, '\0'};
 
     if(canvas == NULL) return;
@@ -254,8 +242,7 @@ static void morse_flipper_draw_rf_freq_digit( Canvas* canvas, int32_t x, int32_t
     canvas_set_color(canvas, ColorBlack);
 }
 
-static void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* app)
-{
+static void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* app) {
     char digits[MORSE_FLIPPER_RF_FREQ_DIGITS + 1U];
     const int32_t cell_w = 18;
     const int32_t cell_h = 20;
@@ -296,8 +283,7 @@ static uint8_t morse_flipper_live_upper_char(uint8_t ch) {
     return ch;
 }
 
-static void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch)
-{
+static void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch) {
     const MorseFlipperTerminus24Glyph* glyph;
     int32_t x0;
     int32_t y0;
@@ -330,15 +316,13 @@ static void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32
     }
 }
 
-static uint16_t morse_flipper_canvas_glyph_width(uint8_t ch, void* ctx)
-{
+static uint16_t morse_flipper_canvas_glyph_width(uint8_t ch, void* ctx) {
     Canvas* canvas = ctx;
     if(canvas == NULL) return 0U;
     return (uint16_t)canvas_glyph_width(canvas, ch);
 }
 
-static void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text)
-{
+static void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text) {
     static const char* const aa_glyph[] = {
         "......X.",
         "......X.",
@@ -457,8 +441,7 @@ static void morse_flipper_draw_startup_gpio_probe(Canvas* canvas, const MorseFli
     canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Press OK to switch to SK mode");
 }
 
-static uint8_t morse_flipper_straight_units_from_ms(uint16_t ms, uint16_t dit_ms)
-{
+static uint8_t morse_flipper_straight_units_from_ms(uint16_t ms, uint16_t dit_ms) {
     uint32_t u;
 
     if(dit_ms == 0U) return 1U;
@@ -473,8 +456,7 @@ static uint8_t morse_flipper_straight_strip_units(
     const uint16_t* marks_ms,
     const uint16_t* spaces_ms,
     uint16_t dit_ms,
-    bool use_ms)
-{
+    bool use_ms) {
     uint8_t total = 0U;
     size_t i;
 
@@ -513,8 +495,7 @@ static void morse_flipper_draw_straight_strip(
     const uint16_t* spaces_ms,
     uint16_t dit_ms,
     uint8_t ref_units,
-    bool use_ms)
-{
+    bool use_ms) {
     uint8_t unit_px;
     uint8_t low_y = y + 6U;
     uint8_t hi_y = y + 1U;
@@ -572,8 +553,7 @@ static void morse_flipper_draw_straight_strip(
     canvas_draw_line(canvas, pos, low_y, pos + unit_px, low_y);
 }
 
-static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFlipperApp* app)
-{
+static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFlipperApp* app) {
     char wait_txt[12];
     uint32_t now;
     uint32_t left_ms;
@@ -587,8 +567,7 @@ static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFli
     canvas_draw_str(canvas, 2, 64, wait_txt);
 }
 
-static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipperApp* app)
-{
+static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipperApp* app) {
     char s_txt[8];
     char di_txt[8];
     char da_txt[8];
@@ -736,8 +715,7 @@ static void morse_flipper_draw_tx_history_screen(
     morse_flipper_draw_tx_history_screen_custom(canvas, app, second_line, NULL);
 }
 
-static uint8_t morse_flipper_rf_rssi_bar_px(int8_t dbm, uint8_t width)
-{
+static uint8_t morse_flipper_rf_rssi_bar_px(int8_t dbm, uint8_t width) {
     const int16_t lo = -115;
     const int16_t hi = -50;
     int16_t clamped = dbm;
@@ -747,8 +725,7 @@ static uint8_t morse_flipper_rf_rssi_bar_px(int8_t dbm, uint8_t width)
     return (uint8_t)(((clamped - lo) * width) / (hi - lo));
 }
 
-static void morse_flipper_draw_rf_rssi_bar(Canvas* canvas, const MorseFlipperApp* app)
-{
+static void morse_flipper_draw_rf_rssi_bar(Canvas* canvas, const MorseFlipperApp* app) {
     const int32_t x = 3;
     const int32_t y = 51;
     const uint8_t w = 122;
@@ -786,8 +763,7 @@ static void morse_flipper_draw_rf_rssi_bar(Canvas* canvas, const MorseFlipperApp
     canvas_set_color(canvas, ColorBlack);
 }
 
-static void morse_flipper_draw_rf_rx_screen(Canvas* canvas, MorseFlipperApp* app)
-{
+static void morse_flipper_draw_rf_rx_screen(Canvas* canvas, MorseFlipperApp* app) {
     char line[32];
 
     if(canvas == NULL || app == NULL) return;

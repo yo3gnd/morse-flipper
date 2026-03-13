@@ -2,8 +2,7 @@
 
 #include <string.h>
 
-static void morse_flipper_run_history_drop_left(MorseFlipperRunHistory* history)
-{
+static void morse_flipper_run_history_drop_left(MorseFlipperRunHistory* history) {
     size_t len;
 
     if(history == NULL) return;
@@ -18,8 +17,7 @@ static void morse_flipper_run_history_drop_left(MorseFlipperRunHistory* history)
     }
 }
 
-static void morse_flipper_run_history_append_ch(MorseFlipperRunHistory* history, char ch)
-{
+static void morse_flipper_run_history_append_ch(MorseFlipperRunHistory* history, char ch) {
     size_t len;
 
     if(history == NULL || ch == '\0') return;
@@ -55,15 +53,13 @@ static void morse_flipper_run_history_append_ch(MorseFlipperRunHistory* history,
     history->text[len + 1U] = '\0';
 }
 
-void morse_flipper_run_history_reset(MorseFlipperRunHistory* history)
-{
+void morse_flipper_run_history_reset(MorseFlipperRunHistory* history) {
     if(history == NULL) return;
 
     memset(history, 0, sizeof(*history));
 }
 
-void morse_flipper_run_history_append(MorseFlipperRunHistory* history, const char* text)
-{
+void morse_flipper_run_history_append(MorseFlipperRunHistory* history, const char* text) {
     if(history == NULL || text == NULL) return;
 
     while(*text) {
@@ -71,7 +67,6 @@ void morse_flipper_run_history_append(MorseFlipperRunHistory* history, const cha
     }
 }
 
-const char* morse_flipper_run_history_text(const MorseFlipperRunHistory* history)
-{
+const char* morse_flipper_run_history_text(const MorseFlipperRunHistory* history) {
     return history == NULL ? "" : history->text;
 }

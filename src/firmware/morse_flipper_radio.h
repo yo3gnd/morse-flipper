@@ -9,8 +9,7 @@ typedef enum {
     MorseFlipperRadioProfileCarrierSense = 1,
 } MorseFlipperRadioProfile;
 
-typedef struct
-{
+typedef struct {
     bool ready;
     bool tx_on;
     bool rx_on;

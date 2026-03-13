@@ -166,30 +166,26 @@ bool morse_trainer_load_straight_stats(MorseTrainerStraightStats* stats) {
     morse_trainer_clear_straight_stats(stats);
 
 #ifdef MORSE_FLIPPER_FAP
-    {
-        Storage* storage = furi_record_open(RECORD_STORAGE);
-        File* file = storage_file_alloc(storage);
-        uint16_t got = 0U;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    uint16_t got = 0U;
 
-        if(storage_file_open( file, morse_trainer_straight_stats_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
-            got = storage_file_read(file, buf, sizeof(buf) - 1U);
-        }
-        buf[got] = '\0';
-        storage_file_close(file);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
+    if(storage_file_open( file, morse_trainer_straight_stats_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        got = storage_file_read(file, buf, sizeof(buf) - 1U);
     }
+    buf[got] = '\0';
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 #else
-    {
-        FILE* f = fopen(morse_trainer_straight_stats_path_value, "rb");
-        size_t got = 0U;
+    FILE* f = fopen(morse_trainer_straight_stats_path_value, "rb");
+    size_t got = 0U;
 
-        if(f != NULL) {
-            got = fread(buf, 1, sizeof(buf) - 1U, f);
-            fclose(f);
-        }
-        buf[got] = '\0';
+    if(f != NULL) {
+        got = fread(buf, 1, sizeof(buf) - 1U, f);
+        fclose(f);
     }
+    buf[got] = '\0';
 #endif
 
     line = buf;
@@ -231,34 +227,30 @@ bool morse_trainer_note_straight_attempt(
         answer ? answer : "");
 
 #ifdef MORSE_FLIPPER_FAP
-    {
-        Storage* storage = furi_record_open(RECORD_STORAGE);
-        File* file = storage_file_alloc(storage);
-        bool ok;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    bool ok;
 
-        storage_common_mkdir(storage, "/ext/ham");
-        ok = storage_file_open( file, morse_trainer_straight_stats_path_value, FSAM_WRITE, FSOM_OPEN_APPEND);
-        if(ok) {
-            storage_file_write(file, line, strlen(line));
-        }
-        storage_file_close(file);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
-        if(!ok) return false;
+    storage_common_mkdir(storage, "/ext/ham");
+    ok = storage_file_open( file, morse_trainer_straight_stats_path_value, FSAM_WRITE, FSOM_OPEN_APPEND);
+    if(ok) {
+        storage_file_write(file, line, strlen(line));
     }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    if(!ok) return false;
 #else
-    {
-        FILE* f = fopen(morse_trainer_straight_stats_path_value, "ab");
+    FILE* f = fopen(morse_trainer_straight_stats_path_value, "ab");
 
-        if(f == NULL) {
-            mkdir("ext", 0777);
-            mkdir("ext/ham", 0777);
-            f = fopen(morse_trainer_straight_stats_path_value, "ab");
-        }
-        if(f == NULL) return false;
-        fwrite(line, 1, strlen(line), f);
-        fclose(f);
+    if(f == NULL) {
+        mkdir("ext", 0777);
+        mkdir("ext/ham", 0777);
+        f = fopen(morse_trainer_straight_stats_path_value, "ab");
     }
+    if(f == NULL) return false;
+    fwrite(line, 1, strlen(line), f);
+    fclose(f);
 #endif
 
     if(stats != NULL) {

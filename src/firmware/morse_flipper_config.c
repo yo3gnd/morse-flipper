@@ -163,8 +163,7 @@ typedef struct {
     uint8_t spare1;
 } MorseFlipperConfigV1;
 
-uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app)
-{
+uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app) {
     uint16_t dit;
     uint8_t wpm;
 
@@ -176,8 +175,7 @@ uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app)
     return wpm;
 }
 
-void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app)
-{
+void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app) {
     uint8_t w;
 
     if(app == NULL) return;
@@ -195,8 +193,7 @@ void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app)
     if(app->trainer_group_pause_s > MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S) app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S;
 }
 
-void morse_flipper_clamp_straight_settings(MorseFlipperApp* app)
-{
+void morse_flipper_clamp_straight_settings(MorseFlipperApp* app) {
     uint8_t w;
 
     if(app == NULL) return;
@@ -224,8 +221,7 @@ void morse_flipper_clamp_straight_settings(MorseFlipperApp* app)
     UNUSED(w);
 }
 
-static uint8_t morse_flipper_config_load_ptt_idx(uint8_t stored_ptt_idx)
-{
+static uint8_t morse_flipper_config_load_ptt_idx(uint8_t stored_ptt_idx) {
     return stored_ptt_idx == MorseFlipperGpioPinP15 ? MorseFlipperGpioPinP15 :
                                                       MORSE_FLIPPER_GPIO_PIN_NONE;
 }
@@ -235,8 +231,7 @@ static void morse_flipper_config_apply_gpio(
     uint8_t dit,
     uint8_t dah,
     uint8_t ground,
-    uint8_t ptt)
-{
+    uint8_t ptt) {
     if(app == NULL) return;
 
     if(morse_flipper_gpio_validate(dit, dah, ground) != MorseFlipperGpioRuleOk) {
@@ -250,33 +245,28 @@ static void morse_flipper_config_apply_gpio(
     morse_flipper_gpio_sync_straight_idx(app);
 }
 
-static uint8_t morse_flipper_config_load_tone_idx(uint8_t stored_tone_idx)
-{
+static uint8_t morse_flipper_config_load_tone_idx(uint8_t stored_tone_idx) {
     if(stored_tone_idx < COUNT_OF(morse_flipper_tones)) return stored_tone_idx;
     return MORSE_FLIPPER_DEFAULT_TONE_IDX;
 }
 
-static uint8_t morse_flipper_config_load_audio_path(uint8_t stored_audio_path)
-{
+static uint8_t morse_flipper_config_load_audio_path(uint8_t stored_audio_path) {
     if(stored_audio_path <= MorseFlipperAudioPathVibration) return stored_audio_path;
     return MorseFlipperAudioPathBuzzer;
 }
 
-static uint8_t morse_flipper_config_load_p2_volume(uint8_t stored_p2_volume_pct)
-{
+static uint8_t morse_flipper_config_load_p2_volume(uint8_t stored_p2_volume_pct) {
     if(stored_p2_volume_pct < 10U) return 10U;
     if(stored_p2_volume_pct > 100U) return 100U;
     return (uint8_t)(10U + ((((uint16_t)stored_p2_volume_pct - 10U) / 5U) * 5U));
 }
 
-static uint8_t morse_flipper_config_load_txg_difficulty(uint8_t stored_difficulty)
-{
+static uint8_t morse_flipper_config_load_txg_difficulty(uint8_t stored_difficulty) {
     if(stored_difficulty < MorseFlipperTxgDifficultyCount) return stored_difficulty;
     return MorseFlipperTxgDifficultyCompetition;
 }
 
-void morse_flipper_load_config(MorseFlipperApp* app)
-{
+void morse_flipper_load_config(MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config;
@@ -541,8 +531,7 @@ void morse_flipper_load_config(MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-void morse_flipper_load_rf_config(MorseFlipperApp* app)
-{
+void morse_flipper_load_rf_config(MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     uint32_t hz = 0U;
@@ -558,8 +547,7 @@ void morse_flipper_load_rf_config(MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-void morse_flipper_load_txg_config(MorseFlipperApp* app)
-{
+void morse_flipper_load_txg_config(MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     uint8_t difficulty = MorseFlipperTxgDifficultyCompetition;
@@ -579,8 +567,7 @@ void morse_flipper_load_txg_config(MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-void morse_flipper_save_config(const MorseFlipperApp* app)
-{
+void morse_flipper_save_config(const MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config = {
@@ -626,8 +613,7 @@ void morse_flipper_save_config(const MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-void morse_flipper_save_rf_config(const MorseFlipperApp* app)
-{
+void morse_flipper_save_rf_config(const MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     uint32_t hz = morse_flipper_rf_frequency_hz(&app->rf);
@@ -640,8 +626,7 @@ void morse_flipper_save_rf_config(const MorseFlipperApp* app)
     furi_record_close(RECORD_STORAGE);
 }
 
-void morse_flipper_save_txg_config(const MorseFlipperApp* app)
-{
+void morse_flipper_save_txg_config(const MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     uint8_t difficulty = morse_flipper_config_load_txg_difficulty(app->txg_difficulty);

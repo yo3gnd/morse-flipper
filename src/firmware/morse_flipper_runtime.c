@@ -70,8 +70,7 @@ static void morse_flipper_decoder_drain_into( MorseFlipperCwDecoder* decoder, ch
     }
 }
 
-static void morse_flipper_finish_tx_group_answer(MorseFlipperApp* app, uint32_t now_ms)
-{
+static void morse_flipper_finish_tx_group_answer(MorseFlipperApp* app, uint32_t now_ms) {
     uint16_t dit_ms;
 
     if(app == NULL || app->screen != MorseFlipperScreenTxGroups || !app->txg_wait_answer) return;
@@ -121,8 +120,7 @@ static void morse_flipper_drain_tx_decoder(MorseFlipperApp* app) {
     morse_flipper_cw_decoder_clear_output(&app->tx_decoder);
 }
 
-static void morse_flipper_finish_tx_group_timeout(MorseFlipperApp* app, uint32_t now_ms)
-{
+static void morse_flipper_finish_tx_group_timeout(MorseFlipperApp* app, uint32_t now_ms) {
     uint16_t dit_ms;
 
     if(app == NULL) return;
@@ -154,8 +152,7 @@ static void morse_flipper_finish_tx_group_timeout(MorseFlipperApp* app, uint32_t
     scene_manager_next_scene(app->scene_manager, MorseFlipperSceneTxGroupsResult);
 }
 
-static void morse_flipper_maybe_finish_tx_group_raw(MorseFlipperApp* app, uint32_t now_ms)
-{
+static void morse_flipper_maybe_finish_tx_group_raw(MorseFlipperApp* app, uint32_t now_ms) {
     uint32_t idle_ms;
     uint32_t settle_ms;
 
@@ -170,8 +167,7 @@ static void morse_flipper_maybe_finish_tx_group_raw(MorseFlipperApp* app, uint32
     morse_flipper_finish_tx_group_answer(app, now_ms);
 }
 
-static void morse_flipper_note_tx_group_result(MorseFlipperApp* app)
-{
+static void morse_flipper_note_tx_group_result(MorseFlipperApp* app) {
     const MorseFlipperTxGroupResult* r;
 
     if(app == NULL) return;
@@ -189,8 +185,7 @@ static void morse_flipper_note_tx_group_result(MorseFlipperApp* app)
     }
 }
 
-static void morse_flipper_tick_tx_groups(MorseFlipperApp* app, uint32_t now_ms)
-{
+static void morse_flipper_tick_tx_groups(MorseFlipperApp* app, uint32_t now_ms) {
     uint32_t timeout_from;
     uint32_t left_ms;
     uint8_t left_s;
@@ -326,8 +321,7 @@ void morse_flipper_feed_straight_mark(MorseFlipperApp* app, uint16_t mark_ms, ui
     app->straight_last_input_at = now_ms;
 }
 
-uint32_t morse_flipper_straight_answer_settle_ms(const MorseFlipperApp* app)
-{
+uint32_t morse_flipper_straight_answer_settle_ms(const MorseFlipperApp* app) {
     uint32_t dit_ms;
     uint8_t target_symbols;
     uint8_t answer_symbols;
@@ -347,8 +341,7 @@ uint32_t morse_flipper_straight_answer_settle_ms(const MorseFlipperApp* app)
     return dit_ms * 3U;
 }
 
-static bool morse_flipper_live_straight_active( MorseFlipperApp* app, bool raw_down, uint32_t now_ms)
-{
+static bool morse_flipper_live_straight_active( MorseFlipperApp* app, bool raw_down, uint32_t now_ms) {
     if(app == NULL) return raw_down;
     return morse_flipper_straight_filter_update( &app->straight_filter, raw_down, now_ms, MORSE_FLIPPER_STRAIGHT_RELEASE_DEBOUNCE_MS);
 }

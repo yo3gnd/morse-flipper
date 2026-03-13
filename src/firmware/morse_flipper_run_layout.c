@@ -3,8 +3,7 @@
 
 #include <string.h>
 
-static void morse_flipper_run_layout_push_row( MorseFlipperRunLayout* layout, const char* row, size_t row_len, uint8_t* row_n)
-{
+static void morse_flipper_run_layout_push_row( MorseFlipperRunLayout* layout, const char* row, size_t row_len, uint8_t* row_n) {
     if(layout == NULL || row == NULL || row_n == NULL) return;
 
     if(*row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS) {
@@ -21,8 +20,7 @@ static void morse_flipper_run_layout_push_row( MorseFlipperRunLayout* layout, co
 static uint16_t morse_flipper_run_layout_ch_width(
     uint8_t ch,
     MorseFlipperGlyphWidthFn glyph_width,
-    void* glyph_ctx)
-{
+    void* glyph_ctx) {
     const char* label;
     uint16_t w = 0U;
 
@@ -52,8 +50,7 @@ void morse_flipper_run_layout_build(
     uint16_t max_w,
     MorseFlipperGlyphWidthFn glyph_width,
     void* glyph_ctx,
-    MorseFlipperRunLayout* layout)
-{
+    MorseFlipperRunLayout* layout) {
     char row[MORSE_FLIPPER_RUN_HISTORY_TEXT];
     uint16_t row_w = 0U;
     uint16_t last_char_x = 0U;

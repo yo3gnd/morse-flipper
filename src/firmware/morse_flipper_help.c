@@ -143,8 +143,7 @@ static const char* const morse_help_moving_forward[] = {
     "If you do get licensed, send me a note at yo3gnd.dev.fzcw@yo3gnd.ro. I would be glad to hear how it went.\n\n\n\nIf you read this far, there is a QSL waiting for you. Send in the secret code 821073",
 };
 
-uint8_t morse_flipper_help_card_count(uint8_t t)
-{
+uint8_t morse_flipper_help_card_count(uint8_t t) {
     switch(t) {
     case MorseFlipperHelpFirstSteps:
         return COUNT_OF(morse_help_first_steps);
@@ -167,8 +166,7 @@ uint8_t morse_flipper_help_card_count(uint8_t t)
     }
 }
 
-static const char* morse_flipper_help_card(uint8_t t, uint8_t i)
-{
+static const char* morse_flipper_help_card(uint8_t t, uint8_t i) {
     switch(t) {
     case MorseFlipperHelpFirstSteps:
         return i < COUNT_OF(morse_help_first_steps) ? morse_help_first_steps[i] : "";
@@ -191,8 +189,7 @@ static const char* morse_flipper_help_card(uint8_t t, uint8_t i)
     }
 }
 
-static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void* context)
-{
+static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void* context) {
     MorseFlipperApp* app = context;
     uint32_t ev = 0U;
 
@@ -204,8 +201,7 @@ static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void
     view_dispatcher_send_custom_event(app->view_dispatcher, ev);
 }
 
-static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app)
-{
+static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     uint8_t n;
     char b[16];
     const char* txt;
@@ -232,13 +228,11 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app)
     }
 }
 
-void morse_flipper_help_open(MorseFlipperApp* app)
-{
+void morse_flipper_help_open(MorseFlipperApp* app) {
     morse_flipper_help_rebuild_widget(app);
     view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewWidget);
 }
 
-void morse_flipper_about_open(MorseFlipperApp* app)
-{
+void morse_flipper_about_open(MorseFlipperApp* app) {
     UNUSED(app);
 }

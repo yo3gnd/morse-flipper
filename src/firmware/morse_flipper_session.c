@@ -293,8 +293,7 @@ static char morse_flipper_upper_char(char ch) {
     return ch;
 }
 
-static void morse_flipper_session_draw_cell(Canvas* canvas, uint8_t center, uint8_t y, uint8_t ch)
-{
+static void morse_flipper_session_draw_cell(Canvas* canvas, uint8_t center, uint8_t y, uint8_t ch) {
     char s[2];
     uint8_t w;
     uint8_t x;

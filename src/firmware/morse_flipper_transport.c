@@ -1,7 +1,6 @@
 #include "morse_flipper_app_i.h"
 
-const char* morse_flipper_pc_state_name(const MorseFlipperApp* app)
-{
+const char* morse_flipper_pc_state_name(const MorseFlipperApp* app) {
     bool up = false;
 
     if(app->pc_mode == MorseFlipperPcModeMidi)
@@ -20,8 +19,7 @@ const char* morse_flipper_pc_state_name(const MorseFlipperApp* app)
     return "usb local off";
 }
 
-uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note)
-{
+uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note) {
     uint8_t best_idx = 0U;
     uint8_t best_delta = 0xFFU;
 
@@ -37,8 +35,7 @@ uint8_t morse_flipper_nearest_tone_idx_for_midi(uint8_t midi_note)
     return best_idx;
 }
 
-bool morse_flipper_transport_connected(const MorseFlipperApp* app)
-{
+bool morse_flipper_transport_connected(const MorseFlipperApp* app) {
     if(app->pc_mode == MorseFlipperPcModeMidi) return morse_usb_midi_is_connected();
 
     if(app->pc_mode == MorseFlipperPcModeKeyboard || app->pc_mode == MorseFlipperPcModeMouse)
@@ -47,8 +44,7 @@ bool morse_flipper_transport_connected(const MorseFlipperApp* app)
     return false;
 }
 
-static uint8_t morse_flipper_keyboard_key_for_note(const MorseFlipperApp* app, uint8_t note)
-{
+static uint8_t morse_flipper_keyboard_key_for_note(const MorseFlipperApp* app, uint8_t note) {
     switch(note) {
     case 0:
         return morse_pc_straight_preset_key(app->pc_straight_preset);
@@ -60,8 +56,7 @@ static uint8_t morse_flipper_keyboard_key_for_note(const MorseFlipperApp* app, u
     }
 }
 
-static uint16_t morse_flipper_hid_key_for_pc_key(uint8_t key)
-{
+static uint16_t morse_flipper_hid_key_for_pc_key(uint8_t key) {
     switch(key) {
     case MorsePcKeySpace:
         return HID_KEYBOARD_SPACEBAR;
@@ -100,13 +95,11 @@ static uint16_t morse_flipper_hid_key_for_pc_key(uint8_t key)
     }
 }
 
-static bool morse_flipper_pc_key_needs_shift(uint8_t key)
-{
+static bool morse_flipper_pc_key_needs_shift(uint8_t key) {
     return key == MorsePcKeyLess || key == MorsePcKeyGreater;
 }
 
-static void morse_flipper_send_midi_note(uint8_t note, bool active)
-{
+static void morse_flipper_send_midi_note(uint8_t note, bool active) {
     uint8_t packet[4];
 
     packet[0] = active ? 0x09U : 0x08U;
@@ -117,8 +110,7 @@ static void morse_flipper_send_midi_note(uint8_t note, bool active)
     morse_usb_midi_tx(packet, sizeof(packet));
 }
 
-static void morse_flipper_send_keyboard_note(MorseFlipperApp* app, uint8_t note, bool active)
-{
+static void morse_flipper_send_keyboard_note(MorseFlipperApp* app, uint8_t note, bool active) {
     uint8_t pc_key = morse_flipper_keyboard_key_for_note(app, note);
     uint16_t key = morse_flipper_hid_key_for_pc_key(pc_key);
 
@@ -133,14 +125,12 @@ static void morse_flipper_send_keyboard_note(MorseFlipperApp* app, uint8_t note,
     }
 }
 
-void morse_flipper_release_mouse_buttons(void)
-{
+void morse_flipper_release_mouse_buttons(void) {
     furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
     furi_hal_hid_mouse_release(HID_MOUSE_BTN_RIGHT);
 }
 
-static void morse_flipper_send_mouse_note(MorseFlipperApp* app, uint8_t note, bool active)
-{
+static void morse_flipper_send_mouse_note(MorseFlipperApp* app, uint8_t note, bool active) {
     uint8_t btn = morse_pc_mouse_button(note, app->mouse_invert);
 
     if(btn == MorsePcMouseBtnNone) return;
@@ -152,8 +142,7 @@ static void morse_flipper_send_mouse_note(MorseFlipperApp* app, uint8_t note, bo
     }
 }
 
-void morse_flipper_send_transport_note(MorseFlipperApp* app, uint8_t note, bool active)
-{
+void morse_flipper_send_transport_note(MorseFlipperApp* app, uint8_t note, bool active) {
     switch(app->pc_mode) {
     case MorseFlipperPcModeMidi:
         morse_flipper_send_midi_note(note, active);
@@ -169,16 +158,14 @@ void morse_flipper_send_transport_note(MorseFlipperApp* app, uint8_t note, bool 
     }
 }
 
-static void morse_flipper_clear_vail_overrides(MorseFlipperApp* app)
-{
+static void morse_flipper_clear_vail_overrides(MorseFlipperApp* app) {
     app->vail_mode_active = false;
     app->vail_speed_active = false;
     app->vail_tone_active = false;
     morse_flipper_update_sidetone(app);
 }
 
-static void morse_flipper_apply_vail_speed(MorseFlipperApp* app, uint8_t value)
-{
+static void morse_flipper_apply_vail_speed(MorseFlipperApp* app, uint8_t value) {
     uint16_t dit_ms = (value == 0U) ? 1U : ((uint16_t)value * 2U);
 
     if(app->vail_speed_active && app->vail_dit_ms == dit_ms) return;
@@ -189,8 +176,7 @@ static void morse_flipper_apply_vail_speed(MorseFlipperApp* app, uint8_t value)
     morse_flipper_view_dirty(app);
 }
 
-static void morse_flipper_apply_vail_mode(MorseFlipperApp* app, uint8_t program)
-{
+static void morse_flipper_apply_vail_mode(MorseFlipperApp* app, uint8_t program) {
     uint8_t mode = morse_keyer_mode_valid(program) ? program : MorseKeyerModePassthrough;
 
     if(app->vail_mode_active && app->vail_keyer_mode == mode) return;
@@ -201,8 +187,7 @@ static void morse_flipper_apply_vail_mode(MorseFlipperApp* app, uint8_t program)
     morse_flipper_view_dirty(app);
 }
 
-static void morse_flipper_apply_vail_tone(MorseFlipperApp* app, uint8_t midi_note)
-{
+static void morse_flipper_apply_vail_tone(MorseFlipperApp* app, uint8_t midi_note) {
     uint8_t tone_idx = morse_flipper_nearest_tone_idx_for_midi(midi_note);
 
     if(app->vail_tone_active && app->vail_tone_idx == tone_idx) return;
@@ -214,23 +199,20 @@ static void morse_flipper_apply_vail_tone(MorseFlipperApp* app, uint8_t midi_not
     morse_flipper_view_dirty(app);
 }
 
-void morse_flipper_resync_transport_notes(MorseFlipperApp* app)
-{
+void morse_flipper_resync_transport_notes(MorseFlipperApp* app) {
     for(uint8_t note = 0U; note < COUNT_OF(app->note_sources); note++) {
         if(app->note_sources[note] != 0U) morse_flipper_send_transport_note(app, note, true);
     }
 }
 
-void morse_flipper_midi_rx_ready(void* context)
-{
+void morse_flipper_midi_rx_ready(void* context) {
     MorseFlipperApp* app = context;
 
     if(app == NULL) return;
     app->midi_rx_pending = true;
 }
 
-void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode)
-{
+void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode) {
     const char* prod = "Morse Flipper Kbd";
 
     if(mode > MorseFlipperPcModeMidi) mode = MorseFlipperPcModeOff;
@@ -284,8 +266,7 @@ void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode)
     morse_flipper_refresh_keyer(app, furi_get_tick());
 }
 
-void morse_flipper_handle_midi_rx(MorseFlipperApp* app)
-{
+void morse_flipper_handle_midi_rx(MorseFlipperApp* app) {
     uint8_t buffer[64];
     size_t size = morse_usb_midi_rx(buffer, sizeof(buffer));
 

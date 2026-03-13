@@ -1,28 +1,24 @@
 #include "morse_flipper_app_i.h"
 
-void morse_flipper_view_dirty(MorseFlipperApp* app)
-{
+void morse_flipper_view_dirty(MorseFlipperApp* app) {
     if(app == NULL || app->live_view == NULL) return;
 
         with_view_model(app->live_view, MorseFlipperLiveModel * m, { m->bump++; }, true);
 }
 
-void morse_flipper_live_draw(Canvas* canvas, void* model)
-{
+void morse_flipper_live_draw(Canvas* canvas, void* model) {
     MorseFlipperLiveModel* m = model;
 
     if(m == NULL || m->app == NULL) return;
         morse_flipper_draw(canvas, m->app);
 }
 
-void morse_flipper_scene_open(MorseFlipperApp* app, uint32_t scene)
-{
+void morse_flipper_scene_open(MorseFlipperApp* app, uint32_t scene) {
     if(app == NULL || app->scene_manager == NULL) return;
         scene_manager_next_scene(app->scene_manager, scene);
 }
 
-void morse_flipper_scene_back(MorseFlipperApp* app)
-{
+void morse_flipper_scene_back(MorseFlipperApp* app) {
     if(app == NULL || app->scene_manager == NULL) return;
 
     if(scene_manager_previous_scene(app->scene_manager)) return;
@@ -32,14 +28,12 @@ void morse_flipper_scene_back(MorseFlipperApp* app)
 }
 
 
-void morse_flipper_scene_menu_pick(void* ctx, uint32_t idx)
-{
+void morse_flipper_scene_menu_pick(void* ctx, uint32_t idx) {
     MorseFlipperApp* app = ctx;
     view_dispatcher_send_custom_event(app->view_dispatcher, idx);
 }
 
-static uint8_t morse_flipper_scene_screen(uint32_t scene)
-{
+static uint8_t morse_flipper_scene_screen(uint32_t scene) {
     switch(scene) {
     case MorseFlipperSceneRun:
         return MorseFlipperScreenRun;
@@ -82,8 +76,7 @@ static uint8_t morse_flipper_scene_screen(uint32_t scene)
     }
 }
 
-static uint8_t morse_flipper_scene_view(uint32_t scene)
-{
+static uint8_t morse_flipper_scene_view(uint32_t scene) {
     switch(scene) {
     case MorseFlipperSceneHome:
     case MorseFlipperSceneAudioCfg:
@@ -111,8 +104,7 @@ static uint8_t morse_flipper_scene_view(uint32_t scene)
     }
 }
 
-void morse_flipper_scene_enter_now(MorseFlipperApp* app, uint32_t scene)
-{
+void morse_flipper_scene_enter_now(MorseFlipperApp* app, uint32_t scene) {
     uint8_t view = morse_flipper_scene_view(scene);
 
     if(view == MorseFlipperViewLive) {

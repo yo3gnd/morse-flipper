@@ -9,14 +9,12 @@
 #define COUNT_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-static uint32_t straight_rand(MorseFlipperStraightTrainer* trainer)
-{
+static uint32_t straight_rand(MorseFlipperStraightTrainer* trainer) {
     trainer->rng_state = trainer->rng_state * 1103515245u + 12345u;
     return trainer->rng_state;
 }
 
-static const char* straight_morse(char ch)
-{
+static const char* straight_morse(char ch) {
     static char code[8];
     size_t i = 0U;
     uint8_t cw_char = cw(ch);
@@ -32,13 +30,11 @@ static const char* straight_morse(char ch)
     return code;
 }
 
-static uint8_t straight_weight(char ch)
-{
+static uint8_t straight_weight(char ch) {
     return (ch == 'E' || ch == 'T') ? 1U : 10U;
 }
 
-static uint8_t straight_units_total(const char* code)
-{
+static uint8_t straight_units_total(const char* code) {
     uint8_t total = 0U;
     size_t i;
 
@@ -52,8 +48,7 @@ static uint8_t straight_units_total(const char* code)
     return total;
 }
 
-static uint8_t straight_symbol_count(const char* code)
-{
+static uint8_t straight_symbol_count(const char* code) {
     uint8_t n = 0U;
 
     if(code == NULL) return 0U;
@@ -62,8 +57,7 @@ static uint8_t straight_symbol_count(const char* code)
     return n;
 }
 
-static char straight_pick(MorseFlipperStraightTrainer* trainer, const char* charset)
-{
+static char straight_pick(MorseFlipperStraightTrainer* trainer, const char* charset) {
     uint32_t total = 0U;
     uint32_t roll;
     size_t i;
@@ -83,8 +77,7 @@ static char straight_pick(MorseFlipperStraightTrainer* trainer, const char* char
     return charset[0];
 }
 
-static uint8_t straight_score(uint16_t got, uint16_t want)
-{
+static uint8_t straight_score(uint16_t got, uint16_t want) {
     uint32_t diff;
     uint32_t pct;
 
@@ -96,8 +89,7 @@ static uint8_t straight_score(uint16_t got, uint16_t want)
     return (uint8_t)pct;
 }
 
-static const char* straight_score_txt(uint8_t sc, char* out, size_t out_sz)
-{
+static const char* straight_score_txt(uint8_t sc, char* out, size_t out_sz) {
     if(out == NULL || out_sz < 3U) return "";
     if(sc >= 90U) {
         snprintf(out, out_sz, "OK");
@@ -108,8 +100,7 @@ static const char* straight_score_txt(uint8_t sc, char* out, size_t out_sz)
     return out;
 }
 
-static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
-{
+static void straight_update_error_view(MorseFlipperStraightTrainer* trainer) {
     size_t i;
     size_t at;
     size_t tview_at;
@@ -221,8 +212,7 @@ static void straight_update_error_view(MorseFlipperStraightTrainer* trainer)
         (unsigned)(trainer->ratio_x100 % 100U));
 }
 
-void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer)
-{
+void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer) {
     if(!trainer) return;
     memset(trainer, 0, sizeof(*trainer));
     trainer->target_char = 'E';
@@ -233,8 +223,7 @@ void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer)
     trainer->worst_dah_score = 100U;
 }
 
-void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms)
-{
+void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms) {
     size_t i;
     const char* morse;
 
@@ -278,8 +267,7 @@ void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer,
     trainer->active = true;
 }
 
-void morse_flipper_straight_trainer_feed( MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms)
-{
+void morse_flipper_straight_trainer_feed( MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms) {
     size_t len;
     size_t i;
     uint32_t total_error = 0U;
@@ -308,98 +296,79 @@ void morse_flipper_straight_trainer_feed( MorseFlipperStraightTrainer* trainer, 
     straight_update_error_view(trainer);
 }
 
-char morse_flipper_straight_trainer_target_char(const MorseFlipperStraightTrainer* trainer)
-{
+char morse_flipper_straight_trainer_target_char(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->target_char : '?';
 }
 
-const char* morse_flipper_straight_trainer_target_morse(const MorseFlipperStraightTrainer* trainer)
-{
+const char* morse_flipper_straight_trainer_target_morse(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->target_morse : "";
 }
 
-const char* morse_flipper_straight_trainer_answer(const MorseFlipperStraightTrainer* trainer)
-{
+const char* morse_flipper_straight_trainer_answer(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->answer : "";
 }
 
-uint16_t morse_flipper_straight_trainer_average_mark_error_ms(const MorseFlipperStraightTrainer* trainer)
-{
+uint16_t morse_flipper_straight_trainer_average_mark_error_ms(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->average_mark_error_ms : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_average_drift_percent(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_average_drift_percent(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->average_drift_percent : 0U;
 }
 
-const char* morse_flipper_straight_trainer_error_bars(const MorseFlipperStraightTrainer* trainer)
-{
+const char* morse_flipper_straight_trainer_error_bars(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->error_bars : "";
 }
 
-const char* morse_flipper_straight_trainer_timing_view(const MorseFlipperStraightTrainer* trainer)
-{
+const char* morse_flipper_straight_trainer_timing_view(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->timing_view : "";
 }
 
-const char* morse_flipper_straight_trainer_metrics_line(const MorseFlipperStraightTrainer* trainer)
-{
+const char* morse_flipper_straight_trainer_metrics_line(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->metrics_line : "";
 }
 
-bool morse_flipper_straight_trainer_active(const MorseFlipperStraightTrainer* trainer)
-{
+bool morse_flipper_straight_trainer_active(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->active : false;
 }
 
-uint8_t morse_flipper_straight_trainer_worst_space_score(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_worst_space_score(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->worst_space_score : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_worst_dit_score(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_worst_dit_score(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->worst_dit_score : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_worst_dah_score(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_worst_dah_score(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->worst_dah_score : 0U;
 }
 
-uint16_t morse_flipper_straight_trainer_ratio_x100(const MorseFlipperStraightTrainer* trainer)
-{
+uint16_t morse_flipper_straight_trainer_ratio_x100(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->ratio_x100 : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_target_total_units(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_target_total_units(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->target_total_units : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_answer_total_units(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_answer_total_units(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->answer_total_units : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_ref_units_max(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_ref_units_max(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? trainer->ref_units_max : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_target_symbol_count(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_target_symbol_count(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? straight_symbol_count(trainer->target_morse) : 0U;
 }
 
-uint8_t morse_flipper_straight_trainer_answer_symbol_count(const MorseFlipperStraightTrainer* trainer)
-{
+uint8_t morse_flipper_straight_trainer_answer_symbol_count(const MorseFlipperStraightTrainer* trainer) {
     return trainer ? straight_symbol_count(trainer->answer) : 0U;
 }
 
-bool morse_flipper_straight_trainer_symbol_count_match(const MorseFlipperStraightTrainer* trainer)
-{
+bool morse_flipper_straight_trainer_symbol_count_match(const MorseFlipperStraightTrainer* trainer) {
     if(trainer == NULL) return false;
 
     return morse_flipper_straight_trainer_target_symbol_count(trainer) ==

@@ -7,8 +7,7 @@
 #define MORSE_FLIPPER_TX_GROUP_LEN       5U
 #define MORSE_FLIPPER_TX_GROUP_MAX_EDGES 64U
 
-typedef struct
-{
+typedef struct {
     uint8_t correct;
     uint8_t speed_pct;
     uint8_t letter_gap_pct;
@@ -30,8 +29,7 @@ typedef struct
     const char* fault;
 } MorseFlipperTxGroupResult;
 
-typedef struct
-{
+typedef struct {
     char target[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
     char answer[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
     uint16_t marks[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];

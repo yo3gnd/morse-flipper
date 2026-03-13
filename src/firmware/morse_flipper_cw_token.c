@@ -18,14 +18,12 @@ static const MorseFlipperCwTokenDef morse_flipper_cw_tokens[] = {
     {MORSE_FLIPPER_CW_TOKEN_SOS, "SOS", "<SOS>", "...---..."},
 };
 
-static char cw_token_up(char ch)
-{
+static char cw_token_up(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
     return ch;
 }
 
-static const MorseFlipperCwTokenDef* cw_token_find(uint8_t ch)
-{
+static const MorseFlipperCwTokenDef* cw_token_find(uint8_t ch) {
     for(size_t i = 0U; i < sizeof(morse_flipper_cw_tokens) / sizeof(morse_flipper_cw_tokens[0]); i++) {
         if(morse_flipper_cw_tokens[i].token == ch) return &morse_flipper_cw_tokens[i];
     }
@@ -33,8 +31,7 @@ static const MorseFlipperCwTokenDef* cw_token_find(uint8_t ch)
     return NULL;
 }
 
-static bool cw_token_label_eq(const char* a, const char* b)
-{
+static bool cw_token_label_eq(const char* a, const char* b) {
     size_t i = 0U;
 
     if(a == NULL || b == NULL) return false;
@@ -47,8 +44,7 @@ static bool cw_token_label_eq(const char* a, const char* b)
     return a[i] == '\0' && b[i] == '\0';
 }
 
-static bool cw_token_append(char* out, size_t out_sz, size_t* at, const char* text)
-{
+static bool cw_token_append(char* out, size_t out_sz, size_t* at, const char* text) {
     if(out == NULL || out_sz == 0U || at == NULL || text == NULL) return false;
 
     while(*text != '\0') {
@@ -63,31 +59,26 @@ static bool cw_token_append(char* out, size_t out_sz, size_t* at, const char* te
     return true;
 }
 
-bool morse_flipper_cw_token_is_private(uint8_t ch)
-{
+bool morse_flipper_cw_token_is_private(uint8_t ch) {
     return cw_token_find(ch) != NULL;
 }
 
-const char* morse_flipper_cw_token_label(uint8_t ch)
-{
+const char* morse_flipper_cw_token_label(uint8_t ch) {
     const MorseFlipperCwTokenDef* def = cw_token_find(ch);
     return def != NULL ? def->label : "";
 }
 
-const char* morse_flipper_cw_token_text(uint8_t ch)
-{
+const char* morse_flipper_cw_token_text(uint8_t ch) {
     const MorseFlipperCwTokenDef* def = cw_token_find(ch);
     return def != NULL ? def->text : "";
 }
 
-const char* morse_flipper_cw_token_morse(uint8_t ch)
-{
+const char* morse_flipper_cw_token_morse(uint8_t ch) {
     const MorseFlipperCwTokenDef* def = cw_token_find(ch);
     return def != NULL ? def->morse : "";
 }
 
-uint16_t morse_flipper_cw_token_code(uint8_t ch)
-{
+uint16_t morse_flipper_cw_token_code(uint8_t ch) {
     const char* morse = morse_flipper_cw_token_morse(ch);
     uint16_t code = 1U;
     uint8_t count = 0U;
@@ -105,8 +96,7 @@ uint16_t morse_flipper_cw_token_code(uint8_t ch)
     return count == 0U ? 0U : code;
 }
 
-bool morse_flipper_cw_token_parse(const char* text, uint8_t* token, size_t* consumed)
-{
+bool morse_flipper_cw_token_parse(const char* text, uint8_t* token, size_t* consumed) {
     char label[4];
     size_t n = 0U;
 
@@ -144,8 +134,7 @@ bool morse_flipper_cw_token_parse(const char* text, uint8_t* token, size_t* cons
     return false;
 }
 
-size_t morse_flipper_cw_token_expand_text(char* out, size_t out_sz, const char* text)
-{
+size_t morse_flipper_cw_token_expand_text(char* out, size_t out_sz, const char* text) {
     size_t at = 0U;
 
     if(out == NULL || out_sz == 0U) return 0U;

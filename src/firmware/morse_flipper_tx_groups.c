@@ -7,36 +7,31 @@
 #define TXG_DEFAULT_PASS_MIN 90U
 #define TXG_DEFAULT_PASS_MAX 110U
 
-static uint32_t txg_rand(MorseFlipperTxGroup* g)
-{
+static uint32_t txg_rand(MorseFlipperTxGroup* g) {
     g->rng = g->rng * 1103515245u + 12345u;
     return g->rng;
 }
 
-static char txg_pick(MorseFlipperTxGroup* g)
-{
+static char txg_pick(MorseFlipperTxGroup* g) {
     uint32_t r = txg_rand(g);
 
     if((r % 100U) < 20U) return (char)('0' + ((r / 100U) % 10U));
     return (char)('A' + ((r / 100U) % 26U));
 }
 
-static char txg_up(char ch)
-{
+static char txg_up(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
     return ch;
 }
 
-static bool txg_answer_ok(char ch)
-{
+static bool txg_answer_ok(char ch) {
     if(morse_flipper_cw_token_is_private((uint8_t)ch)) return true;
     if(ch == '#') return true;
     if(ch == ' ' || ch == '|') return false;
     return cw(ch) != CW_INVALID;
 }
 
-static char txg_lookup_code(uint16_t code)
-{
+static char txg_lookup_code(uint16_t code) {
     uint8_t i;
 
     if(code <= 1U || code == CW_INVALID) return '#';
@@ -47,16 +42,14 @@ static char txg_lookup_code(uint16_t code)
     return '#';
 }
 
-static uint8_t txg_pct(uint32_t got, uint32_t want)
-{
+static uint8_t txg_pct(uint32_t got, uint32_t want) {
     if(got == 0U || want == 0U) return 0U;
     got = (got * 100U + (want / 2U)) / want;
     if(got > 255U) got = 255U;
     return (uint8_t)got;
 }
 
-static uint8_t txg_consistency(uint32_t total_diff, uint32_t total_ref)
-{
+static uint8_t txg_consistency(uint32_t total_diff, uint32_t total_ref) {
     uint32_t pct;
 
     if(total_ref == 0U) return 100U;
@@ -65,25 +58,21 @@ static uint8_t txg_consistency(uint32_t total_diff, uint32_t total_ref)
     return (uint8_t)(100U - pct);
 }
 
-static uint16_t txg_abs100(uint16_t v)
-{
+static uint16_t txg_abs100(uint16_t v) {
     return v > 100U ? (uint16_t)(v - 100U) : (uint16_t)(100U - v);
 }
 
-static uint8_t txg_pass_min(const MorseFlipperTxGroup* g)
-{
+static uint8_t txg_pass_min(const MorseFlipperTxGroup* g) {
     if(g == 0 || g->pass_min == 0U) return TXG_DEFAULT_PASS_MIN;
     return g->pass_min;
 }
 
-static uint8_t txg_pass_max(const MorseFlipperTxGroup* g)
-{
+static uint8_t txg_pass_max(const MorseFlipperTxGroup* g) {
     if(g == 0 || g->pass_max < txg_pass_min(g)) return TXG_DEFAULT_PASS_MAX;
     return g->pass_max;
 }
 
-static bool txg_range_pass(const MorseFlipperTxGroup* g, uint8_t pct)
-{
+static bool txg_range_pass(const MorseFlipperTxGroup* g, uint8_t pct) {
     return pct >= txg_pass_min(g) && pct <= txg_pass_max(g);
 }
 
@@ -93,8 +82,7 @@ static void txg_fault_try(
     uint16_t* best_delta,
     const char* text,
     uint16_t sev,
-    uint16_t delta)
-{
+    uint16_t delta) {
     if(best == 0 || best_sev == 0 || best_delta == 0 || text == 0) return;
     if(sev > *best_sev || (sev == *best_sev && delta > *best_delta)) {
         *best = text;
@@ -108,8 +96,7 @@ static void txg_expected(
     uint8_t* mark_units,
     uint8_t* mark_cnt,
     uint8_t* space_units,
-    uint8_t* space_cnt)
-{
+    uint8_t* space_cnt) {
     uint8_t mi = 0U;
     uint8_t si = 0U;
 
@@ -135,8 +122,7 @@ static void txg_expected(
     if(space_cnt) *space_cnt = si;
 }
 
-void morse_flipper_tx_group_init(MorseFlipperTxGroup* g)
-{
+void morse_flipper_tx_group_init(MorseFlipperTxGroup* g) {
     if(g == 0) return;
     memset(g, 0, sizeof(*g));
     g->rng = 0x55443322U;
@@ -145,8 +131,7 @@ void morse_flipper_tx_group_init(MorseFlipperTxGroup* g)
     memcpy(g->target, "ABCDE", MORSE_FLIPPER_TX_GROUP_LEN + 1U);
 }
 
-void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk)
-{
+void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk) {
     uint8_t i;
     uint32_t oldrng;
     uint8_t pass_min;
@@ -165,22 +150,19 @@ void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk)
     g->target[MORSE_FLIPPER_TX_GROUP_LEN] = '\0';
 }
 
-void morse_flipper_tx_group_feed_mark(MorseFlipperTxGroup* g, uint16_t ms)
-{
+void morse_flipper_tx_group_feed_mark(MorseFlipperTxGroup* g, uint16_t ms) {
     if(g == 0 || ms == 0U) return;
     if(g->mark_count < MORSE_FLIPPER_TX_GROUP_MAX_EDGES)
         g->marks[g->mark_count++] = ms;
 }
 
-void morse_flipper_tx_group_feed_space(MorseFlipperTxGroup* g, uint16_t ms)
-{
+void morse_flipper_tx_group_feed_space(MorseFlipperTxGroup* g, uint16_t ms) {
     if(g == 0 || ms == 0U) return;
     if(g->space_count < MORSE_FLIPPER_TX_GROUP_MAX_EDGES)
         g->spaces[g->space_count++] = ms;
 }
 
-void morse_flipper_tx_group_feed_text(MorseFlipperTxGroup* g, const char* text)
-{
+void morse_flipper_tx_group_feed_text(MorseFlipperTxGroup* g, const char* text) {
     char ch;
     uint8_t n;
 
@@ -195,8 +177,7 @@ void morse_flipper_tx_group_feed_text(MorseFlipperTxGroup* g, const char* text)
     }
 }
 
-static bool txg_raw_boundaries(const MorseFlipperTxGroup* g, uint16_t dit_ms, bool* boundary)
-{
+static bool txg_raw_boundaries(const MorseFlipperTxGroup* g, uint16_t dit_ms, bool* boundary) {
     uint8_t usable_spaces;
 
     if(g == 0 || boundary == 0 || dit_ms == 0U) return false;
@@ -227,8 +208,7 @@ static bool txg_raw_boundaries(const MorseFlipperTxGroup* g, uint16_t dit_ms, bo
     return true;
 }
 
-static char txg_decode_raw_marks(const uint16_t* marks, uint8_t count, uint16_t dit_ms)
-{
+static char txg_decode_raw_marks(const uint16_t* marks, uint8_t count, uint16_t dit_ms) {
     uint16_t code = 1U;
 
     if(marks == 0 || count == 0U || count > 9U || dit_ms == 0U) return '#';
@@ -244,8 +224,7 @@ static char txg_decode_raw_marks(const uint16_t* marks, uint8_t count, uint16_t 
     return txg_lookup_code(code);
 }
 
-bool morse_flipper_tx_group_finalize_answer_from_raw(MorseFlipperTxGroup* g, uint16_t dit_ms)
-{
+bool morse_flipper_tx_group_finalize_answer_from_raw(MorseFlipperTxGroup* g, uint16_t dit_ms) {
     bool boundary[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     char out[MORSE_FLIPPER_TX_GROUP_LEN + 1U];
     uint8_t start = 0U;
@@ -270,8 +249,7 @@ bool morse_flipper_tx_group_finalize_answer_from_raw(MorseFlipperTxGroup* g, uin
     return true;
 }
 
-void morse_flipper_tx_group_set_range(MorseFlipperTxGroup* g, uint8_t pass_min, uint8_t pass_max)
-{
+void morse_flipper_tx_group_set_range(MorseFlipperTxGroup* g, uint8_t pass_min, uint8_t pass_max) {
     if(g == 0) return;
     if(pass_min == 0U || pass_min > 100U || pass_max < 100U || pass_max < pass_min) {
         pass_min = TXG_DEFAULT_PASS_MIN;
@@ -281,8 +259,7 @@ void morse_flipper_tx_group_set_range(MorseFlipperTxGroup* g, uint8_t pass_min, 
     g->pass_max = pass_max;
 }
 
-void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out)
-{
+void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out) {
     uint8_t mu[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t su[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t mc;
@@ -325,8 +302,7 @@ void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms
         !timed_out && g->result.correct_pass && g->result.speed_pass && g->result.letter_gap_pass;
 }
 
-static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit_ms)
-{
+static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit_ms) {
     uint8_t mu[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t su[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t mc;
@@ -394,8 +370,7 @@ static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit
         g->result.dit_gap_pass && g->result.variance_pass;
 }
 
-static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g)
-{
+static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g) {
     const char* best = "";
     uint16_t sev = 0U;
     uint16_t delta = 0U;
@@ -445,8 +420,7 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g)
             g->result.ratio_x100 > 300U ? (uint16_t)(g->result.ratio_x100 - 300U) :
                                            (uint16_t)(300U - g->result.ratio_x100));
 
-    if(g->sk && !g->result.accuracy_pass)
-    {
+    if(g->sk && !g->result.accuracy_pass) {
         bool dit_worse = txg_abs100(g->result.dit_pct) >= txg_abs100(g->result.dah_pct);
         uint8_t p = dit_worse ? g->result.dit_pct : g->result.dah_pct;
         txg_fault_try(
@@ -480,21 +454,18 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g)
     g->result.fault = best;
 }
 
-void morse_flipper_tx_group_score(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out)
-{
+void morse_flipper_tx_group_score(MorseFlipperTxGroup* g, uint16_t dit_ms, bool timed_out) {
     if(g == 0) return;
     morse_flipper_tx_group_score_common(g, dit_ms, timed_out);
     if(g->sk) morse_flipper_tx_group_score_sk(g, dit_ms);
     morse_flipper_tx_group_pick_fault(g);
 }
 
-bool morse_flipper_tx_group_complete(const MorseFlipperTxGroup* g)
-{
+bool morse_flipper_tx_group_complete(const MorseFlipperTxGroup* g) {
     return morse_flipper_tx_group_answer_len(g) >= MORSE_FLIPPER_TX_GROUP_LEN;
 }
 
-bool morse_flipper_tx_group_marks_complete(const MorseFlipperTxGroup* g)
-{
+bool morse_flipper_tx_group_marks_complete(const MorseFlipperTxGroup* g) {
     uint8_t want;
 
     if(g == 0) return false;
@@ -502,8 +473,7 @@ bool morse_flipper_tx_group_marks_complete(const MorseFlipperTxGroup* g)
     return want != 0U && g->mark_count >= want;
 }
 
-uint8_t morse_flipper_tx_group_expected_marks(const MorseFlipperTxGroup* g)
-{
+uint8_t morse_flipper_tx_group_expected_marks(const MorseFlipperTxGroup* g) {
     uint8_t mu[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t su[MORSE_FLIPPER_TX_GROUP_MAX_EDGES];
     uint8_t mc = 0U;
@@ -514,8 +484,7 @@ uint8_t morse_flipper_tx_group_expected_marks(const MorseFlipperTxGroup* g)
     return mc;
 }
 
-uint8_t morse_flipper_tx_group_answer_len(const MorseFlipperTxGroup* g)
-{
+uint8_t morse_flipper_tx_group_answer_len(const MorseFlipperTxGroup* g) {
     uint8_t n = 0U;
 
     if(g == 0) return 0U;
