@@ -39,6 +39,7 @@ App(
         "src/firmware/morse_flipper_rf_timing.c",
         "src/firmware/morse_flipper_straight_filter.c",
         "src/firmware/morse_flipper_straight_trainer.c",
+        "src/firmware/morse_flipper_straight_runtime.c",
         "src/firmware/morse_flipper_tx_groups.c",
         "src/firmware/trainer.c",
         "src/firmware/trainer_files.c",
