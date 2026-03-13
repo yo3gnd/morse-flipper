@@ -327,7 +327,7 @@ static void
     y_max = canvas_height(canvas);
 
     for(row = 0U; row < MORSE_FLIPPER_TERMINUS24_HEIGHT; row++) {
-        uint16_t bits = glyph->rows[row];
+        uint16_t bits = morse_flipper_terminus24_row(glyph, row);
         uint8_t col;
 
         for(col = 0U; col < MORSE_FLIPPER_TERMINUS24_WIDTH; col++) {
