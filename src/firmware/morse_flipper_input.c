@@ -202,7 +202,7 @@ static bool morse_flipper_trainer_input(MorseFlipperApp* app, const InputEvent* 
     return false;
 }
 
-static bool morse_flipper_straight_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_straight_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenStraight) return false;
 
     if(event->key == InputKeyBack &&
@@ -261,7 +261,7 @@ static bool morse_flipper_straight_input( MorseFlipperApp* app, const InputEvent
     return false;
 }
 
-static bool morse_flipper_tx_groups_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_tx_groups_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     bool back_key;
 
     if(app->screen != MorseFlipperScreenTxGroups) return false;
@@ -312,7 +312,7 @@ static bool morse_flipper_tx_groups_input( MorseFlipperApp* app, const InputEven
     return false;
 }
 
-static bool morse_flipper_tx_groups_result_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_tx_groups_result_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenTxGroupsResult) return false;
 
     if((event->key == InputKeyBack &&
@@ -334,7 +334,7 @@ static bool morse_flipper_tx_groups_result_input( MorseFlipperApp* app, const In
     return true;
 }
 
-static bool morse_flipper_tx_groups_final_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_tx_groups_final_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenTxGroupsFinal) return false;
     UNUSED(now_ms);
 
@@ -352,7 +352,7 @@ static bool morse_flipper_tx_groups_final_input( MorseFlipperApp* app, const Inp
     return true;
 }
 
-static bool morse_flipper_session_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_session_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     MorseFlipperInputGate g;
 
     if(app->screen != MorseFlipperScreenSession) return false;
@@ -423,12 +423,12 @@ static bool morse_flipper_session_input( MorseFlipperApp* app, const InputEvent*
 static void morse_flipper_leave_session_end(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
     morse_flipper_reset_session_state(app, now_ms);
-    if(scene_manager_search_and_switch_to_previous_scene( app->scene_manager, MorseFlipperSceneMenuTraining))
+    if(scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MorseFlipperSceneMenuTraining))
         return;
     scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
 }
 
-static bool morse_flipper_session_end_input( MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_session_end_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenSessionEnd) return false;
 
     if((event->key == InputKeyOk || event->key == InputKeyBack) &&
@@ -558,7 +558,7 @@ static bool morse_flipper_run_trace_home_input(MorseFlipperApp* app, InputEvent*
     return false;
 }
 
-bool morse_flipper_input_chunk_b( MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
+bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
     if(morse_flipper_trainer_input(app, event)) return true;
     if(morse_flipper_straight_input(app, event, now_ms)) return true;
     if(morse_flipper_tx_groups_input(app, event, now_ms)) return true;
@@ -604,7 +604,7 @@ static bool morse_flipper_session_live_keying_input(MorseFlipperApp* app, const 
     return false;
 }
 
-void morse_flipper_handle_active_keying_event( MorseFlipperApp* app, const InputEvent* event) {
+void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputEvent* event) {
     uint32_t now_ms = furi_get_tick();
     MorseFlipperInputGate g = morse_flipper_input_gate(app);
     bool btn_src = g.btn;

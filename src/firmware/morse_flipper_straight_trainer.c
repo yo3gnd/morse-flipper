@@ -193,7 +193,7 @@ void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer) {
     trainer->worst_dah_score = 100U;
 }
 
-void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms) {
+void morse_flipper_straight_trainer_start(MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms) {
     size_t i;
     uint16_t code;
     uint8_t mark_count;
@@ -243,7 +243,7 @@ void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer,
     trainer->active = true;
 }
 
-void morse_flipper_straight_trainer_feed( MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms) {
+void morse_flipper_straight_trainer_feed(MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms) {
     size_t len;
     size_t i;
     uint32_t total_error = 0U;

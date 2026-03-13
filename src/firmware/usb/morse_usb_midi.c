@@ -315,7 +315,7 @@ static void morse_usb_midi_deinit(usbd_device* dev);
 static void morse_usb_midi_wakeup(usbd_device* dev);
 static void morse_usb_midi_suspend(usbd_device* dev);
 static usbd_respond morse_usb_midi_ep_config(usbd_device* dev, uint8_t cfg);
-static usbd_respond morse_usb_midi_control( usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
+static usbd_respond morse_usb_midi_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
 static void morse_usb_midi_ep_event(usbd_device* dev, uint8_t event, uint8_t ep);
 static void morse_usb_midi_reset_tx_sem(void);
 
@@ -364,7 +364,7 @@ size_t morse_usb_midi_tx(const uint8_t* buffer, size_t size) {
         return 0U;
     }
 
-    int32_t written = usbd_ep_write( morse_usb_midi_state.dev, MORSE_USB_MIDI_EP_IN, (uint8_t*)buffer, size);
+    int32_t written = usbd_ep_write(morse_usb_midi_state.dev, MORSE_USB_MIDI_EP_IN, (uint8_t*)buffer, size);
     if(written <= 0) {
         furi_semaphore_release(morse_usb_midi_state.tx_sem);
         return 0U;
@@ -446,7 +446,7 @@ static usbd_respond morse_usb_midi_ep_config(usbd_device* dev, uint8_t cfg) {
     }
 }
 
-static usbd_respond morse_usb_midi_control( usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
+static usbd_respond morse_usb_midi_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
     UNUSED(dev);
     UNUSED(req);
     UNUSED(callback);

@@ -61,7 +61,7 @@ static void morse_flipper_append_text(char* dst, size_t dst_sz, const char* add)
     memcpy(dst + len, add, add_len + 1U);
 }
 
-static void morse_flipper_decoder_drain_into( MorseFlipperCwDecoder* decoder, char* out, size_t out_sz) {
+static void morse_flipper_decoder_drain_into(MorseFlipperCwDecoder* decoder, char* out, size_t out_sz) {
     if(decoder == NULL || out == NULL || out_sz < 2U) return;
 
     if(morse_flipper_cw_decoder_output(decoder)[0] != '\0') {
@@ -341,9 +341,9 @@ uint32_t morse_flipper_straight_answer_settle_ms(const MorseFlipperApp* app) {
     return dit_ms * 3U;
 }
 
-static bool morse_flipper_live_straight_active( MorseFlipperApp* app, bool raw_down, uint32_t now_ms) {
+static bool morse_flipper_live_straight_active(MorseFlipperApp* app, bool raw_down, uint32_t now_ms) {
     if(app == NULL) return raw_down;
-    return morse_flipper_straight_filter_update( &app->straight_filter, raw_down, now_ms, MORSE_FLIPPER_STRAIGHT_RELEASE_DEBOUNCE_MS);
+    return morse_flipper_straight_filter_update(&app->straight_filter, raw_down, now_ms, MORSE_FLIPPER_STRAIGHT_RELEASE_DEBOUNCE_MS);
 }
 
 
@@ -356,7 +356,7 @@ static void morse_flipper_sync_gpio_inputs(MorseFlipperApp* app, uint32_t now_ms
         straight_active = morse_flipper_live_straight_active(app, morse_flipper_straight_down(), now_ms);
     } else if(app->input_source == MorseFlipperInputSourcePaddle) {
         if(morse_flipper_gpio_probe_use_straight(app)) {
-            straight_active = morse_flipper_live_straight_active( app, !furi_hal_gpio_read(morse_flipper_dit_pin), now_ms);
+            straight_active = morse_flipper_live_straight_active(app, !furi_hal_gpio_read(morse_flipper_dit_pin), now_ms);
         } else if(!morse_flipper_gpio_probe_blocks_start(app)) {
             morse_flipper_straight_filter_reset(&app->straight_filter);
             dit_active = morse_flipper_logical_dit_down(app);
@@ -391,8 +391,8 @@ static void morse_flipper_sync_gpio_inputs(MorseFlipperApp* app, uint32_t now_ms
     }
 
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, straight_active);
-    morse_flipper_set_paddle_source( app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, dit_active, now_ms);
-    morse_flipper_set_paddle_source( app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, dah_active, now_ms);
+    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, dit_active, now_ms);
+    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, dah_active, now_ms);
 }
 
 static uint8_t morse_flipper_read_input_mask(const MorseFlipperApp* app) {
@@ -475,7 +475,7 @@ void morse_flipper_poll(MorseFlipperApp* app) {
 
     if(app->screen == MorseFlipperScreenSession && app->session_started &&
        morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
-        morse_trainer_tick( &app->trainer, MORSE_FLIPPER_POLL_MS, (uint32_t)app->trainer_answer_timeout_s * 1000U);
+        morse_trainer_tick(&app->trainer, MORSE_FLIPPER_POLL_MS, (uint32_t)app->trainer_answer_timeout_s * 1000U);
     }
 
     morse_flipper_tick_session(app, now_ms);

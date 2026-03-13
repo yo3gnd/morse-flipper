@@ -1,7 +1,7 @@
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 
-static void morse_flipper_session_answer_text( const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars);
+static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars);
 
 void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     if(app == NULL) return;
@@ -110,8 +110,8 @@ void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t 
 
     morse_flipper_clear_button_keying(app, now_ms);
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, false);
-    morse_flipper_set_paddle_source( app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, false, now_ms);
-    morse_flipper_set_paddle_source( app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, false, now_ms);
+    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, false, now_ms);
+    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, false, now_ms);
 }
 
 void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms) {
@@ -334,7 +334,7 @@ static uint8_t morse_flipper_session_slot_centers(uint8_t size, uint8_t* out) {
     return size;
 }
 
-static void morse_flipper_session_answer_text( const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
     char preview = 0;
     size_t wi = 0U;
     size_t i;
@@ -403,7 +403,7 @@ static uint8_t morse_flipper_session_answer_count(const char* answer) {
     return n;
 }
 
-static void morse_flipper_session_answer_committed_text( const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_committed_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
     size_t wi = 0U;
     uint8_t i = 0U;
 
@@ -435,7 +435,7 @@ static uint8_t morse_flipper_session_text_hits(const char* want, const char* got
     return hit;
 }
 
-static void morse_flipper_session_title( const MorseFlipperApp* app, char* out, size_t out_sz) {
+static void morse_flipper_session_title(const MorseFlipperApp* app, char* out, size_t out_sz) {
     const char* chars;
     size_t i;
     size_t wi = 0U;
@@ -459,7 +459,7 @@ static void morse_flipper_session_title( const MorseFlipperApp* app, char* out, 
     chars = morse_trainer_charset(&app->trainer);
     len = strlen(chars);
     if(len > 12U) {
-        snprintf( out, out_sz, "%s", app->trainer.custom_name[0] ? app->trainer.custom_name : chars);
+        snprintf(out, out_sz, "%s", app->trainer.custom_name[0] ? app->trainer.custom_name : chars);
         return;
     }
 
@@ -629,7 +629,7 @@ void morse_flipper_draw_session_bottom(Canvas* canvas, const MorseFlipperApp* ap
     letter_total = (uint16_t)((uint16_t)scored * (uint16_t)size);
     if(app->session_round_pending && !app->trainer_playback_active &&
        morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
-        morse_flipper_session_answer_committed_text( app, live_answer, sizeof(live_answer), size);
+        morse_flipper_session_answer_committed_text(app, live_answer, sizeof(live_answer), size);
         live_count = morse_flipper_session_answer_count(live_answer);
         letter_hits = (uint16_t)(letter_hits + morse_flipper_session_text_hits(morse_trainer_last_group(&app->trainer), live_answer));
         letter_total = (uint16_t)(letter_total + live_count);

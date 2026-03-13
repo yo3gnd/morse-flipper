@@ -216,7 +216,7 @@ static void morse_flipper_rf_edit_text(char* out, size_t out_sz, uint32_t khz) {
     snprintf(out, out_sz, "%06lu", (unsigned long)(khz % 1000000U));
 }
 
-static void morse_flipper_draw_rf_freq_digit( Canvas* canvas, int32_t x, int32_t y, size_t w, size_t h, bool focused, char digit) {
+static void morse_flipper_draw_rf_freq_digit(Canvas* canvas, int32_t x, int32_t y, size_t w, size_t h, bool focused, char digit) {
     char text[2] = {digit, '\0'};
 
     if(canvas == NULL) return;
@@ -224,7 +224,7 @@ static void morse_flipper_draw_rf_freq_digit( Canvas* canvas, int32_t x, int32_t
     canvas_set_color(canvas, ColorBlack);
     if(focused) {
         canvas_draw_triangle(canvas, x + (int32_t)(w / 2U), y - 2, 5, 3, CanvasDirectionBottomToTop);
-        canvas_draw_triangle( canvas, x + (int32_t)(w / 2U), y + (int32_t)h + 2, 5, 3, CanvasDirectionTopToBottom);
+        canvas_draw_triangle(canvas, x + (int32_t)(w / 2U), y + (int32_t)h + 2, 5, 3, CanvasDirectionTopToBottom);
         canvas_draw_rbox(canvas, x, y, w, h, 1);
         canvas_set_color(canvas, ColorWhite);
     } else {
@@ -367,7 +367,7 @@ static void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, co
     }
 }
 
-static void morse_flipper_gpio_probe_pair_text( const MorseFlipperApp* app, uint8_t pin_idx, char* out, size_t out_sz) {
+static void morse_flipper_gpio_probe_pair_text(const MorseFlipperApp* app, uint8_t pin_idx, char* out, size_t out_sz) {
     if(app == NULL || out == NULL || out_sz == 0U) return;
     snprintf(
         out,
@@ -701,7 +701,7 @@ static void morse_flipper_draw_tx_history_screen_custom(
             underline_y);
     }
     morse_flipper_draw_tx_history_divider(canvas, left_hint);
-    canvas_draw_str( canvas, 3, 44, morse_flipper_run_mode_line(app, mode_line, sizeof(mode_line)));
+    canvas_draw_str(canvas, 3, 44, morse_flipper_run_mode_line(app, mode_line, sizeof(mode_line)));
     canvas_draw_str(canvas, 3, 54, second_line ? second_line : "");
     footer = hint_override ? hint_override : morse_flipper_run_hint(app, hint_line, sizeof(hint_line));
     if(canvas_string_width(canvas, footer) > 124) canvas_set_font(canvas, FontKeyboard);
@@ -946,7 +946,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             return;
         }
 
-        morse_flipper_draw_straight_prompt( canvas, 19, 18, morse_flipper_straight_trainer_target_char(&app->straight_trainer));
+        morse_flipper_draw_straight_prompt(canvas, 19, 18, morse_flipper_straight_trainer_target_char(&app->straight_trainer));
 
         if(app->straight_done &&
            morse_flipper_straight_trainer_answer(&app->straight_trainer)[0] != '\0') {
@@ -1026,7 +1026,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenRf) {
-        morse_flipper_draw_tx_history_screen( canvas, app, morse_flipper_rf_khz_line(app, browse_line, sizeof(browse_line)));
+        morse_flipper_draw_tx_history_screen(canvas, app, morse_flipper_rf_khz_line(app, browse_line, sizeof(browse_line)));
         return;
     }
 

@@ -31,6 +31,6 @@ uint8_t morse_flipper_gpio_default_dit(void);
 uint8_t morse_flipper_gpio_default_dah(void);
 uint8_t morse_flipper_gpio_default_ground(void);
 
-MorseFlipperGpioRule morse_flipper_gpio_validate( uint8_t dit, uint8_t dah, uint8_t ground);
+MorseFlipperGpioRule morse_flipper_gpio_validate(uint8_t dit, uint8_t dah, uint8_t ground);
 
 const char* morse_flipper_gpio_rule_text(MorseFlipperGpioRule rule);

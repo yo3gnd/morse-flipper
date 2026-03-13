@@ -24,7 +24,7 @@ void morse_flipper_rf_timing_init(MorseFlipperRfTiming* timing) {
     memset(timing, 0, sizeof(*timing));
 }
 
-void morse_flipper_rf_timing_capture( MorseFlipperRfTiming* timing, bool mark, uint16_t duration_ms, const char* frequency_text) {
+void morse_flipper_rf_timing_capture(MorseFlipperRfTiming* timing, bool mark, uint16_t duration_ms, const char* frequency_text) {
     char line[48];
     size_t slot;
 

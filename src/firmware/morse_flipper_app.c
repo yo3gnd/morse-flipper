@@ -221,7 +221,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         text_input_get_view(app.text_input));
 
     app.settings_list = variable_item_list_alloc();
-    view_dispatcher_add_view( app.view_dispatcher, MorseFlipperViewSettings, variable_item_list_get_view(app.settings_list));
+    view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewSettings, variable_item_list_get_view(app.settings_list));
 
     app.widget = widget_alloc();
     app.help_text = furi_string_alloc();

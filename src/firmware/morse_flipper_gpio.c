@@ -39,7 +39,7 @@ uint8_t morse_flipper_gpio_default_ground(void) {
     return MorseFlipperGpioPinP3;
 }
 
-MorseFlipperGpioRule morse_flipper_gpio_validate( uint8_t dit, uint8_t dah, uint8_t ground) {
+MorseFlipperGpioRule morse_flipper_gpio_validate(uint8_t dit, uint8_t dah, uint8_t ground) {
     if(!morse_flipper_gpio_pin_valid(dit) || !morse_flipper_gpio_pin_valid(dah)) {
         return MorseFlipperGpioRuleBadIndex;
     }

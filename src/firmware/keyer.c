@@ -35,7 +35,7 @@ static void morse_keyer_set_output(MorseKeyer* keyer, uint8_t paddle, bool activ
     }
 
     keyer->output_active[paddle] = active;
-    morse_keyer_push_event( keyer, active ? MorseKeyerEventPress : MorseKeyerEventRelease, paddle);
+    morse_keyer_push_event(keyer, active ? MorseKeyerEventPress : MorseKeyerEventRelease, paddle);
 }
 
 static void morse_keyer_release_outputs(MorseKeyer* keyer) {

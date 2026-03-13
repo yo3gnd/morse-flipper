@@ -28,7 +28,7 @@ static uint8_t morse_flipper_session_slot_centers(uint8_t size, uint8_t* out) {
     return size;
 }
 
-static void morse_flipper_session_answer_text( const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
     char preview = 0;
     size_t wi = 0U;
     size_t i;
@@ -85,7 +85,7 @@ static uint8_t morse_flipper_session_answer_count(const char* answer) {
     return n;
 }
 
-static void morse_flipper_session_title( const MorseFlipperApp* app, char* out, size_t out_sz) {
+static void morse_flipper_session_title(const MorseFlipperApp* app, char* out, size_t out_sz) {
     const char* chars;
     size_t i;
     size_t wi = 0U;
@@ -105,7 +105,7 @@ static void morse_flipper_session_title( const MorseFlipperApp* app, char* out, 
     chars = morse_trainer_charset(&app->trainer);
     len = strlen(chars);
     if(len > 12U) {
-        snprintf( out, out_sz, "%s", app->trainer.custom_name[0] ? app->trainer.custom_name : chars);
+        snprintf(out, out_sz, "%s", app->trainer.custom_name[0] ? app->trainer.custom_name : chars);
         return;
     }
 

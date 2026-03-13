@@ -182,7 +182,7 @@ void morse_flipper_radio_set_rx_callback(
     radio->rx_ctx = ctx;
 }
 
-void morse_flipper_radio_sync_live( MorseFlipperRadio* radio, uint32_t freq_hz, bool active, bool tx_on, MorseFlipperRadioProfile profile) {
+void morse_flipper_radio_sync_live(MorseFlipperRadio* radio, uint32_t freq_hz, bool active, bool tx_on, MorseFlipperRadioProfile profile) {
     if(!radio) return;
 
 #ifdef MORSE_FLIPPER_FAP

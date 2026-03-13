@@ -221,7 +221,7 @@ void morse_flipper_audio_pwm_set_gate(MorseFlipperAudioPwm* audio, bool gate) {
     audio->gate_requested = gate;
 }
 
-void morse_flipper_audio_pwm_render( MorseFlipperAudioPwm* audio, uint16_t* dst, size_t count) {
+void morse_flipper_audio_pwm_render(MorseFlipperAudioPwm* audio, uint16_t* dst, size_t count) {
     size_t i;
 
     if(audio == NULL || dst == NULL || !audio->prepared) return;
@@ -282,7 +282,7 @@ static void morse_flipper_audio_pwm_dma_isr(void* context) {
     if(LL_DMA_IsActiveFlag_HT1(MORSE_FLIPPER_AUDIO_PWM_DMA) &&
        LL_DMA_IsEnabledIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF)) {
         LL_DMA_ClearFlag_HT1(MORSE_FLIPPER_AUDIO_PWM_DMA);
-        morse_flipper_audio_pwm_render( audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_HALF_SAMPLES);
+        morse_flipper_audio_pwm_render(audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_HALF_SAMPLES);
     }
 
     if(LL_DMA_IsActiveFlag_TC1(MORSE_FLIPPER_AUDIO_PWM_DMA) &&
@@ -369,7 +369,7 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio) {
     LL_DMA_EnableIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     LL_DMA_EnableIT_TC(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     LL_DMA_EnableIT_TE(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
-    furi_hal_interrupt_set_isr_ex( MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, FuriHalInterruptPriorityKamiSama, morse_flipper_audio_pwm_dma_isr, audio);
+    furi_hal_interrupt_set_isr_ex(MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, FuriHalInterruptPriorityKamiSama, morse_flipper_audio_pwm_dma_isr, audio);
 
     LL_TIM_ClearFlag_UPDATE(TIM1);
     LL_TIM_EnableDMAReq_UPDATE(TIM1);

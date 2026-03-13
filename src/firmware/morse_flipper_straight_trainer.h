@@ -33,8 +33,8 @@ typedef struct {
 } MorseFlipperStraightTrainer;
 
 void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer);
-void morse_flipper_straight_trainer_start( MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms);
-void morse_flipper_straight_trainer_feed( MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms);
+void morse_flipper_straight_trainer_start(MorseFlipperStraightTrainer* trainer, const char* charset, uint16_t dit_ms);
+void morse_flipper_straight_trainer_feed(MorseFlipperStraightTrainer* trainer, char elem, uint16_t mark_ms, uint16_t space_before_ms);
 char morse_flipper_straight_trainer_target_char(const MorseFlipperStraightTrainer* trainer);
 const char* morse_flipper_straight_trainer_target_morse(const MorseFlipperStraightTrainer* trainer);
 const char* morse_flipper_straight_trainer_answer(const MorseFlipperStraightTrainer* trainer);
