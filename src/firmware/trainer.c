@@ -83,7 +83,7 @@ void morse_trainer_init(MorseTrainer* trainer) {
 
     memset(trainer, 0, sizeof(*trainer));
     trainer->lesson = 1U;
-    trainer->group_size = 5U;
+    trainer->group_size = 3U;
     trainer->session_groups = 10U;
     trainer->local_dit_ms = 100U;
     trainer->rng_state = 1U;

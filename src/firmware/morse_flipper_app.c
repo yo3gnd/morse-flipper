@@ -48,7 +48,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .pc_paddle_preset = 0U,
         .pc_straight_preset = 0U,
         .handedness = MorseFlipperHandednessSwapped,
-        .input_source = MorseFlipperInputSourceStraight,
+        .input_source = MorseFlipperInputSourceButtons,
         .audio_path = MorseFlipperAudioPathBuzzer,
         .keyer_mode = MorseKeyerModeStraight,
         .gpio_straight_idx = MorseFlipperGpioPinP7,
@@ -191,8 +191,6 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_trainer_load_custom_sets(&app.custom_sets);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_load_config(&app);
-    morse_flipper_load_rf_config(&app);
-    morse_flipper_load_txg_config(&app);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_cw_decoder_init(&app.rf_decoder, morse_flipper_current_dit_ms(&app));
     morse_flipper_cw_decoder_init(&app.tx_decoder, morse_flipper_current_dit_ms(&app));
@@ -291,7 +289,6 @@ void morse_flipper_shutdown(MorseFlipperApp* app) {
         notification_message(app->notifications, &sequence_reset_red);
     }
     morse_flipper_save_config(app);
-    morse_flipper_save_rf_config(app);
 
     morse_flipper_gpio_deinit();
     if(app->view_dispatcher) {

@@ -1,14 +1,17 @@
 #include "morse_flipper_app_i.h"
 
+#define MORSE_FLIPPER_OLD_RF_CONFIG_PATH  APP_DATA_PATH("rf.bin")
+#define MORSE_FLIPPER_OLD_TXG_CONFIG_PATH APP_DATA_PATH("tx_groups.bin")
+
 typedef struct {
-    uint32_t version;
+    uint8_t version;
     uint8_t tone_idx;
     uint8_t keyer_mode;
     uint8_t handedness;
     uint8_t trainer_lesson;
     uint8_t trainer_group_size;
     uint8_t trainer_session_groups;
-    uint8_t spare0;
+    uint8_t input_source;
     uint16_t local_dit_ms;
     uint8_t gpio_straight_idx;
     uint8_t gpio_dit_idx;
@@ -28,140 +31,15 @@ typedef struct {
     uint8_t straight_next_delay_s;
     uint8_t audio_path;
     uint8_t p2_volume_pct;
+    uint8_t txg_difficulty;
+    uint8_t reserved0;
+    uint32_t rf_frequency_hz;
     uint8_t ham_logging_enabled;
     uint8_t ham_message_count;
     uint8_t ham_assignments[MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS];
     char ham_messages[MORSE_FLIPPER_HAM_KEYER_MAX_MESSAGES]
                      [MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
 } MorseFlipperConfig;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t gpio_ptt_idx;
-    uint8_t trainer_custom_set_idx;
-    uint8_t usb_mode;
-    uint8_t usb_paddle_preset;
-    uint8_t usb_straight_preset;
-    uint8_t usb_mouse_invert;
-    uint8_t trainer_farnsworth_wpm;
-    uint8_t trainer_answer_timeout_s;
-    uint8_t trainer_group_pause_s;
-    uint16_t straight_dit_ms;
-    uint8_t straight_answer_timeout_s;
-    uint8_t straight_next_delay_s;
-    uint8_t audio_path;
-    uint8_t p2_volume_pct;
-} MorseFlipperConfigV10;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-    uint8_t usb_mode;
-    uint8_t usb_paddle_preset;
-    uint8_t usb_straight_preset;
-    uint8_t usb_mouse_invert;
-    uint8_t trainer_farnsworth_wpm;
-    uint8_t trainer_answer_timeout_s;
-    uint8_t trainer_group_pause_s;
-} MorseFlipperConfigV6;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-    uint8_t usb_mode;
-    uint8_t usb_paddle_preset;
-    uint8_t usb_straight_preset;
-    uint8_t usb_mouse_invert;
-} MorseFlipperConfigV5;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-} MorseFlipperConfigV2;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-} MorseFlipperConfigV3;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t handedness;
-    uint8_t trainer_lesson;
-    uint8_t trainer_group_size;
-    uint8_t trainer_session_groups;
-    uint8_t spare0;
-    uint16_t local_dit_ms;
-    uint8_t gpio_straight_idx;
-    uint8_t gpio_dit_idx;
-    uint8_t gpio_dah_idx;
-    uint8_t gpio_ground_idx;
-    uint8_t trainer_custom_set_idx;
-} MorseFlipperConfigV4;
-
-typedef struct {
-    uint32_t version;
-    uint8_t tone_idx;
-    uint8_t keyer_mode;
-    uint8_t spare0;
-    uint8_t spare1;
-} MorseFlipperConfigV1;
 
 uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app) {
     uint16_t dit;
@@ -272,338 +150,115 @@ static uint8_t morse_flipper_config_load_txg_difficulty(uint8_t stored_difficult
     return MorseFlipperTxgDifficultyCompetition;
 }
 
-void morse_flipper_load_config(MorseFlipperApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    MorseFlipperConfig config;
-    MorseFlipperConfigV10 config_v10;
-    MorseFlipperConfigV6 config_v6;
-    MorseFlipperConfigV5 config_v5;
-    MorseFlipperConfigV4 config_v4;
-    MorseFlipperConfigV3 config_v3;
-    MorseFlipperConfigV2 config_v2;
-    MorseFlipperConfigV1 config_v1;
-    uint16_t got = 0U;
+static void morse_flipper_config_apply(MorseFlipperApp* app, const MorseFlipperConfig* config) {
+    if(app == NULL || config == NULL) return;
 
-    if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        got = storage_file_read(file, &config, sizeof(config));
-        if(got == sizeof(config) && config.version == MORSE_FLIPPER_CONFIG_VERSION) {
-            app->tone_idx = morse_flipper_config_load_tone_idx(config.tone_idx);
+    app->tone_idx = morse_flipper_config_load_tone_idx(config->tone_idx);
 
-            if(config.keyer_mode >= MorseKeyerModeStraight &&
-               config.keyer_mode <= MorseKeyerModeKeyahead)
-                app->keyer_mode = config.keyer_mode;
+    if(config->keyer_mode >= MorseKeyerModeStraight &&
+       config->keyer_mode <= MorseKeyerModeKeyahead)
+        app->keyer_mode = config->keyer_mode;
 
-            if(config.handedness <= MorseFlipperHandednessSwapped)
-                app->handedness = config.handedness;
-            if(config.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config.spare0;
+    if(config->handedness <= MorseFlipperHandednessSwapped) app->handedness = config->handedness;
+    if(config->input_source <= MorseFlipperInputSourceButtons)
+        app->input_source = config->input_source;
 
-            morse_trainer_set_lesson(&app->trainer, config.trainer_lesson);
-            morse_trainer_set_group_size(&app->trainer, config.trainer_group_size);
-            morse_trainer_set_session_groups(&app->trainer, config.trainer_session_groups);
-            if(config.local_dit_ms != 0U) app->trainer.local_dit_ms = config.local_dit_ms;
+    morse_trainer_set_lesson(&app->trainer, config->trainer_lesson);
+    morse_trainer_set_group_size(&app->trainer, config->trainer_group_size);
+    morse_trainer_set_session_groups(&app->trainer, config->trainer_session_groups);
+    if(config->local_dit_ms != 0U) app->trainer.local_dit_ms = config->local_dit_ms;
 
-            morse_flipper_config_apply_gpio(
-                app,
-                config.gpio_dit_idx,
-                config.gpio_dah_idx,
-                config.gpio_ground_idx,
-                config.gpio_ptt_idx);
+    morse_flipper_config_apply_gpio(
+        app,
+        config->gpio_dit_idx,
+        config->gpio_dah_idx,
+        config->gpio_ground_idx,
+        config->gpio_ptt_idx);
 
-            if(config.trainer_custom_set_idx <= app->custom_sets.count)
-                app->trainer.custom_set_idx = config.trainer_custom_set_idx;
-            if(config.usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config.usb_mode;
-            if(config.usb_paddle_preset < morse_pc_paddle_preset_count())
-                app->pc_paddle_preset = config.usb_paddle_preset;
-            if(config.usb_straight_preset < morse_pc_straight_preset_count())
-                app->pc_straight_preset = config.usb_straight_preset;
+    if(config->trainer_custom_set_idx <= app->custom_sets.count)
+        app->trainer.custom_set_idx = config->trainer_custom_set_idx;
+    if(config->usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config->usb_mode;
+    if(config->usb_paddle_preset < morse_pc_paddle_preset_count())
+        app->pc_paddle_preset = config->usb_paddle_preset;
+    if(config->usb_straight_preset < morse_pc_straight_preset_count())
+        app->pc_straight_preset = config->usb_straight_preset;
 
-            app->mouse_invert = config.usb_mouse_invert != 0U;
-            app->trainer_farnsworth_wpm = config.trainer_farnsworth_wpm;
-            app->trainer_answer_timeout_s = config.trainer_answer_timeout_s;
-            app->trainer_group_pause_s = config.trainer_group_pause_s;
-            app->straight_dit_ms = config.straight_dit_ms;
-            app->straight_answer_timeout_s = config.straight_answer_timeout_s;
-            app->straight_next_delay_s = config.straight_next_delay_s;
-            app->audio_path = morse_flipper_config_load_audio_path(config.audio_path);
-            app->p2_volume_pct = morse_flipper_config_load_p2_volume(config.p2_volume_pct);
-            app->ham_keyer.logging_enabled = config.ham_logging_enabled != 0U;
-            app->ham_keyer.message_count = config.ham_message_count;
-            memcpy(
-                app->ham_keyer.assignments,
-                config.ham_assignments,
-                sizeof(app->ham_keyer.assignments));
-            memcpy(app->ham_keyer.messages, config.ham_messages, sizeof(app->ham_keyer.messages));
-        } else if(got == sizeof(config_v10)) {
-            memcpy(&config_v10, &config, sizeof(config_v10));
-            if(config_v10.version == 10U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v10.tone_idx);
+    app->mouse_invert = config->usb_mouse_invert != 0U;
+    app->trainer_farnsworth_wpm = config->trainer_farnsworth_wpm;
+    app->trainer_answer_timeout_s = config->trainer_answer_timeout_s;
+    app->trainer_group_pause_s = config->trainer_group_pause_s;
+    app->straight_dit_ms = config->straight_dit_ms;
+    app->straight_answer_timeout_s = config->straight_answer_timeout_s;
+    app->straight_next_delay_s = config->straight_next_delay_s;
+    app->audio_path = morse_flipper_config_load_audio_path(config->audio_path);
+    app->p2_volume_pct = morse_flipper_config_load_p2_volume(config->p2_volume_pct);
+    app->txg_difficulty = morse_flipper_config_load_txg_difficulty(config->txg_difficulty);
+    if(furi_hal_subghz_is_frequency_valid(config->rf_frequency_hz))
+        morse_flipper_rf_set_frequency_hz(&app->rf, config->rf_frequency_hz);
 
-                if(config_v10.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v10.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v10.keyer_mode;
+    app->ham_keyer.logging_enabled = config->ham_logging_enabled != 0U;
+    app->ham_keyer.message_count = config->ham_message_count;
+    memcpy(
+        app->ham_keyer.assignments, config->ham_assignments, sizeof(app->ham_keyer.assignments));
+    memcpy(app->ham_keyer.messages, config->ham_messages, sizeof(app->ham_keyer.messages));
+}
 
-                if(config_v10.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v10.handedness;
-                if(config_v10.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v10.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v10.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v10.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v10.trainer_session_groups);
-                if(config_v10.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v10.local_dit_ms;
-
-                morse_flipper_config_apply_gpio(
-                    app,
-                    config_v10.gpio_dit_idx,
-                    config_v10.gpio_dah_idx,
-                    config_v10.gpio_ground_idx,
-                    config_v10.gpio_ptt_idx);
-
-                if(config_v10.trainer_custom_set_idx <= app->custom_sets.count)
-                    app->trainer.custom_set_idx = config_v10.trainer_custom_set_idx;
-                if(config_v10.usb_mode <= MorseFlipperPcModeMidi)
-                    app->pc_mode_pref = config_v10.usb_mode;
-                if(config_v10.usb_paddle_preset < morse_pc_paddle_preset_count())
-                    app->pc_paddle_preset = config_v10.usb_paddle_preset;
-                if(config_v10.usb_straight_preset < morse_pc_straight_preset_count())
-                    app->pc_straight_preset = config_v10.usb_straight_preset;
-
-                app->mouse_invert = config_v10.usb_mouse_invert != 0U;
-                app->trainer_farnsworth_wpm = config_v10.trainer_farnsworth_wpm;
-                app->trainer_answer_timeout_s = config_v10.trainer_answer_timeout_s;
-                app->trainer_group_pause_s = config_v10.trainer_group_pause_s;
-                app->straight_dit_ms = config_v10.straight_dit_ms;
-                app->straight_answer_timeout_s = config_v10.straight_answer_timeout_s;
-                app->straight_next_delay_s = config_v10.straight_next_delay_s;
-                app->audio_path = morse_flipper_config_load_audio_path(config_v10.audio_path);
-                app->p2_volume_pct = morse_flipper_config_load_p2_volume(config_v10.p2_volume_pct);
-            }
-        } else if(got == sizeof(config_v6)) {
-            memcpy(&config_v6, &config, sizeof(config_v6));
-            if(config_v6.version == 6U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v6.tone_idx);
-
-                if(config_v6.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v6.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v6.keyer_mode;
-
-                if(config_v6.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v6.handedness;
-                if(config_v6.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v6.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v6.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v6.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v6.trainer_session_groups);
-                if(config_v6.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v6.local_dit_ms;
-
-                morse_flipper_config_apply_gpio(
-                    app,
-                    config_v6.gpio_dit_idx,
-                    config_v6.gpio_dah_idx,
-                    config_v6.gpio_ground_idx,
-                    MORSE_FLIPPER_GPIO_PIN_NONE);
-
-                if(config_v6.trainer_custom_set_idx <= app->custom_sets.count)
-                    app->trainer.custom_set_idx = config_v6.trainer_custom_set_idx;
-                if(config_v6.usb_mode <= MorseFlipperPcModeMidi)
-                    app->pc_mode_pref = config_v6.usb_mode;
-                if(config_v6.usb_paddle_preset < morse_pc_paddle_preset_count())
-                    app->pc_paddle_preset = config_v6.usb_paddle_preset;
-                if(config_v6.usb_straight_preset < morse_pc_straight_preset_count())
-                    app->pc_straight_preset = config_v6.usb_straight_preset;
-
-                app->mouse_invert = config_v6.usb_mouse_invert != 0U;
-                app->trainer_farnsworth_wpm = config_v6.trainer_farnsworth_wpm;
-                app->trainer_answer_timeout_s = config_v6.trainer_answer_timeout_s;
-                app->trainer_group_pause_s = config_v6.trainer_group_pause_s;
-            }
-        } else if(got == sizeof(config_v5)) {
-            memcpy(&config_v5, &config, sizeof(config_v5));
-            if(config_v5.version == 5U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v5.tone_idx);
-
-                if(config_v5.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v5.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v5.keyer_mode;
-
-                if(config_v5.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v5.handedness;
-                if(config_v5.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v5.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v5.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v5.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v5.trainer_session_groups);
-                if(config_v5.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v5.local_dit_ms;
-
-                morse_flipper_config_apply_gpio(
-                    app,
-                    config_v5.gpio_dit_idx,
-                    config_v5.gpio_dah_idx,
-                    config_v5.gpio_ground_idx,
-                    MORSE_FLIPPER_GPIO_PIN_NONE);
-
-                if(config_v5.trainer_custom_set_idx <= app->custom_sets.count)
-                    app->trainer.custom_set_idx = config_v5.trainer_custom_set_idx;
-                if(config_v5.usb_mode <= MorseFlipperPcModeMidi)
-                    app->pc_mode_pref = config_v5.usb_mode;
-                if(config_v5.usb_paddle_preset < morse_pc_paddle_preset_count())
-                    app->pc_paddle_preset = config_v5.usb_paddle_preset;
-                if(config_v5.usb_straight_preset < morse_pc_straight_preset_count())
-                    app->pc_straight_preset = config_v5.usb_straight_preset;
-                app->mouse_invert = config_v5.usb_mouse_invert != 0U;
-            }
-        } else if(got == sizeof(config_v4)) {
-            memcpy(&config_v4, &config, sizeof(config_v4));
-            if(config_v4.version == 4U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v4.tone_idx);
-
-                if(config_v4.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v4.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v4.keyer_mode;
-
-                if(config_v4.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v4.handedness;
-                if(config_v4.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v4.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v4.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v4.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v4.trainer_session_groups);
-                if(config_v4.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v4.local_dit_ms;
-
-                morse_flipper_config_apply_gpio(
-                    app,
-                    config_v4.gpio_dit_idx,
-                    config_v4.gpio_dah_idx,
-                    config_v4.gpio_ground_idx,
-                    MORSE_FLIPPER_GPIO_PIN_NONE);
-
-                if(config_v4.trainer_custom_set_idx <= app->custom_sets.count)
-                    app->trainer.custom_set_idx = config_v4.trainer_custom_set_idx;
-            }
-        } else if(got == sizeof(config_v3)) {
-            memcpy(&config_v3, &config, sizeof(config_v3));
-            if(config_v3.version == 3U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v3.tone_idx);
-
-                if(config_v3.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v3.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v3.keyer_mode;
-
-                if(config_v3.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v3.handedness;
-                if(config_v3.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v3.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v3.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v3.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v3.trainer_session_groups);
-                if(config_v3.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v3.local_dit_ms;
-
-                morse_flipper_config_apply_gpio(
-                    app,
-                    config_v3.gpio_dit_idx,
-                    config_v3.gpio_dah_idx,
-                    config_v3.gpio_ground_idx,
-                    MORSE_FLIPPER_GPIO_PIN_NONE);
-            }
-        } else if(got == sizeof(config_v2)) {
-            memcpy(&config_v2, &config, sizeof(config_v2));
-            if(config_v2.version == 2U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v2.tone_idx);
-
-                if(config_v2.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v2.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v2.keyer_mode;
-
-                if(config_v2.handedness <= MorseFlipperHandednessSwapped)
-                    app->handedness = config_v2.handedness;
-                if(config_v2.spare0 <= MorseFlipperInputSourceButtons)
-                    app->input_source = config_v2.spare0;
-
-                morse_trainer_set_lesson(&app->trainer, config_v2.trainer_lesson);
-                morse_trainer_set_group_size(&app->trainer, config_v2.trainer_group_size);
-                morse_trainer_set_session_groups(&app->trainer, config_v2.trainer_session_groups);
-                if(config_v2.local_dit_ms != 0U)
-                    app->trainer.local_dit_ms = config_v2.local_dit_ms;
-            }
-        } else if(got == sizeof(config_v1)) {
-            memcpy(&config_v1, &config, sizeof(config_v1));
-            if(config_v1.version == 1U) {
-                app->tone_idx = morse_flipper_config_load_tone_idx(config_v1.tone_idx);
-
-                if(config_v1.keyer_mode >= MorseKeyerModeStraight &&
-                   config_v1.keyer_mode <= MorseKeyerModeKeyahead)
-                    app->keyer_mode = config_v1.keyer_mode;
-            }
-        }
-    }
+static void morse_flipper_config_apply_runtime_limits(MorseFlipperApp* app) {
+    if(app == NULL) return;
 
     morse_flipper_clamp_trainer_settings(app);
     morse_flipper_clamp_straight_settings(app);
     morse_flipper_ham_keyer_normalize(&app->ham_keyer);
-
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-}
-
-void morse_flipper_load_rf_config(MorseFlipperApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    uint32_t hz = 0U;
-
-    if(storage_file_open(file, MORSE_FLIPPER_RF_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        if(storage_file_read(file, &hz, sizeof(hz)) == sizeof(hz) &&
-           furi_hal_subghz_is_frequency_valid(hz))
-            morse_flipper_rf_set_frequency_hz(&app->rf, hz);
-    }
-
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-}
-
-void morse_flipper_load_txg_config(MorseFlipperApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    uint8_t difficulty = MorseFlipperTxgDifficultyCompetition;
-
-    if(storage_file_open(file, MORSE_FLIPPER_TXG_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        if(storage_file_read(file, &difficulty, sizeof(difficulty)) == sizeof(difficulty)) {
-            app->txg_difficulty = morse_flipper_config_load_txg_difficulty(difficulty);
-        }
-    }
     morse_flipper_tx_group_set_range(
         &app->tx_group,
         morse_flipper_txg_range_low(app->txg_difficulty),
         morse_flipper_txg_range_high(app->txg_difficulty));
+}
+
+static void morse_flipper_config_delete_settings(Storage* storage) {
+    if(storage == NULL) return;
+
+    storage_common_remove(storage, MORSE_FLIPPER_CONFIG_PATH);
+    storage_common_remove(storage, MORSE_FLIPPER_OLD_RF_CONFIG_PATH);
+    storage_common_remove(storage, MORSE_FLIPPER_OLD_TXG_CONFIG_PATH);
+}
+
+void morse_flipper_load_config(MorseFlipperApp* app) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    MorseFlipperConfig config;
+    uint16_t got = 0U;
+    bool reset_settings = false;
+
+    if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        got = storage_file_read(file, &config, sizeof(config));
+        if(got == sizeof(config) && config.version == MORSE_FLIPPER_SETTINGS_VERSION) {
+            morse_flipper_config_apply(app, &config);
+        } else {
+            reset_settings = true;
+        }
+    }
 
     storage_file_close(file);
+    if(reset_settings) morse_flipper_config_delete_settings(storage);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
+
+    morse_flipper_config_apply_runtime_limits(app);
 }
 
 void morse_flipper_save_config(const MorseFlipperApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     MorseFlipperConfig config = {
-        .version = MORSE_FLIPPER_CONFIG_VERSION,
+        .version = MORSE_FLIPPER_SETTINGS_VERSION,
         .tone_idx = app->tone_idx,
         .keyer_mode = app->keyer_mode,
         .handedness = app->handedness,
         .trainer_lesson = morse_trainer_lesson(&app->trainer),
         .trainer_group_size = morse_trainer_group_size(&app->trainer),
         .trainer_session_groups = morse_trainer_session_groups(&app->trainer),
-        .spare0 = app->input_source,
+        .input_source = app->input_source,
         .local_dit_ms = app->trainer.local_dit_ms,
         .gpio_straight_idx = morse_flipper_gpio_straight_idx(app),
         .gpio_dit_idx = app->gpio_dit_idx,
@@ -623,6 +278,9 @@ void morse_flipper_save_config(const MorseFlipperApp* app) {
         .straight_next_delay_s = app->straight_next_delay_s,
         .audio_path = app->audio_path,
         .p2_volume_pct = app->p2_volume_pct,
+        .txg_difficulty = morse_flipper_config_load_txg_difficulty(app->txg_difficulty),
+        .reserved0 = 0U,
+        .rf_frequency_hz = morse_flipper_rf_frequency_hz(&app->rf),
         .ham_logging_enabled = app->ham_keyer.logging_enabled ? 1U : 0U,
         .ham_message_count = app->ham_keyer.message_count,
     };
@@ -632,32 +290,6 @@ void morse_flipper_save_config(const MorseFlipperApp* app) {
 
     if(storage_file_open(file, MORSE_FLIPPER_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS))
         storage_file_write(file, &config, sizeof(config));
-
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-}
-
-void morse_flipper_save_rf_config(const MorseFlipperApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    uint32_t hz = morse_flipper_rf_frequency_hz(&app->rf);
-
-    if(storage_file_open(file, MORSE_FLIPPER_RF_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS))
-        storage_file_write(file, &hz, sizeof(hz));
-
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-}
-
-void morse_flipper_save_txg_config(const MorseFlipperApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    uint8_t difficulty = morse_flipper_config_load_txg_difficulty(app->txg_difficulty);
-
-    if(storage_file_open(file, MORSE_FLIPPER_TXG_CONFIG_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS))
-        storage_file_write(file, &difficulty, sizeof(difficulty));
 
     storage_file_close(file);
     storage_file_free(file);

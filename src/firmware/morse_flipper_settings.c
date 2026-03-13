@@ -538,7 +538,7 @@ static void morse_flipper_tx_groups_difficulty_changed(VariableItem* item) {
         &app->tx_group,
         morse_flipper_txg_range_low(app->txg_difficulty),
         morse_flipper_txg_range_high(app->txg_difficulty));
-    morse_flipper_save_txg_config(app);
+    morse_flipper_save_config(app);
 }
 
 void morse_flipper_trainer_group_size_changed(VariableItem* item) {

@@ -194,7 +194,7 @@ void morse_flipper_rf_commit_edit(MorseFlipperApp* app) {
     if(!morse_flipper_rf_tx_allowed_khz(khz)) khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
     app->rf_edit_khz = khz;
     morse_flipper_rf_set_frequency_hz(&app->rf, khz * 1000U);
-    morse_flipper_save_rf_config(app);
+    morse_flipper_save_config(app);
 }
 
 const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {

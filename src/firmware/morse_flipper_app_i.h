@@ -41,9 +41,7 @@
 #define MORSE_FLIPPER_POLL_MS                       5
 #define MORSE_FLIPPER_PREVIEW_TICKS                 8
 #define MORSE_FLIPPER_CONFIG_PATH                   APP_DATA_PATH("config.bin")
-#define MORSE_FLIPPER_RF_CONFIG_PATH                APP_DATA_PATH("rf.bin")
-#define MORSE_FLIPPER_TXG_CONFIG_PATH               APP_DATA_PATH("tx_groups.bin")
-#define MORSE_FLIPPER_CONFIG_VERSION                11
+#define MORSE_FLIPPER_SETTINGS_VERSION              1U
 #define MORSE_FLIPPER_DEFAULT_DIT_MS                100U
 #define MORSE_FLIPPER_SESSION_SETTLE_MS             1000U
 #define MORSE_FLIPPER_SESSION_RESULT_MS             160U
@@ -540,10 +538,6 @@ void morse_flipper_poll(MorseFlipperApp* app);
 void morse_flipper_release_all_notes(MorseFlipperApp* app);
 void morse_flipper_load_config(MorseFlipperApp* app);
 void morse_flipper_save_config(const MorseFlipperApp* app);
-void morse_flipper_load_rf_config(MorseFlipperApp* app);
-void morse_flipper_save_rf_config(const MorseFlipperApp* app);
-void morse_flipper_load_txg_config(MorseFlipperApp* app);
-void morse_flipper_save_txg_config(const MorseFlipperApp* app);
 uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app);
 void morse_flipper_set_local_wpm(MorseFlipperApp* app, uint8_t wpm);
 void morse_flipper_set_run_wpm(MorseFlipperApp* app, uint8_t wpm);
