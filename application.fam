@@ -42,6 +42,7 @@ App(
         "src/firmware/morse_flipper_straight_trainer.c",
         "src/firmware/morse_flipper_straight_runtime.c",
         "src/firmware/morse_flipper_tx_groups.c",
+        "src/firmware/morse_flipper_tx_groups_runtime.c",
         "src/firmware/trainer.c",
         "src/firmware/trainer_files.c",
         "src/firmware/usb/*.c",
