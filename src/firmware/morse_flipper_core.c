@@ -514,7 +514,6 @@ typedef struct {
     MorseTrainer trainer;
     MorseFlipperHamKeyer ham_keyer;
     MorseTrainerCustomSets custom_sets;
-    MorseTrainerStraightStats straight_stats;
     uint8_t straight_hist_cnt[36];
     uint16_t straight_hist_sum[36];
     char straight_worst_line[24];
