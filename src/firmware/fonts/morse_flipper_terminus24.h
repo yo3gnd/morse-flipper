@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MORSE_FLIPPER_TERMINUS24_WIDTH 12U
+#define MORSE_FLIPPER_TERMINUS24_WIDTH  12U
 #define MORSE_FLIPPER_TERMINUS24_HEIGHT 24U
 
 typedef struct {

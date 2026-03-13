@@ -5,8 +5,8 @@
 
 #include "trainer.h"
 
-#define MORSE_TRAINER_CUSTOM_SET_CAP   8U
-#define MORSE_TRAINER_CUSTOM_NAME_CAP  24U
+#define MORSE_TRAINER_CUSTOM_SET_CAP  8U
+#define MORSE_TRAINER_CUSTOM_NAME_CAP 24U
 
 typedef struct {
     char name[MORSE_TRAINER_CUSTOM_NAME_CAP];

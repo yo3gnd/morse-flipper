@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#define MORSE_FLIPPER_RADIO_RX_RING 64u
+#define MORSE_FLIPPER_RADIO_RX_RING      64u
 #define MORSE_FLIPPER_RADIO_RX_DRAIN_MAX 8u
 
 #ifdef MORSE_FLIPPER_FAP

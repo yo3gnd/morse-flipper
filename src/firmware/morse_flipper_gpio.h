@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define MORSE_FLIPPER_GPIO_PIN_COUNT 8U
-#define MORSE_FLIPPER_GPIO_PIN_NONE 0xFFU
+#define MORSE_FLIPPER_GPIO_PIN_NONE  0xFFU
 
 typedef enum {
     MorseFlipperGpioPinP2 = 0,

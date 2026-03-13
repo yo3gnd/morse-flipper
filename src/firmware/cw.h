@@ -15,6 +15,6 @@ uint8_t cw_total_units(uint16_t cw_code);
 void cw_to_text(uint16_t cw_code, char* out, size_t out_sz);
 
 /* expects uint8_t cw_char already loaded with cw() */
-#define FOR_EACH_CW_SYMBOL(var) \
-    for (; cw_char > 1; cw_char >>= 1) \
-        for (bool var = ((cw_char & 1u) != 0), _cw_once = true; _cw_once; _cw_once = false)
+#define FOR_EACH_CW_SYMBOL(var)       \
+    for(; cw_char > 1; cw_char >>= 1) \
+        for(bool var = ((cw_char & 1u) != 0), _cw_once = true; _cw_once; _cw_once = false)
