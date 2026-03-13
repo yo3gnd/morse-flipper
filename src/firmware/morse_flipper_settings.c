@@ -33,7 +33,8 @@ void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state)
     view = variable_item_list_get_view(list);
     with_view_model(
         view,
-        MorseFlipperVilModel * model, {
+        MorseFlipperVilModel * model,
+        {
             uint8_t count = MorseFlipperVilArray_size(model->items);
             uint8_t win = 0U;
 
@@ -246,7 +247,8 @@ static void morse_flipper_audio_menu_refresh(MorseFlipperApp* app) {
     item = app->audio_cfg_items[MorseFlipperAudioSettingPath];
     if(item) {
         variable_item_set_current_value_index(item, app->audio_path);
-        variable_item_set_current_value_text(item, morse_flipper_audio_path_names[app->audio_path]);
+        variable_item_set_current_value_text(
+            item, morse_flipper_audio_path_names[app->audio_path]);
     }
 
     item = app->audio_cfg_items[MorseFlipperAudioSettingTone];
@@ -670,11 +672,7 @@ void morse_flipper_scene_audio_cfg_on_enter(void* context) {
         app->settings_list, morse_flipper_settings_noop_enter, app);
 
     item = variable_item_list_add(
-        app->settings_list,
-        "Audio path",
-        3U,
-        morse_flipper_settings_audio_path_changed,
-        app);
+        app->settings_list, "Audio path", 3U, morse_flipper_settings_audio_path_changed, app);
     app->audio_cfg_items[MorseFlipperAudioSettingPath] = item;
 
     item = variable_item_list_add(
@@ -686,11 +684,7 @@ void morse_flipper_scene_audio_cfg_on_enter(void* context) {
     app->audio_cfg_items[MorseFlipperAudioSettingTone] = item;
 
     item = variable_item_list_add(
-        app->settings_list,
-        "P2 Volume",
-        19U,
-        morse_flipper_settings_p2_volume_changed,
-        app);
+        app->settings_list, "P2 Volume", 19U, morse_flipper_settings_p2_volume_changed, app);
     app->audio_cfg_items[MorseFlipperAudioSettingP2Volume] = item;
 
     if((sel & 0xffU) > MorseFlipperAudioSettingP2Volume) sel = 0U;
@@ -867,8 +861,7 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     item = variable_item_list_add(
         app->settings_list,
         "Answer timeout",
-        (uint8_t)(MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S -
-                  MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S + 1U),
+        (uint8_t)(MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S - MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S + 1U),
         morse_flipper_trainer_answer_timeout_changed,
         app);
     app->trainer_items[MorseFlipperTrainerSettingAnswerTimeout] = item;
@@ -932,8 +925,8 @@ void morse_flipper_scene_straight_cfg_on_enter(void* context) {
     item = variable_item_list_add(
         app->settings_list,
         "Answer timeout",
-        (uint8_t)(MORSE_FLIPPER_STRAIGHT_TIMEOUT_MAX_S -
-                  MORSE_FLIPPER_STRAIGHT_TIMEOUT_MIN_S + 1U),
+        (uint8_t)(MORSE_FLIPPER_STRAIGHT_TIMEOUT_MAX_S - MORSE_FLIPPER_STRAIGHT_TIMEOUT_MIN_S +
+                  1U),
         morse_flipper_straight_timeout_changed,
         app);
     app->straight_cfg_items[1] = item;
@@ -943,8 +936,7 @@ void morse_flipper_scene_straight_cfg_on_enter(void* context) {
     item = variable_item_list_add(
         app->settings_list,
         "Next delay",
-        (uint8_t)(MORSE_FLIPPER_STRAIGHT_NEXT_MAX_S -
-                  MORSE_FLIPPER_STRAIGHT_NEXT_MIN_S + 1U),
+        (uint8_t)(MORSE_FLIPPER_STRAIGHT_NEXT_MAX_S - MORSE_FLIPPER_STRAIGHT_NEXT_MIN_S + 1U),
         morse_flipper_straight_next_changed,
         app);
     app->straight_cfg_items[2] = item;
@@ -986,8 +978,7 @@ void morse_flipper_scene_tx_groups_cfg_on_enter(void* context) {
         app);
     variable_item_set_current_value_index(item, app->txg_difficulty);
     variable_item_set_current_value_text(
-        item,
-        morse_flipper_txg_difficulty_name(app->txg_difficulty));
+        item, morse_flipper_txg_difficulty_name(app->txg_difficulty));
 
     if(sel > 0U) sel = 0U;
     variable_item_list_set_selected_item(app->settings_list, sel);

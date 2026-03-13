@@ -193,9 +193,12 @@ static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void
     uint32_t ev = 0U;
 
     if(type != InputTypeShort) return;
-    if(result == GuiButtonTypeLeft) ev = MorseFlipperCustomHelpPrev;
-    else if(result == GuiButtonTypeRight) ev = MorseFlipperCustomHelpNext;
-    else return;
+    if(result == GuiButtonTypeLeft)
+        ev = MorseFlipperCustomHelpPrev;
+    else if(result == GuiButtonTypeRight)
+        ev = MorseFlipperCustomHelpNext;
+    else
+        return;
 
     view_dispatcher_send_custom_event(app->view_dispatcher, ev);
 }
@@ -223,8 +226,10 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     }
 
     if(app->help_page + 1U < n) {
-        if(app->help_page == 0U) snprintf(b, sizeof(b), "Next");
-        else snprintf(b, sizeof(b), "%u/%u", (unsigned)(app->help_page + 2U), (unsigned)n);
+        if(app->help_page == 0U)
+            snprintf(b, sizeof(b), "Next");
+        else
+            snprintf(b, sizeof(b), "%u/%u", (unsigned)(app->help_page + 2U), (unsigned)n);
         widget_add_button_element(
             app->widget, GuiButtonTypeRight, b, morse_flipper_help_btn_cb, app);
     }

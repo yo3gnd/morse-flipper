@@ -64,8 +64,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
 
     if(app->screen != MorseFlipperScreenHamStartRefusal &&
        app->screen != MorseFlipperScreenHamAssign &&
-       app->screen != MorseFlipperScreenHamAssignments &&
-       app->screen != MorseFlipperScreenHamRun)
+       app->screen != MorseFlipperScreenHamAssignments && app->screen != MorseFlipperScreenHamRun)
         return false;
 
     if(app->screen == MorseFlipperScreenHamRun) {
@@ -593,13 +592,14 @@ bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32
     return false;
 }
 
-static bool morse_flipper_session_live_keying_input(MorseFlipperApp* app, const InputEvent* event) {
+static bool
+    morse_flipper_session_live_keying_input(MorseFlipperApp* app, const InputEvent* event) {
     MorseFlipperInputGate g;
 
     if(app->screen != MorseFlipperScreenSession && app->screen != MorseFlipperScreenTxGroups)
         return false;
-    if(app->screen == MorseFlipperScreenSession &&
-       !morse_flipper_session_repeat_active(app) && !morse_flipper_session_running_view(app))
+    if(app->screen == MorseFlipperScreenSession && !morse_flipper_session_repeat_active(app) &&
+       !morse_flipper_session_running_view(app))
         return false;
     if(app->screen == MorseFlipperScreenTxGroups && !app->txg_wait_answer) return false;
     if(event->type != InputTypePress && event->type != InputTypeRelease) return false;
@@ -632,8 +632,7 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
     bool btn_pad = g.btn_pad;
 
     if((app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf) &&
-       event->key == InputKeyLeft &&
-       event->type == InputTypeShort) {
+       event->key == InputKeyLeft && event->type == InputTypeShort) {
         morse_flipper_reset_run_state(app);
         morse_flipper_view_dirty(app);
         return;
@@ -647,7 +646,8 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
         } else if(event->type == InputTypeLong) {
             if(app->screen == MorseFlipperScreenTxGroups)
                 morse_flipper_leave_tx_groups(app, now_ms);
-            else morse_flipper_leave_live_screen(app, now_ms);
+            else
+                morse_flipper_leave_live_screen(app, now_ms);
         }
         return;
     }
@@ -684,21 +684,21 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
 
     if(g.back_exit && event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        if(app->screen == MorseFlipperScreenTxGroups) morse_flipper_leave_tx_groups(app, now_ms);
-        else morse_flipper_leave_live_screen(app, now_ms);
+        if(app->screen == MorseFlipperScreenTxGroups)
+            morse_flipper_leave_tx_groups(app, now_ms);
+        else
+            morse_flipper_leave_live_screen(app, now_ms);
         return;
     }
 
     if(app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf) {
-        if(app->screen == MorseFlipperScreenRun &&
-           event->key == InputKeyUp &&
+        if(app->screen == MorseFlipperScreenRun && event->key == InputKeyUp &&
            (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
             morse_flipper_set_run_wpm(app, (uint8_t)(morse_flipper_current_wpm(app) + 1U));
             return;
         }
 
-        if(app->screen == MorseFlipperScreenRun &&
-           event->key == InputKeyDown &&
+        if(app->screen == MorseFlipperScreenRun && event->key == InputKeyDown &&
            (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
             uint8_t wpm = morse_flipper_current_wpm(app);
             morse_flipper_set_run_wpm(app, wpm > 0U ? (uint8_t)(wpm - 1U) : 0U);
@@ -732,7 +732,7 @@ void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir) {
     if(app->audio_path == MorseFlipperAudioPathVibration) return;
 
     int idx = app->tone_idx < COUNT_OF(morse_flipper_tones) ? (int)app->tone_idx :
-                                                            (int)MORSE_FLIPPER_DEFAULT_TONE_IDX;
+                                                              (int)MORSE_FLIPPER_DEFAULT_TONE_IDX;
     int current_idx = idx;
 
     idx += dir;

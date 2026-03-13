@@ -61,7 +61,8 @@ static void morse_flipper_scene_menu_main_on_exit(void* context) {
 
 static void morse_flipper_scene_menu_training_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuTraining);
+    uint32_t sel =
+        scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuTraining);
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuTraining);
     submenu_set_header(app->submenu, "Training");
@@ -114,7 +115,8 @@ static void morse_flipper_scene_menu_training_on_exit(void* context) {
 
 static void morse_flipper_scene_menu_settings_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuSettings);
+    uint32_t sel =
+        scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneMenuSettings);
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuSettings);
     submenu_set_header(app->submenu, "Settings");
@@ -295,10 +297,7 @@ static void morse_flipper_scene_menu_ham_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuHam);
     submenu_set_header(app->submenu, "Ham Keyer");
     snprintf(
-        logging,
-        sizeof(logging),
-        "Logging: %s",
-        app->ham_keyer.logging_enabled ? "On" : "Off");
+        logging, sizeof(logging), "Logging: %s", app->ham_keyer.logging_enabled ? "On" : "Off");
     submenu_add_item(
         app->submenu, "Start", MorseFlipperHamMenuStart, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
@@ -334,8 +333,9 @@ static bool morse_flipper_scene_menu_ham_on_event(void* context, SceneManagerEve
     if(event.event == MorseFlipperHamMenuStart) {
         scene_manager_next_scene(
             app->scene_manager,
-            app->input_source == MorseFlipperInputSourceButtons ? MorseFlipperSceneHamStartRefusal :
-                                                                  MorseFlipperSceneHamRun);
+            app->input_source == MorseFlipperInputSourceButtons ?
+                MorseFlipperSceneHamStartRefusal :
+                MorseFlipperSceneHamRun);
         return true;
     }
 
@@ -367,7 +367,8 @@ static void morse_flipper_scene_menu_ham_on_exit(void* context) {
 
 static void morse_flipper_scene_ham_configure_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneHamConfigure);
+    uint32_t sel =
+        scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneHamConfigure);
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneHamConfigure);
     submenu_set_header(app->submenu, "Messages");
@@ -407,7 +408,8 @@ static bool morse_flipper_scene_ham_configure_on_event(void* context, SceneManag
     }
 
     if(event.event >= MorseFlipperHamConfigureMessageBase &&
-       event.event < (uint32_t)MorseFlipperHamConfigureMessageBase + app->ham_keyer.message_count) {
+       event.event <
+           (uint32_t)MorseFlipperHamConfigureMessageBase + app->ham_keyer.message_count) {
         app->ham_selected_message = (uint8_t)(event.event - MorseFlipperHamConfigureMessageBase);
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamMessageActions);
     }
@@ -459,11 +461,9 @@ static bool morse_flipper_scene_ham_actions_on_event(void* context, SceneManager
         morse_flipper_ham_keyer_delete_message(&app->ham_keyer, app->ham_selected_message);
         morse_flipper_save_config(app);
         if(!scene_manager_search_and_switch_to_previous_scene(
-               app->scene_manager,
-               MorseFlipperSceneHamConfigure))
+               app->scene_manager, MorseFlipperSceneHamConfigure))
             scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager,
-                MorseFlipperSceneHamConfigure);
+                app->scene_manager, MorseFlipperSceneHamConfigure);
     }
 
     return true;
@@ -517,8 +517,7 @@ static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneMana
         return true;
     }
 
-    if(event.type != SceneManagerEventTypeCustom ||
-       event.event != MorseFlipperCustomHamTextDone)
+    if(event.type != SceneManagerEventTypeCustom || event.event != MorseFlipperCustomHamTextDone)
         return false;
 
     for(size_t i = 0U; app->ham_text_buffer[i] != '\0'; i++) {
@@ -527,20 +526,16 @@ static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneMana
 
     if(app->ham_text_mode == MorseFlipperHamTextModeEdit) {
         morse_flipper_ham_keyer_edit_message(
-            &app->ham_keyer,
-            app->ham_selected_message,
-            app->ham_text_buffer);
+            &app->ham_keyer, app->ham_selected_message, app->ham_text_buffer);
     } else if(app->ham_text_mode == MorseFlipperHamTextModeAdd) {
         morse_flipper_ham_keyer_add_message(&app->ham_keyer, app->ham_text_buffer);
     }
     morse_flipper_save_config(app);
 
     if(!scene_manager_search_and_switch_to_previous_scene(
-           app->scene_manager,
-           MorseFlipperSceneHamConfigure))
+           app->scene_manager, MorseFlipperSceneHamConfigure))
         scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager,
-            MorseFlipperSceneHamConfigure);
+            app->scene_manager, MorseFlipperSceneHamConfigure);
 
     return true;
 }
@@ -752,77 +747,43 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
 };
 
 static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[MorseFlipperSceneNum] = {
-    morse_flipper_scene_menu_main_on_event,
-    morse_flipper_scene_menu_training_on_event,
-    morse_flipper_scene_menu_settings_on_event,
-    morse_flipper_scene_menu_help_on_event,
-    morse_flipper_scene_menu_rf_on_event,
-    morse_flipper_scene_menu_ham_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_home_on_event,
-    morse_flipper_scene_audio_cfg_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_pc_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_gpio_on_event,
-    morse_flipper_scene_help_on_event,
-    morse_flipper_scene_about_on_event,
-    morse_flipper_scene_startup_probe_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_ham_configure_on_event,
-    morse_flipper_scene_ham_actions_on_event,
-    morse_flipper_scene_ham_text_input_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_live_on_event,
-    morse_flipper_scene_tx_groups_cfg_on_event,
+    morse_flipper_scene_menu_main_on_event,     morse_flipper_scene_menu_training_on_event,
+    morse_flipper_scene_menu_settings_on_event, morse_flipper_scene_menu_help_on_event,
+    morse_flipper_scene_menu_rf_on_event,       morse_flipper_scene_menu_ham_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_home_on_event,
+    morse_flipper_scene_audio_cfg_on_event,     morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_pc_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_gpio_on_event,
+    morse_flipper_scene_help_on_event,          morse_flipper_scene_about_on_event,
+    morse_flipper_scene_startup_probe_on_event, morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_ham_configure_on_event,
+    morse_flipper_scene_ham_actions_on_event,   morse_flipper_scene_ham_text_input_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
+    morse_flipper_scene_live_on_event,          morse_flipper_scene_tx_groups_cfg_on_event,
 };
 
 static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFlipperSceneNum] = {
-    morse_flipper_scene_menu_main_on_exit,
-    morse_flipper_scene_menu_training_on_exit,
-    morse_flipper_scene_menu_settings_on_exit,
-    morse_flipper_scene_menu_help_on_exit,
-    morse_flipper_scene_menu_rf_on_exit,
-    morse_flipper_scene_menu_ham_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_home_on_exit,
-    morse_flipper_scene_audio_cfg_on_exit,
-    morse_flipper_scene_trainer_on_exit,
-    morse_flipper_scene_straight_cfg_on_exit,
-    morse_flipper_scene_pc_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_gpio_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_ham_configure_on_exit,
-    morse_flipper_scene_ham_actions_on_exit,
-    morse_flipper_scene_ham_text_input_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_live_on_exit,
-    morse_flipper_scene_tx_groups_cfg_on_exit,
+    morse_flipper_scene_menu_main_on_exit,     morse_flipper_scene_menu_training_on_exit,
+    morse_flipper_scene_menu_settings_on_exit, morse_flipper_scene_menu_help_on_exit,
+    morse_flipper_scene_menu_rf_on_exit,       morse_flipper_scene_menu_ham_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_home_on_exit,
+    morse_flipper_scene_audio_cfg_on_exit,     morse_flipper_scene_trainer_on_exit,
+    morse_flipper_scene_straight_cfg_on_exit,  morse_flipper_scene_pc_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_gpio_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_ham_configure_on_exit,
+    morse_flipper_scene_ham_actions_on_exit,   morse_flipper_scene_ham_text_input_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_tx_groups_cfg_on_exit,
 };
 
 const SceneManagerHandlers morse_flipper_scene_handlers = {

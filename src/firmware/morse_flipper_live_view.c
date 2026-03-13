@@ -64,11 +64,7 @@ static void morse_flipper_draw_txg_big_slots(Canvas* canvas, int32_t cy, const c
 
     for(uint8_t i = 0U; i < MORSE_FLIPPER_TX_GROUP_LEN; i++) {
         if(text[i] == '\0') break;
-        morse_flipper_draw_straight_prompt(
-            canvas,
-            cx + ((cell + gap) * (int32_t)i),
-            cy,
-            text[i]);
+        morse_flipper_draw_straight_prompt(canvas, cx + ((cell + gap) * (int32_t)i), cy, text[i]);
     }
 }
 
@@ -269,12 +265,7 @@ static void morse_flipper_draw_rf_freq_digit(
 
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(
-        canvas,
-        x + (int32_t)(w / 2U),
-        y + (int32_t)(h / 2U),
-        AlignCenter,
-        AlignCenter,
-        text);
+        canvas, x + (int32_t)(w / 2U), y + (int32_t)(h / 2U), AlignCenter, AlignCenter, text);
     canvas_set_color(canvas, ColorBlack);
 }
 
@@ -283,9 +274,8 @@ static void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipper
     const int32_t cell_w = 18;
     const int32_t cell_h = 20;
     const int32_t gap = 1;
-    const int32_t total_w =
-        (cell_w * (int32_t)MORSE_FLIPPER_RF_FREQ_DIGITS) +
-        (gap * ((int32_t)MORSE_FLIPPER_RF_FREQ_DIGITS - 1));
+    const int32_t total_w = (cell_w * (int32_t)MORSE_FLIPPER_RF_FREQ_DIGITS) +
+                            (gap * ((int32_t)MORSE_FLIPPER_RF_FREQ_DIGITS - 1));
     const int32_t x0 = (128 - total_w) / 2;
     const int32_t y0 = 11;
     uint8_t i;
@@ -319,7 +309,8 @@ static uint8_t morse_flipper_live_upper_char(uint8_t ch) {
     return ch;
 }
 
-static void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch) {
+static void
+    morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch) {
     const MorseFlipperTerminus24Glyph* glyph;
     int32_t x0;
     int32_t y0;
@@ -474,7 +465,8 @@ static void morse_flipper_draw_startup_gpio_probe(Canvas* canvas, const MorseFli
     }
 
     if(!morse_flipper_gpio_probe_forces_straight(app->startup_gpio_probe_state)) {
-        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Press back to continue");
+        canvas_draw_str_aligned(
+            canvas, 64, 58, AlignCenter, AlignCenter, "Press back to continue");
         return;
     }
 
@@ -646,9 +638,8 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
             di_txt,
             sizeof(di_txt),
             "%s",
-            morse_flipper_straight_trainer_worst_dit_score(&app->straight_trainer) >= 90U ?
-                "OK" :
-                "");
+            morse_flipper_straight_trainer_worst_dit_score(&app->straight_trainer) >= 90U ? "OK" :
+                                                                                            "");
         if(di_txt[0] == '\0')
             snprintf(
                 di_txt,
@@ -659,9 +650,8 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
             da_txt,
             sizeof(da_txt),
             "%s",
-            morse_flipper_straight_trainer_worst_dah_score(&app->straight_trainer) >= 90U ?
-                "OK" :
-                "");
+            morse_flipper_straight_trainer_worst_dah_score(&app->straight_trainer) >= 90U ? "OK" :
+                                                                                            "");
         if(da_txt[0] == '\0')
             snprintf(
                 da_txt,
@@ -678,7 +668,10 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
 
     if(app->straight_session_total != 0U)
         pct = ((unsigned)app->straight_session_good * 100U) / app->straight_session_total;
-    snprintf(cnt, sizeof(cnt), "%u/%u %u%%",
+    snprintf(
+        cnt,
+        sizeof(cnt),
+        "%u/%u %u%%",
         (unsigned)app->straight_session_good,
         (unsigned)app->straight_session_total,
         pct);
@@ -883,7 +876,8 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, "Press Up, Down,");
         canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "Left or Right");
-        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "to assign this message");
+        canvas_draw_str_aligned(
+            canvas, 64, 44, AlignCenter, AlignCenter, "to assign this message");
         canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, "Bk cancel");
         return;
     }
@@ -915,11 +909,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             sizeof(browse_line),
             "Back: Bkin %s hold L exit",
             app->ham_keyer.break_in_enabled ? "on" : "off");
-        morse_flipper_draw_tx_history_screen_custom(
-            canvas,
-            app,
-            "P16 PTT  P15 Key",
-            browse_line);
+        morse_flipper_draw_tx_history_screen_custom(canvas, app, "P16 PTT  P15 Key", browse_line);
         if(app->ham_macro_active && app->ham_macro_dir < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) {
             snprintf(
                 browse_line,
@@ -1108,13 +1098,9 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         char gpio_trace[48];
 
         morse_flipper_cw_token_expand_text(
-            tx_trace,
-            sizeof(tx_trace),
-            app->rf_tx_text[0] ? app->rf_tx_text : "-");
+            tx_trace, sizeof(tx_trace), app->rf_tx_text[0] ? app->rf_tx_text : "-");
         morse_flipper_cw_token_expand_text(
-            gpio_trace,
-            sizeof(gpio_trace),
-            app->gpio_text[0] ? app->gpio_text : "-");
+            gpio_trace, sizeof(gpio_trace), app->gpio_text[0] ? app->gpio_text : "-");
         snprintf(
             trace_line1,
             sizeof(trace_line1),
@@ -1138,12 +1124,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
             app->keyer.set_queue_len,
             app->keyer.fifo_queue_len,
             app->keyer.pulse_active ? 1U : 0U);
-        snprintf(
-            trace_line4,
-            sizeof(trace_line4),
-            "tx %.12s gp %.11s",
-            tx_trace,
-            gpio_trace);
+        snprintf(trace_line4, sizeof(trace_line4), "tx %.12s gp %.11s", tx_trace, gpio_trace);
 
         canvas_draw_str(canvas, 2, 10, trace_line1);
         canvas_draw_str(

@@ -3,19 +3,19 @@
 void morse_flipper_view_dirty(MorseFlipperApp* app) {
     if(app == NULL || app->live_view == NULL) return;
 
-        with_view_model(app->live_view, MorseFlipperLiveModel * m, { m->bump++; }, true);
+    with_view_model(app->live_view, MorseFlipperLiveModel * m, { m->bump++; }, true);
 }
 
 void morse_flipper_live_draw(Canvas* canvas, void* model) {
     MorseFlipperLiveModel* m = model;
 
     if(m == NULL || m->app == NULL) return;
-        morse_flipper_draw(canvas, m->app);
+    morse_flipper_draw(canvas, m->app);
 }
 
 void morse_flipper_scene_open(MorseFlipperApp* app, uint32_t scene) {
     if(app == NULL || app->scene_manager == NULL) return;
-        scene_manager_next_scene(app->scene_manager, scene);
+    scene_manager_next_scene(app->scene_manager, scene);
 }
 
 void morse_flipper_scene_back(MorseFlipperApp* app) {
@@ -23,10 +23,9 @@ void morse_flipper_scene_back(MorseFlipperApp* app) {
 
     if(scene_manager_previous_scene(app->scene_manager)) return;
 
-        scene_manager_stop(app->scene_manager);
+    scene_manager_stop(app->scene_manager);
     if(app->view_dispatcher) view_dispatcher_stop(app->view_dispatcher);
 }
-
 
 void morse_flipper_scene_menu_pick(void* ctx, uint32_t idx) {
     MorseFlipperApp* app = ctx;

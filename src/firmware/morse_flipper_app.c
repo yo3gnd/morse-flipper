@@ -18,7 +18,8 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .help_text = NULL,
         .exit_requested = false,
         .previous_usb_config = NULL,
-        .hid_cfg = {
+        .hid_cfg =
+            {
                 .vid = 0x6666U,
                 .pid = 0x434BU,
                 .manuf = "YO3GND",
@@ -189,7 +190,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_straight_trainer_init(&app.straight_trainer);
     morse_flipper_tx_group_init(&app.tx_group);
     morse_trainer_load_custom_sets(&app.custom_sets);
-   morse_trainer_load_straight_stats(&app.straight_stats);
+    morse_trainer_load_straight_stats(&app.straight_stats);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_load_config(&app);
     morse_flipper_load_rf_config(&app);
@@ -220,9 +221,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
 
     app.text_input = text_input_alloc();
     view_dispatcher_add_view(
-        app.view_dispatcher,
-        MorseFlipperViewTextInput,
-        text_input_get_view(app.text_input));
+        app.view_dispatcher, MorseFlipperViewTextInput, text_input_get_view(app.text_input));
 
     app.settings_list = variable_item_list_alloc();
     view_dispatcher_add_view(
@@ -238,10 +237,14 @@ MorseFlipperApp* morse_flipper_boot(void) {
     app.live_view = view_alloc();
     view_set_context(app.live_view, &app);
     view_allocate_model(app.live_view, ViewModelTypeLockFree, sizeof(MorseFlipperLiveModel));
-    with_view_model(app.live_view, MorseFlipperLiveModel * m, {
-        m->app = &app;
-        m->bump = 0U;
-    }, false);
+    with_view_model(
+        app.live_view,
+        MorseFlipperLiveModel * m,
+        {
+            m->app = &app;
+            m->bump = 0U;
+        },
+        false);
     view_set_draw_callback(app.live_view, morse_flipper_live_draw);
     view_set_input_callback(app.live_view, morse_flipper_live_input);
     view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewLive, app.live_view);
