@@ -646,6 +646,7 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms);
 int8_t morse_flipper_rf_clamp_dbm(int8_t dbm);
 int8_t morse_flipper_rssi_dbm_round(float rssi);
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz);
+void morse_flipper_rf_reset_edit(MorseFlipperApp* app);
 void morse_flipper_rf_bump_focus(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_bump_digit(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_commit_edit(MorseFlipperApp* app);

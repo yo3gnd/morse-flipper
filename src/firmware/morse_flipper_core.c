@@ -744,6 +744,7 @@ const char* morse_flipper_run_mode_line(const MorseFlipperApp* app, char* buf, s
 const char* morse_flipper_run_input_name(const MorseFlipperApp* app);
 const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app);
 const char* morse_flipper_run_usb_name(const MorseFlipperApp* app);
+void morse_flipper_rf_reset_edit(MorseFlipperApp* app);
 const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz);
 void morse_flipper_reset_run_state(MorseFlipperApp* app);
 const char* morse_flipper_trace_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz);
@@ -1186,17 +1187,6 @@ const char* morse_flipper_run_hint(const MorseFlipperApp* app, char* buf, size_t
     return buf;
 }
 
-int8_t morse_flipper_rssi_dbm_round(float rssi) {
-    if(rssi >= 0.0f) return (int8_t)(rssi + 0.5f);
-    return (int8_t)(rssi - 0.5f);
-}
-
-int8_t morse_flipper_rf_clamp_dbm(int8_t dbm) {
-    if(dbm < -115) return -115;
-    if(dbm > -50) return -50;
-    return dbm;
-}
-
 const char* morse_flipper_run_mode_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     const char* input;
     const char* keyer;
@@ -1264,97 +1254,6 @@ const char* morse_flipper_run_usb_name(const MorseFlipperApp* app) {
     default:
         return "USB off";
     }
-}
-
-static bool morse_flipper_rf_tx_allowed_hz(uint32_t hz) {
-    return furi_hal_subghz_is_frequency_valid(hz) && furi_hal_region_is_frequency_allowed(hz);
-}
-
-bool morse_flipper_rf_tx_allowed_khz(uint32_t khz) {
-    return morse_flipper_rf_tx_allowed_hz(khz * 1000U);
-}
-
-static void morse_flipper_rf_reset_edit(MorseFlipperApp* app) {
-    if(app == NULL) return;
-    app->rf_edit_khz = morse_flipper_rf_frequency_khz(&app->rf);
-    app->rf_freq_focus = 0U;
-}
-
-static uint32_t morse_flipper_rf_edit_place(uint8_t focus) {
-    static const uint32_t places[MORSE_FLIPPER_RF_FREQ_DIGITS] = {
-        100000U, 10000U, 1000U, 100U, 10U, 1U};
-
-    if(focus >= MORSE_FLIPPER_RF_FREQ_DIGITS) return 1U;
-    return places[focus];
-}
-
-void morse_flipper_rf_bump_focus(MorseFlipperApp* app, int dir) {
-    uint8_t focus;
-
-    if(app == NULL) return;
-    focus = app->rf_freq_focus % MORSE_FLIPPER_RF_FREQ_DIGITS;
-    if(dir < 0) {
-        app->rf_freq_focus = focus == 0U ? (MORSE_FLIPPER_RF_FREQ_DIGITS - 1U) :
-                                           (uint8_t)(focus - 1U);
-    } else {
-        app->rf_freq_focus = (uint8_t)((focus + 1U) % MORSE_FLIPPER_RF_FREQ_DIGITS);
-    }
-}
-
-void morse_flipper_rf_bump_digit(MorseFlipperApp* app, int dir) {
-    uint32_t place;
-    uint32_t khz;
-    uint8_t digit;
-    uint8_t next_digit;
-    int32_t delta;
-
-    if(app == NULL) return;
-
-    place = morse_flipper_rf_edit_place(app->rf_freq_focus);
-    khz = app->rf_edit_khz % 1000000U;
-    digit = (uint8_t)((khz / place) % 10U);
-    next_digit = dir < 0 ? (uint8_t)((digit + 9U) % 10U) : (uint8_t)((digit + 1U) % 10U);
-    delta = ((int32_t)next_digit - (int32_t)digit) * (int32_t)place;
-    app->rf_edit_khz = (uint32_t)((int32_t)khz + delta);
-}
-
-void morse_flipper_rf_commit_edit(MorseFlipperApp* app) {
-    uint32_t khz;
-
-    if(app == NULL) return;
-
-    khz = app->rf_edit_khz % 1000000U;
-    if(!morse_flipper_rf_tx_allowed_khz(khz)) khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
-    app->rf_edit_khz = khz;
-    morse_flipper_rf_set_frequency_hz(&app->rf, khz * 1000U);
-    morse_flipper_save_rf_config(app);
-}
-
-const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
-    unsigned long khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
-
-    if(buf == NULL || buf_sz == 0U) return "433150 khz";
-    if(app != NULL) khz = (unsigned long)morse_flipper_rf_frequency_khz(&app->rf);
-    snprintf(buf, buf_sz, "%lu khz", khz);
-    return buf;
-}
-
-const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
-    if(buf == NULL || buf_sz == 0U) return "";
-
-    if(app == NULL || !app->rf_rssi_valid) {
-        snprintf(buf, buf_sz, "cs0 --/--");
-        return buf;
-    }
-
-    snprintf(
-        buf,
-        buf_sz,
-        "cs%d %d/%d",
-        app->rf_carrier_present ? 1 : 0,
-        (int)app->rf_rssi_dbm,
-        (int)app->rf_rssi_peak_dbm);
-    return buf;
 }
 
 const char* morse_flipper_trace_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
