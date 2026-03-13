@@ -52,7 +52,8 @@ static uint16_t morse_flipper_audio_pwm_current_env_q15(const MorseFlipperAudioP
         }
 
         delta = MORSE_FLIPPER_AUDIO_PWM_Q15 - audio->env_anchor_q15;
-        return (uint16_t)( audio->env_anchor_q15 + ((delta * audio->attack_q15[audio->env_idx]) / MORSE_FLIPPER_AUDIO_PWM_Q15));
+        return (uint16_t)(audio->env_anchor_q15 + ((delta * audio->attack_q15[audio->env_idx]) /
+                                                   MORSE_FLIPPER_AUDIO_PWM_Q15));
     case MorseFlipperAudioPwmEnvSustain:
         return MORSE_FLIPPER_AUDIO_PWM_Q15;
     case MorseFlipperAudioPwmEnvRelease:
@@ -188,9 +189,10 @@ void morse_flipper_audio_pwm_prepare(
     audio->gate_applied = false;
 
     for(i = 0U; i < MORSE_FLIPPER_AUDIO_PWM_SINE_SAMPLES; i++) {
-        audio->attack_q15[i] = i < audio->attack_len ?
-                                   morse_flipper_audio_pwm_progress_q15((uint16_t)i, audio->attack_len) :
-                                   MORSE_FLIPPER_AUDIO_PWM_Q15;
+        audio->attack_q15[i] =
+            i < audio->attack_len ?
+                morse_flipper_audio_pwm_progress_q15((uint16_t)i, audio->attack_len) :
+                MORSE_FLIPPER_AUDIO_PWM_Q15;
         audio->release_q15[i] = i < audio->release_len ?
                                     (uint16_t)(MORSE_FLIPPER_AUDIO_PWM_Q15 -
                                                morse_flipper_audio_pwm_progress_q15(
@@ -282,7 +284,8 @@ static void morse_flipper_audio_pwm_dma_isr(void* context) {
     if(LL_DMA_IsActiveFlag_HT1(MORSE_FLIPPER_AUDIO_PWM_DMA) &&
        LL_DMA_IsEnabledIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF)) {
         LL_DMA_ClearFlag_HT1(MORSE_FLIPPER_AUDIO_PWM_DMA);
-        morse_flipper_audio_pwm_render(audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_HALF_SAMPLES);
+        morse_flipper_audio_pwm_render(
+            audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_HALF_SAMPLES);
     }
 
     if(LL_DMA_IsActiveFlag_TC1(MORSE_FLIPPER_AUDIO_PWM_DMA) &&
@@ -349,7 +352,8 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio) {
     LL_TIM_CC_EnableChannel(TIM1, LL_TIM_CHANNEL_CH1N);
     LL_TIM_EnableAllOutputs(TIM1);
 
-    morse_flipper_audio_pwm_render(audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_SAMPLES);
+    morse_flipper_audio_pwm_render(
+        audio, audio->dma_buffer, MORSE_FLIPPER_AUDIO_PWM_BUFFER_SAMPLES);
 
     LL_DMA_DisableChannel(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     dma_cfg.PeriphOrM2MSrcAddress = (uint32_t)&TIM1->CCR1;
@@ -369,7 +373,11 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio) {
     LL_DMA_EnableIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     LL_DMA_EnableIT_TC(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     LL_DMA_EnableIT_TE(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
-    furi_hal_interrupt_set_isr_ex(MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, FuriHalInterruptPriorityKamiSama, morse_flipper_audio_pwm_dma_isr, audio);
+    furi_hal_interrupt_set_isr_ex(
+        MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ,
+        FuriHalInterruptPriorityKamiSama,
+        morse_flipper_audio_pwm_dma_isr,
+        audio);
 
     LL_TIM_ClearFlag_UPDATE(TIM1);
     LL_TIM_EnableDMAReq_UPDATE(TIM1);

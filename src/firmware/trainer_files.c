@@ -43,8 +43,10 @@ static bool morse_trainer_read_custom_text(char* buf, size_t buf_sz) {
     storage_common_mkdir(storage, "/ext/ham");
 
     if(!storage_file_open(file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        if(storage_file_open(file, morse_trainer_custom_path_value, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-            storage_file_write(file, morse_trainer_custom_defaults, strlen(morse_trainer_custom_defaults));
+        if(storage_file_open(
+               file, morse_trainer_custom_path_value, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+            storage_file_write(
+                file, morse_trainer_custom_defaults, strlen(morse_trainer_custom_defaults));
         }
         storage_file_close(file);
         storage_file_open(file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
@@ -170,7 +172,8 @@ bool morse_trainer_load_straight_stats(MorseTrainerStraightStats* stats) {
     File* file = storage_file_alloc(storage);
     uint16_t got = 0U;
 
-    if(storage_file_open(file, morse_trainer_straight_stats_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(storage_file_open(
+           file, morse_trainer_straight_stats_path_value, FSAM_READ, FSOM_OPEN_EXISTING)) {
         got = storage_file_read(file, buf, sizeof(buf) - 1U);
     }
     buf[got] = '\0';
@@ -232,7 +235,8 @@ bool morse_trainer_note_straight_attempt(
     bool ok;
 
     storage_common_mkdir(storage, "/ext/ham");
-    ok = storage_file_open(file, morse_trainer_straight_stats_path_value, FSAM_WRITE, FSOM_OPEN_APPEND);
+    ok = storage_file_open(
+        file, morse_trainer_straight_stats_path_value, FSAM_WRITE, FSOM_OPEN_APPEND);
     if(ok) {
         storage_file_write(file, line, strlen(line));
     }

@@ -24,7 +24,8 @@ static char cw_token_up(char ch) {
 }
 
 static const MorseFlipperCwTokenDef* cw_token_find(uint8_t ch) {
-    for(size_t i = 0U; i < sizeof(morse_flipper_cw_tokens) / sizeof(morse_flipper_cw_tokens[0]); i++) {
+    for(size_t i = 0U; i < sizeof(morse_flipper_cw_tokens) / sizeof(morse_flipper_cw_tokens[0]);
+        i++) {
         if(morse_flipper_cw_tokens[i].token == ch) return &morse_flipper_cw_tokens[i];
     }
 
@@ -94,7 +95,8 @@ bool morse_flipper_cw_token_parse(const char* text, uint8_t* token, size_t* cons
 
     if(*text != '>' || n == 0U) return false;
 
-    for(size_t i = 0U; i < sizeof(morse_flipper_cw_tokens) / sizeof(morse_flipper_cw_tokens[0]); i++) {
+    for(size_t i = 0U; i < sizeof(morse_flipper_cw_tokens) / sizeof(morse_flipper_cw_tokens[0]);
+        i++) {
         if(cw_token_label_eq(label, morse_flipper_cw_tokens[i].label)) {
             if(token) *token = morse_flipper_cw_tokens[i].token;
             if(consumed) *consumed = n + 2U;

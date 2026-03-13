@@ -16,7 +16,11 @@ typedef struct {
 } MorseFlipperRfTiming;
 
 void morse_flipper_rf_timing_init(MorseFlipperRfTiming* timing);
-void morse_flipper_rf_timing_capture(MorseFlipperRfTiming* timing, bool mark, uint16_t duration_ms, const char* frequency_text);
+void morse_flipper_rf_timing_capture(
+    MorseFlipperRfTiming* timing,
+    bool mark,
+    uint16_t duration_ms,
+    const char* frequency_text);
 size_t morse_flipper_rf_timing_count(const MorseFlipperRfTiming* timing);
 bool morse_flipper_rf_timing_mark(const MorseFlipperRfTiming* timing, size_t idx);
 uint16_t morse_flipper_rf_timing_duration_ms(const MorseFlipperRfTiming* timing, size_t idx);

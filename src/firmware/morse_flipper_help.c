@@ -14,8 +14,7 @@ static const char* const morse_help_first_steps[] = {
     "This app NEVER shows dots and dashes. This is by design. Be wary of anything that does and consider it sub-par training material.",
     "Think of how you learnt the multiplication table. Nobody sensible counts up to work out 8 times 3; they just know it is 24. Morse should become the same sort of reflex: hear the sound, get the letter. No thinking involved.",
     "You didn't learn the multiplication table by counting, but by repetition, and you shouldn't learn Morse code by counting.",
-    "This is important: if you catch yourself thinking out in dots and dashes, you are counting. Stop and make the exercise harder. Practise only outside the comfort zone."
-};
+    "This is important: if you catch yourself thinking out in dots and dashes, you are counting. Stop and make the exercise harder. Practise only outside the comfort zone."};
 
 static const char* const morse_help_input_keys[] = {
     "Practical telegraphy always uses a device called a key, manipulator or tapper.",
@@ -214,17 +213,20 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     txt = morse_flipper_help_card(app->help_topic, app->help_page);
     furi_string_set(app->help_text, txt);
     furi_string_cat(app->help_text, "\n");
-    widget_add_text_scroll_element(app->widget, 0, 0, 128, 52, furi_string_get_cstr(app->help_text));
+    widget_add_text_scroll_element(
+        app->widget, 0, 0, 128, 52, furi_string_get_cstr(app->help_text));
 
     if(app->help_page > 0U) {
         snprintf(b, sizeof(b), "%u", (unsigned)app->help_page);
-        widget_add_button_element(app->widget, GuiButtonTypeLeft, b, morse_flipper_help_btn_cb, app);
+        widget_add_button_element(
+            app->widget, GuiButtonTypeLeft, b, morse_flipper_help_btn_cb, app);
     }
 
     if(app->help_page + 1U < n) {
         if(app->help_page == 0U) snprintf(b, sizeof(b), "Next");
         else snprintf(b, sizeof(b), "%u/%u", (unsigned)(app->help_page + 2U), (unsigned)n);
-        widget_add_button_element(app->widget, GuiButtonTypeRight, b, morse_flipper_help_btn_cb, app);
+        widget_add_button_element(
+            app->widget, GuiButtonTypeRight, b, morse_flipper_help_btn_cb, app);
     }
 }
 

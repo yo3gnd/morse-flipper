@@ -3,7 +3,11 @@
 
 #include <string.h>
 
-static void morse_flipper_run_layout_push_row(MorseFlipperRunLayout* layout, const char* row, size_t row_len, uint8_t* row_n) {
+static void morse_flipper_run_layout_push_row(
+    MorseFlipperRunLayout* layout,
+    const char* row,
+    size_t row_len,
+    uint8_t* row_n) {
     if(layout == NULL || row == NULL || row_n == NULL) return;
 
     if(*row_n < MORSE_FLIPPER_RUN_HISTORY_ROWS) {

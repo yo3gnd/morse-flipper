@@ -63,7 +63,8 @@ static void radio_rx_capture(bool level, uint32_t duration, void* context) {
 
     ms = duration > 65535u ? 65535u : (uint16_t)duration;
     next = (uint8_t)((radio->rx_wr + 1u) % MORSE_FLIPPER_RADIO_RX_RING);
-    if(next == radio->rx_rd) radio->rx_rd = (uint8_t)((radio->rx_rd + 1u) % MORSE_FLIPPER_RADIO_RX_RING);
+    if(next == radio->rx_rd)
+        radio->rx_rd = (uint8_t)((radio->rx_rd + 1u) % MORSE_FLIPPER_RADIO_RX_RING);
 
     radio->rx_mark[radio->rx_wr] = level;
     radio->rx_ms[radio->rx_wr] = ms;
@@ -182,7 +183,12 @@ void morse_flipper_radio_set_rx_callback(
     radio->rx_ctx = ctx;
 }
 
-void morse_flipper_radio_sync_live(MorseFlipperRadio* radio, uint32_t freq_hz, bool active, bool tx_on, MorseFlipperRadioProfile profile) {
+void morse_flipper_radio_sync_live(
+    MorseFlipperRadio* radio,
+    uint32_t freq_hz,
+    bool active,
+    bool tx_on,
+    MorseFlipperRadioProfile profile) {
     if(!radio) return;
 
 #ifdef MORSE_FLIPPER_FAP

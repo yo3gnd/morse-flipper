@@ -184,13 +184,19 @@ void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app) {
     if(app->trainer_farnsworth_wpm == 0U) app->trainer_farnsworth_wpm = w;
     if(app->trainer_farnsworth_wpm > w) app->trainer_farnsworth_wpm = w;
 
-    if(app->trainer_answer_timeout_s == 0U) app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_DEFAULT_S;
-    if(app->trainer_answer_timeout_s < MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S) app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S;
-    if(app->trainer_answer_timeout_s > MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S) app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S;
+    if(app->trainer_answer_timeout_s == 0U)
+        app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_DEFAULT_S;
+    if(app->trainer_answer_timeout_s < MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S)
+        app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S;
+    if(app->trainer_answer_timeout_s > MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S)
+        app->trainer_answer_timeout_s = MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S;
 
-    if(app->trainer_group_pause_s == 0U) app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_DEFAULT_S;
-    if(app->trainer_group_pause_s < MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S) app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S;
-    if(app->trainer_group_pause_s > MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S) app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S;
+    if(app->trainer_group_pause_s == 0U)
+        app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_DEFAULT_S;
+    if(app->trainer_group_pause_s < MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S)
+        app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MIN_S;
+    if(app->trainer_group_pause_s > MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S)
+        app->trainer_group_pause_s = MORSE_FLIPPER_TRAINER_GROUP_PAUSE_MAX_S;
 }
 
 void morse_flipper_clamp_straight_settings(MorseFlipperApp* app) {
@@ -288,7 +294,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
                config.keyer_mode <= MorseKeyerModeKeyahead)
                 app->keyer_mode = config.keyer_mode;
 
-            if(config.handedness <= MorseFlipperHandednessSwapped) app->handedness = config.handedness;
+            if(config.handedness <= MorseFlipperHandednessSwapped)
+                app->handedness = config.handedness;
             if(config.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config.spare0;
 
             morse_trainer_set_lesson(&app->trainer, config.trainer_lesson);
@@ -322,7 +329,10 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
             app->p2_volume_pct = morse_flipper_config_load_p2_volume(config.p2_volume_pct);
             app->ham_keyer.logging_enabled = config.ham_logging_enabled != 0U;
             app->ham_keyer.message_count = config.ham_message_count;
-            memcpy(app->ham_keyer.assignments, config.ham_assignments, sizeof(app->ham_keyer.assignments));
+            memcpy(
+                app->ham_keyer.assignments,
+                config.ham_assignments,
+                sizeof(app->ham_keyer.assignments));
             memcpy(app->ham_keyer.messages, config.ham_messages, sizeof(app->ham_keyer.messages));
         } else if(got == sizeof(config_v10)) {
             memcpy(&config_v10, &config, sizeof(config_v10));
@@ -335,12 +345,14 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v10.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v10.handedness;
-                if(config_v10.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v10.spare0;
+                if(config_v10.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v10.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v10.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v10.trainer_group_size);
                 morse_trainer_set_session_groups(&app->trainer, config_v10.trainer_session_groups);
-                if(config_v10.local_dit_ms != 0U) app->trainer.local_dit_ms = config_v10.local_dit_ms;
+                if(config_v10.local_dit_ms != 0U)
+                    app->trainer.local_dit_ms = config_v10.local_dit_ms;
 
                 morse_flipper_config_apply_gpio(
                     app,
@@ -351,7 +363,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v10.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v10.trainer_custom_set_idx;
-                if(config_v10.usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config_v10.usb_mode;
+                if(config_v10.usb_mode <= MorseFlipperPcModeMidi)
+                    app->pc_mode_pref = config_v10.usb_mode;
                 if(config_v10.usb_paddle_preset < morse_pc_paddle_preset_count())
                     app->pc_paddle_preset = config_v10.usb_paddle_preset;
                 if(config_v10.usb_straight_preset < morse_pc_straight_preset_count())
@@ -378,7 +391,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v6.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v6.handedness;
-                if(config_v6.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v6.spare0;
+                if(config_v6.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v6.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v6.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v6.trainer_group_size);
@@ -394,7 +408,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v6.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v6.trainer_custom_set_idx;
-                if(config_v6.usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config_v6.usb_mode;
+                if(config_v6.usb_mode <= MorseFlipperPcModeMidi)
+                    app->pc_mode_pref = config_v6.usb_mode;
                 if(config_v6.usb_paddle_preset < morse_pc_paddle_preset_count())
                     app->pc_paddle_preset = config_v6.usb_paddle_preset;
                 if(config_v6.usb_straight_preset < morse_pc_straight_preset_count())
@@ -416,7 +431,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v5.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v5.handedness;
-                if(config_v5.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v5.spare0;
+                if(config_v5.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v5.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v5.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v5.trainer_group_size);
@@ -432,7 +448,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v5.trainer_custom_set_idx <= app->custom_sets.count)
                     app->trainer.custom_set_idx = config_v5.trainer_custom_set_idx;
-                if(config_v5.usb_mode <= MorseFlipperPcModeMidi) app->pc_mode_pref = config_v5.usb_mode;
+                if(config_v5.usb_mode <= MorseFlipperPcModeMidi)
+                    app->pc_mode_pref = config_v5.usb_mode;
                 if(config_v5.usb_paddle_preset < morse_pc_paddle_preset_count())
                     app->pc_paddle_preset = config_v5.usb_paddle_preset;
                 if(config_v5.usb_straight_preset < morse_pc_straight_preset_count())
@@ -450,7 +467,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v4.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v4.handedness;
-                if(config_v4.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v4.spare0;
+                if(config_v4.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v4.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v4.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v4.trainer_group_size);
@@ -478,7 +496,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v3.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v3.handedness;
-                if(config_v3.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v3.spare0;
+                if(config_v3.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v3.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v3.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v3.trainer_group_size);
@@ -503,7 +522,8 @@ void morse_flipper_load_config(MorseFlipperApp* app) {
 
                 if(config_v2.handedness <= MorseFlipperHandednessSwapped)
                     app->handedness = config_v2.handedness;
-                if(config_v2.spare0 <= MorseFlipperInputSourceButtons) app->input_source = config_v2.spare0;
+                if(config_v2.spare0 <= MorseFlipperInputSourceButtons)
+                    app->input_source = config_v2.spare0;
 
                 morse_trainer_set_lesson(&app->trainer, config_v2.trainer_lesson);
                 morse_trainer_set_group_size(&app->trainer, config_v2.trainer_group_size);

@@ -83,9 +83,12 @@ static const MorseFlipperTerminus24Glyph morse_flipper_terminus24_glyphs[] = {
 static inline const MorseFlipperTerminus24Glyph* morse_flipper_terminus24_glyph(uint8_t ch) {
     size_t i;
 
-    for(i = 0U; i < (sizeof(morse_flipper_terminus24_glyphs) / sizeof(morse_flipper_terminus24_glyphs[0])); i++) {
+    for(i = 0U;
+        i < (sizeof(morse_flipper_terminus24_glyphs) / sizeof(morse_flipper_terminus24_glyphs[0]));
+        i++) {
         if(morse_flipper_terminus24_glyphs[i].ch == ch) return &morse_flipper_terminus24_glyphs[i];
     }
 
-    return &morse_flipper_terminus24_glyphs[sizeof(morse_flipper_terminus24_glyphs) / sizeof(morse_flipper_terminus24_glyphs[0]) - 1U];
+    return &morse_flipper_terminus24_glyphs
+        [sizeof(morse_flipper_terminus24_glyphs) / sizeof(morse_flipper_terminus24_glyphs[0]) - 1U];
 }

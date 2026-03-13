@@ -69,15 +69,18 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
         app->rf_rssi_sum_dbm += dbm;
         app->rf_rssi_samples++;
 
-        if(app->rf_rssi_next_at == 0U) app->rf_rssi_next_at = now_ms + MORSE_FLIPPER_RF_RSSI_WINDOW_MS;
+        if(app->rf_rssi_next_at == 0U)
+            app->rf_rssi_next_at = now_ms + MORSE_FLIPPER_RF_RSSI_WINDOW_MS;
         if(now_ms >= app->rf_rssi_next_at && app->rf_rssi_samples != 0U) {
             avg_sum = app->rf_rssi_sum_dbm;
             avg_samples = app->rf_rssi_samples;
 
             if(avg_sum >= 0) {
-                app->rf_rssi_dbm = (int8_t)((avg_sum + ((int32_t)avg_samples / 2)) / (int32_t)avg_samples);
+                app->rf_rssi_dbm =
+                    (int8_t)((avg_sum + ((int32_t)avg_samples / 2)) / (int32_t)avg_samples);
             } else {
-                app->rf_rssi_dbm = (int8_t)((avg_sum - ((int32_t)avg_samples / 2)) / (int32_t)avg_samples);
+                app->rf_rssi_dbm =
+                    (int8_t)((avg_sum - ((int32_t)avg_samples / 2)) / (int32_t)avg_samples);
             }
             app->rf_rx_activity = app->rf_rx_edges_window;
             app->rf_rssi_sum_dbm = 0;
@@ -88,7 +91,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
             if(!app->rf_rssi_valid || app->rf_rssi_dbm > app->rf_rssi_peak_dbm) {
                 app->rf_rssi_peak_dbm = app->rf_rssi_dbm;
                 app->rf_rssi_peak_decay_at = now_ms + MORSE_FLIPPER_RF_RSSI_PEAK_DECAY_MS;
-            } else if(now_ms >= app->rf_rssi_peak_decay_at && app->rf_rssi_peak_dbm > app->rf_rssi_dbm) {
+            } else if(
+                now_ms >= app->rf_rssi_peak_decay_at && app->rf_rssi_peak_dbm > app->rf_rssi_dbm) {
                 app->rf_rssi_peak_dbm--;
                 app->rf_rssi_peak_decay_at = now_ms + MORSE_FLIPPER_RF_RSSI_PEAK_DECAY_MS;
             }

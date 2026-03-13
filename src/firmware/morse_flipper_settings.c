@@ -141,7 +141,8 @@ void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
     if(it) {
         idx = app->trainer.custom_set_idx;
         variable_item_set_current_value_index(it, idx);
-        variable_item_set_current_value_text(it, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+        variable_item_set_current_value_text(
+            it, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
     }
 }
 
@@ -200,7 +201,8 @@ void morse_flipper_settings_swap_changed(VariableItem* item) {
     uint32_t now_ms = furi_get_tick();
 
     app->handedness = idx == 0U ? MorseFlipperHandednessNormal : MorseFlipperHandednessSwapped;
-    variable_item_set_current_value_text(item, app->handedness == MorseFlipperHandednessSwapped ? "Yes" : "No");
+    variable_item_set_current_value_text(
+        item, app->handedness == MorseFlipperHandednessSwapped ? "Yes" : "No");
     morse_flipper_resync_button_paddles(app, now_ms);
     morse_flipper_refresh_keyer(app, now_ms);
     morse_flipper_poll(app);
@@ -265,7 +267,8 @@ static void morse_flipper_audio_menu_refresh(MorseFlipperApp* app) {
 
     item = app->audio_cfg_items[MorseFlipperAudioSettingP2Volume];
     if(item) {
-        variable_item_set_current_value_index(item, morse_flipper_p2_volume_idx(app->p2_volume_pct));
+        variable_item_set_current_value_index(
+            item, morse_flipper_p2_volume_idx(app->p2_volume_pct));
         snprintf(txt, sizeof(txt), "%u%%", (unsigned)morse_flipper_p2_volume_pct(app));
         variable_item_set_current_value_text(item, txt);
     }
@@ -287,7 +290,8 @@ static void morse_flipper_settings_p2_volume_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     char txt[8];
 
-    app->p2_volume_pct = morse_flipper_p2_volume_from_idx(variable_item_get_current_value_index(item));
+    app->p2_volume_pct =
+        morse_flipper_p2_volume_from_idx(variable_item_get_current_value_index(item));
     snprintf(txt, sizeof(txt), "%u%%", (unsigned)app->p2_volume_pct);
     variable_item_set_current_value_text(item, txt);
     if(morse_flipper_audio_output_is_pwm(app)) morse_flipper_sync_audio_output(app);
@@ -367,7 +371,8 @@ static uint8_t morse_flipper_ptt_choice_to_ui(uint8_t idx) {
 void morse_flipper_settings_gpio_ptt_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
 
-    app->gpio_edit_ptt_idx = morse_flipper_ptt_choice_from_ui(variable_item_get_current_value_index(item));
+    app->gpio_edit_ptt_idx =
+        morse_flipper_ptt_choice_from_ui(variable_item_get_current_value_index(item));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ptt_idx));
 }
 
@@ -562,7 +567,8 @@ void morse_flipper_trainer_chars_changed(VariableItem* item) {
 
     app->trainer.custom_set_idx = idx;
     morse_flipper_apply_trainer_charset_choice(app);
-    variable_item_set_current_value_text(item, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+    variable_item_set_current_value_text(
+        item, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
     morse_flipper_save_config(app);
 }
 
@@ -575,10 +581,13 @@ void morse_flipper_scene_home_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneHome);
     variable_item_list_reset(app->settings_list);
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_enter_callback, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_enter_callback, app);
 
-    item = variable_item_list_add(app->settings_list, "WPM", 21U, morse_flipper_settings_wpm_changed, app);
-    idx = (uint8_t)(morse_flipper_current_wpm(app) < 10U ? 0U : morse_flipper_current_wpm(app) - 10U);
+    item = variable_item_list_add(
+        app->settings_list, "WPM", 21U, morse_flipper_settings_wpm_changed, app);
+    idx = (uint8_t)(morse_flipper_current_wpm(app) < 10U ? 0U :
+                                                           morse_flipper_current_wpm(app) - 10U);
     if(idx > 20U) idx = 20U;
     snprintf(wpm_text, sizeof(wpm_text), "%u", (unsigned)(idx + 10U));
     variable_item_set_current_value_index(item, idx);
@@ -602,9 +611,11 @@ void morse_flipper_scene_home_on_enter(void* context) {
         app);
     idx = morse_flipper_keyer_value_index(app->keyer_mode);
     variable_item_set_current_value_index(item, idx);
-    variable_item_set_current_value_text(item, morse_keyer_mode_name(morse_flipper_keyer_values[idx]));
+    variable_item_set_current_value_text(
+        item, morse_keyer_mode_name(morse_flipper_keyer_values[idx]));
 
-    item = variable_item_list_add(app->settings_list, "Swap paddles", 2U, morse_flipper_settings_swap_changed, app);
+    item = variable_item_list_add(
+        app->settings_list, "Swap paddles", 2U, morse_flipper_settings_swap_changed, app);
     idx = app->handedness == MorseFlipperHandednessSwapped ? 1U : 0U;
     variable_item_set_current_value_index(item, idx);
     variable_item_set_current_value_text(item, idx ? "Yes" : "No");
@@ -640,7 +651,10 @@ bool morse_flipper_scene_home_on_event(void* context, SceneManagerEvent event) {
 
 void morse_flipper_scene_home_on_exit(void* context) {
     MorseFlipperApp* app = context;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneHome, variable_item_list_get_selected_item_index(app->settings_list));
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperSceneHome,
+        variable_item_list_get_selected_item_index(app->settings_list));
     variable_item_list_reset(app->settings_list);
 }
 
@@ -652,7 +666,8 @@ void morse_flipper_scene_audio_cfg_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneAudioCfg);
     variable_item_list_reset(app->settings_list);
     memset(app->audio_cfg_items, 0, sizeof(app->audio_cfg_items));
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
 
     item = variable_item_list_add(
         app->settings_list,
@@ -710,16 +725,20 @@ void morse_flipper_scene_gpio_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneGpio);
     variable_item_list_reset(app->settings_list);
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
     app->gpio_edit_dit_idx = app->gpio_dit_idx;
     app->gpio_edit_dah_idx = app->gpio_dah_idx;
     app->gpio_edit_ground_idx = app->gpio_ground_idx;
     app->gpio_edit_ptt_idx = app->gpio_ptt_idx;
-    if(app->gpio_edit_dit_idx == MorseFlipperGpioPinP2 || app->gpio_edit_dit_idx == MorseFlipperGpioPinP15)
+    if(app->gpio_edit_dit_idx == MorseFlipperGpioPinP2 ||
+       app->gpio_edit_dit_idx == MorseFlipperGpioPinP15)
         app->gpio_edit_dit_idx = morse_flipper_gpio_default_dit();
-    if(app->gpio_edit_dah_idx == MorseFlipperGpioPinP2 || app->gpio_edit_dah_idx == MorseFlipperGpioPinP15)
+    if(app->gpio_edit_dah_idx == MorseFlipperGpioPinP2 ||
+       app->gpio_edit_dah_idx == MorseFlipperGpioPinP15)
         app->gpio_edit_dah_idx = morse_flipper_gpio_default_dah();
-    if(app->gpio_edit_ground_idx == MorseFlipperGpioPinP2 || app->gpio_edit_ground_idx == MorseFlipperGpioPinP15)
+    if(app->gpio_edit_ground_idx == MorseFlipperGpioPinP2 ||
+       app->gpio_edit_ground_idx == MorseFlipperGpioPinP15)
         app->gpio_edit_ground_idx = morse_flipper_gpio_default_ground();
 
     item = variable_item_list_add(
@@ -746,12 +765,14 @@ void morse_flipper_scene_gpio_on_enter(void* context) {
         COUNT_OF(morse_flipper_gpio_ui_pins) + 1U,
         morse_flipper_settings_gpio_ground_changed,
         app);
-    variable_item_set_current_value_index(item, morse_flipper_ground_choice_to_ui(app->gpio_edit_ground_idx));
+    variable_item_set_current_value_index(
+        item, morse_flipper_ground_choice_to_ui(app->gpio_edit_ground_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ground_idx));
 
     item = variable_item_list_add(
         app->settings_list, "PTT/TX", 2U, morse_flipper_settings_gpio_ptt_changed, app);
-    variable_item_set_current_value_index(item, morse_flipper_ptt_choice_to_ui(app->gpio_edit_ptt_idx));
+    variable_item_set_current_value_index(
+        item, morse_flipper_ptt_choice_to_ui(app->gpio_edit_ptt_idx));
     variable_item_set_current_value_text(item, morse_flipper_gpio_name(app->gpio_edit_ptt_idx));
 
     if(sel > MorseFlipperGpioSettingPtt) sel = MorseFlipperGpioSettingDit;
@@ -782,7 +803,10 @@ bool morse_flipper_scene_gpio_on_event(void* context, SceneManagerEvent event) {
 
 void morse_flipper_scene_gpio_on_exit(void* context) {
     MorseFlipperApp* app = context;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneGpio, variable_item_list_get_selected_item_index(app->settings_list));
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperSceneGpio,
+        variable_item_list_get_selected_item_index(app->settings_list));
     variable_item_list_reset(app->settings_list);
 }
 
@@ -817,7 +841,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneTrainer);
     variable_item_list_reset(app->settings_list);
     memset(app->trainer_items, 0, sizeof(app->trainer_items));
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
 
     item = variable_item_list_add(
         app->settings_list,
@@ -827,7 +852,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
         app);
     app->trainer_items[MorseFlipperTrainerSettingLesson] = item;
 
-    item = variable_item_list_add(app->settings_list, "WPM", 21U, morse_flipper_trainer_wpm_changed, app);
+    item = variable_item_list_add(
+        app->settings_list, "WPM", 21U, morse_flipper_trainer_wpm_changed, app);
     app->trainer_items[MorseFlipperTrainerSettingWpm] = item;
 
     item = variable_item_list_add(
@@ -856,10 +882,12 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
         app);
     app->trainer_items[MorseFlipperTrainerSettingGroupPause] = item;
 
-    item = variable_item_list_add(app->settings_list, "Group size", 9U, morse_flipper_trainer_group_size_changed, app);
+    item = variable_item_list_add(
+        app->settings_list, "Group size", 9U, morse_flipper_trainer_group_size_changed, app);
     app->trainer_items[MorseFlipperTrainerSettingGroupSize] = item;
 
-    item = variable_item_list_add(app->settings_list, "Groups", 28U, morse_flipper_trainer_groups_changed, app);
+    item = variable_item_list_add(
+        app->settings_list, "Groups", 28U, morse_flipper_trainer_groups_changed, app);
     app->trainer_items[MorseFlipperTrainerSettingGroups] = item;
 
     item = variable_item_list_add(
@@ -877,7 +905,10 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
 
 void morse_flipper_scene_trainer_on_exit(void* context) {
     MorseFlipperApp* app = context;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneTrainer, morse_flipper_settings_list_state(app->settings_list));
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperSceneTrainer,
+        morse_flipper_settings_list_state(app->settings_list));
     variable_item_list_reset(app->settings_list);
 }
 
@@ -889,9 +920,11 @@ void morse_flipper_scene_straight_cfg_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneStraightCfg);
     variable_item_list_reset(app->settings_list);
     memset(app->straight_cfg_items, 0, sizeof(app->straight_cfg_items));
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
 
-        item = variable_item_list_add(app->settings_list, "WPM", 21U, morse_flipper_straight_wpm_changed, app);
+    item = variable_item_list_add(
+        app->settings_list, "WPM", 21U, morse_flipper_straight_wpm_changed, app);
     app->straight_cfg_items[0] = item;
     variable_item_set_current_value_index(item, 0U);
     variable_item_set_current_value_text(item, "10");
@@ -925,7 +958,10 @@ void morse_flipper_scene_straight_cfg_on_enter(void* context) {
 
 void morse_flipper_scene_straight_cfg_on_exit(void* context) {
     MorseFlipperApp* app = context;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneStraightCfg, morse_flipper_settings_list_state(app->settings_list));
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperSceneStraightCfg,
+        morse_flipper_settings_list_state(app->settings_list));
     variable_item_list_reset(app->settings_list);
 }
 
@@ -939,7 +975,8 @@ void morse_flipper_scene_tx_groups_cfg_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneTxGroupsCfg);
     variable_item_list_reset(app->settings_list);
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
 
     item = variable_item_list_add(
         app->settings_list,
@@ -983,7 +1020,8 @@ void morse_flipper_scene_pc_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperScenePc);
     variable_item_list_reset(app->settings_list);
-    variable_item_list_set_enter_callback(app->settings_list, morse_flipper_settings_noop_enter, app);
+    variable_item_list_set_enter_callback(
+        app->settings_list, morse_flipper_settings_noop_enter, app);
 
     it = variable_item_list_add(
         app->settings_list,
@@ -1010,9 +1048,11 @@ void morse_flipper_scene_pc_on_enter(void* context) {
         morse_flipper_settings_usb_straight_changed,
         app);
     variable_item_set_current_value_index(it, app->pc_straight_preset);
-    variable_item_set_current_value_text(it, morse_pc_straight_preset_name(app->pc_straight_preset));
+    variable_item_set_current_value_text(
+        it, morse_pc_straight_preset_name(app->pc_straight_preset));
 
-    it = variable_item_list_add(app->settings_list, "Invert mouse", 2U, morse_flipper_settings_usb_mouse_swap_changed, app);
+    it = variable_item_list_add(
+        app->settings_list, "Invert mouse", 2U, morse_flipper_settings_usb_mouse_swap_changed, app);
     variable_item_set_current_value_index(it, app->mouse_invert ? 1U : 0U);
     variable_item_set_current_value_text(it, app->mouse_invert ? "Yes" : "No");
 
@@ -1033,6 +1073,9 @@ bool morse_flipper_scene_pc_on_event(void* context, SceneManagerEvent event) {
 
 void morse_flipper_scene_pc_on_exit(void* context) {
     MorseFlipperApp* app = context;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperScenePc, variable_item_list_get_selected_item_index(app->settings_list));
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        MorseFlipperScenePc,
+        variable_item_list_get_selected_item_index(app->settings_list));
     variable_item_list_reset(app->settings_list);
 }

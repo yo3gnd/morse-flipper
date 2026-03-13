@@ -1,7 +1,11 @@
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 
-static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars);
+static void morse_flipper_session_answer_text(
+    const MorseFlipperApp* app,
+    char* out,
+    size_t out_sz,
+    uint8_t max_chars);
 
 void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     if(app == NULL) return;
@@ -75,7 +79,8 @@ bool morse_flipper_session_wait_key_down(const MorseFlipperApp* app) {
     }
 
     if(app->input_source == MorseFlipperInputSourceStraight) return morse_flipper_straight_down();
-    if(morse_flipper_gpio_probe_use_straight(app)) return !furi_hal_gpio_read(morse_flipper_dit_pin);
+    if(morse_flipper_gpio_probe_use_straight(app))
+        return !furi_hal_gpio_read(morse_flipper_dit_pin);
 
     return morse_flipper_logical_dit_down(app) || morse_flipper_logical_dah_down(app);
 }
@@ -110,8 +115,10 @@ void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t 
 
     morse_flipper_clear_button_keying(app, now_ms);
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, false);
-    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, false, now_ms);
-    morse_flipper_set_paddle_source(app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, false, now_ms);
+    morse_flipper_set_paddle_source(
+        app, MorseKeyerPaddleDit, MORSE_PADDLE_SOURCE_GPIO_DIT, false, now_ms);
+    morse_flipper_set_paddle_source(
+        app, MorseKeyerPaddleDah, MORSE_PADDLE_SOURCE_GPIO_DAH, false, now_ms);
 }
 
 void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms) {
@@ -229,7 +236,8 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
 
     if(!morse_flipper_session_repeat_active(app)) return;
 
-    morse_flipper_session_answer_text(app, ans, sizeof(ans), morse_trainer_group_size(&app->trainer));
+    morse_flipper_session_answer_text(
+        app, ans, sizeof(ans), morse_trainer_group_size(&app->trainer));
     if(ans[0] == '\0') return;
 
     dt = morse_flipper_current_dit_ms(app) * 8U;
@@ -284,7 +292,8 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
     x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
     canvas_draw_str(canvas, x, 39, digits);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
+    canvas_draw_str_aligned(
+        canvas, 64, 54, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
 
     if(flash_on) canvas_set_color(canvas, ColorBlack);
 }
@@ -334,7 +343,11 @@ static uint8_t morse_flipper_session_slot_centers(uint8_t size, uint8_t* out) {
     return size;
 }
 
-static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_text(
+    const MorseFlipperApp* app,
+    char* out,
+    size_t out_sz,
+    uint8_t max_chars) {
     char preview = 0;
     size_t wi = 0U;
     size_t i;
@@ -348,7 +361,8 @@ static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* 
         uint8_t wi = 0U;
         uint8_t i = 0U;
 
-        while(morse_trainer_reveal(&app->trainer)[i] != '\0' && wi + 1U < out_sz && wi < max_chars) {
+        while(morse_trainer_reveal(&app->trainer)[i] != '\0' && wi + 1U < out_sz &&
+              wi < max_chars) {
             out[wi++] = morse_trainer_reveal(&app->trainer)[i++];
         }
         out[wi] = '\0';
@@ -403,7 +417,11 @@ static uint8_t morse_flipper_session_answer_count(const char* answer) {
     return n;
 }
 
-static void morse_flipper_session_answer_committed_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_committed_text(
+    const MorseFlipperApp* app,
+    char* out,
+    size_t out_sz,
+    uint8_t max_chars) {
     size_t wi = 0U;
     uint8_t i = 0U;
 
@@ -451,7 +469,8 @@ static void morse_flipper_session_title(const MorseFlipperApp* app, char* out, s
     }
 
     if(app->trainer.custom_set_idx == 0U) {
-        morse_trainer_lesson_label(morse_trainer_lesson(&app->trainer), lesson_label, sizeof(lesson_label));
+        morse_trainer_lesson_label(
+            morse_trainer_lesson(&app->trainer), lesson_label, sizeof(lesson_label));
         snprintf(out, out_sz, "Lesson %s", lesson_label);
         return;
     }
@@ -526,7 +545,8 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
             canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "Press OK to start");
         } else {
             canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Press OK to start");
-            canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "Press your key to start");
+            canvas_draw_str_aligned(
+                canvas, 64, 44, AlignCenter, AlignCenter, "Press your key to start");
         }
         return;
     }
@@ -631,11 +651,14 @@ void morse_flipper_draw_session_bottom(Canvas* canvas, const MorseFlipperApp* ap
        morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
         morse_flipper_session_answer_committed_text(app, live_answer, sizeof(live_answer), size);
         live_count = morse_flipper_session_answer_count(live_answer);
-        letter_hits = (uint16_t)(letter_hits + morse_flipper_session_text_hits(morse_trainer_last_group(&app->trainer), live_answer));
+        letter_hits =
+            (uint16_t)(letter_hits + morse_flipper_session_text_hits(
+                                         morse_trainer_last_group(&app->trainer), live_answer));
         letter_total = (uint16_t)(letter_total + live_count);
     }
     if(letter_total != 0U && letter_hits > letter_total) letter_hits = letter_total;
-    letter_pct = letter_total == 0U ? 100U : (uint8_t)(((uint32_t)letter_hits * 100U) / letter_total);
+    letter_pct = letter_total == 0U ? 100U :
+                                      (uint8_t)(((uint32_t)letter_hits * 100U) / letter_total);
 
     snprintf(progress_line, sizeof(progress_line), "%u/%u", (unsigned)asked, (unsigned)total);
     snprintf(pct_line, sizeof(pct_line), "%u%%", (unsigned)letter_pct);

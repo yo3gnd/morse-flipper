@@ -125,7 +125,8 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder) {
 
     mark_count = 0;
     for(i = 0; i < decoder->pending_count && mark_count < sizeof(marks) / sizeof(marks[0]); i++) {
-        if(decoder->pending_samples[i] > 0) marks[mark_count++] = (uint16_t)decoder->pending_samples[i];
+        if(decoder->pending_samples[i] > 0)
+            marks[mark_count++] = (uint16_t)decoder->pending_samples[i];
     }
     if(mark_count < 8) return false;
 
@@ -154,7 +155,8 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder) {
     for(i = 0; i < split_idx; i++) lower_total += marks[i];
     decoder->dit_ms = (uint16_t)(lower_total / split_idx);
     decoder->dit_sample_count = 0;
-    for(i = 0; i < split_idx && i < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0]); i++) {
+    for(i = 0; i < split_idx && i < sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0]);
+        i++) {
         decoder->dit_samples[decoder->dit_sample_count++] = marks[i];
     }
     return true;
@@ -169,7 +171,8 @@ static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     if(!decoder || !ms) return;
 
     if(!decoder->dit_ms) {
-        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
+        if(decoder->pending_count <
+           sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
             decoder->pending_samples[decoder->pending_count++] = (int16_t)ms;
         }
         return;
@@ -197,7 +200,8 @@ static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms) {
     if(!decoder || !ms) return;
 
     if(!decoder->dit_ms) {
-        if(decoder->pending_count < sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
+        if(decoder->pending_count <
+           sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
             decoder->pending_samples[decoder->pending_count++] = -(int16_t)ms;
         }
         return;

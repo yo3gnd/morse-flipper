@@ -12,7 +12,8 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
         return true;
     }
 
-    if(event->key == InputKeyBack && (event->type == InputTypeShort || event->type == InputTypeLong)) {
+    if(event->key == InputKeyBack &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
         app->about_ok_count = 0U;
         morse_flipper_scene_back(app);
         return true;
@@ -35,7 +36,8 @@ static bool morse_flipper_startup_probe_input(MorseFlipperApp* app, const InputE
         morse_flipper_save_config(app);
         morse_flipper_refresh_keyer(app, furi_get_tick());
         morse_flipper_poll(app);
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuMain);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuMain);
         return true;
     }
 
@@ -202,7 +204,8 @@ static bool morse_flipper_trainer_input(MorseFlipperApp* app, const InputEvent* 
     return false;
 }
 
-static bool morse_flipper_straight_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool
+    morse_flipper_straight_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenStraight) return false;
 
     if(event->key == InputKeyBack &&
@@ -261,7 +264,8 @@ static bool morse_flipper_straight_input(MorseFlipperApp* app, const InputEvent*
     return false;
 }
 
-static bool morse_flipper_tx_groups_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool
+    morse_flipper_tx_groups_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     bool back_key;
 
     if(app->screen != MorseFlipperScreenTxGroups) return false;
@@ -312,7 +316,10 @@ static bool morse_flipper_tx_groups_input(MorseFlipperApp* app, const InputEvent
     return false;
 }
 
-static bool morse_flipper_tx_groups_result_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_tx_groups_result_input(
+    MorseFlipperApp* app,
+    const InputEvent* event,
+    uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenTxGroupsResult) return false;
 
     if((event->key == InputKeyBack &&
@@ -322,7 +329,8 @@ static bool morse_flipper_tx_groups_result_input(MorseFlipperApp* app, const Inp
         return true;
     }
 
-    if(event->type == InputTypePress || event->type == InputTypeShort || event->type == InputTypeLong) {
+    if(event->type == InputTypePress || event->type == InputTypeShort ||
+       event->type == InputTypeLong) {
         if(app->txg_result_until > now_ms + 1000U) {
             app->txg_result_until = now_ms + 1000U;
             app->txg_result_draw_s = 0xFFU;
@@ -334,31 +342,38 @@ static bool morse_flipper_tx_groups_result_input(MorseFlipperApp* app, const Inp
     return true;
 }
 
-static bool morse_flipper_tx_groups_final_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_tx_groups_final_input(
+    MorseFlipperApp* app,
+    const InputEvent* event,
+    uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenTxGroupsFinal) return false;
     UNUSED(now_ms);
 
     if((event->key == InputKeyBack || event->key == InputKeyOk) &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuTraining);
         return true;
     }
 
     if(event->key == InputKeyLeft && event->type == InputTypeLong) {
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuTraining);
         return true;
     }
 
     return true;
 }
 
-static bool morse_flipper_session_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool
+    morse_flipper_session_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
     MorseFlipperInputGate g;
 
     if(app->screen != MorseFlipperScreenSession) return false;
     g = morse_flipper_input_gate(app);
 
-    if((morse_flipper_gpio_probe_notice_active(app) || morse_flipper_gpio_probe_blocks_start(app)) &&
+    if((morse_flipper_gpio_probe_notice_active(app) ||
+        morse_flipper_gpio_probe_blocks_start(app)) &&
        event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         morse_flipper_leave_session(app, now_ms);
@@ -423,12 +438,17 @@ static bool morse_flipper_session_input(MorseFlipperApp* app, const InputEvent* 
 static void morse_flipper_leave_session_end(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
     morse_flipper_reset_session_state(app, now_ms);
-    if(scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MorseFlipperSceneMenuTraining))
+    if(scene_manager_search_and_switch_to_previous_scene(
+           app->scene_manager, MorseFlipperSceneMenuTraining))
         return;
-    scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuTraining);
+    scene_manager_search_and_switch_to_another_scene(
+        app->scene_manager, MorseFlipperSceneMenuTraining);
 }
 
-static bool morse_flipper_session_end_input(MorseFlipperApp* app, const InputEvent* event, uint32_t now_ms) {
+static bool morse_flipper_session_end_input(
+    MorseFlipperApp* app,
+    const InputEvent* event,
+    uint32_t now_ms) {
     if(app->screen != MorseFlipperScreenSessionEnd) return false;
 
     if((event->key == InputKeyOk || event->key == InputKeyBack) &&
@@ -625,7 +645,8 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
         } else if(event->type == InputTypeRelease) {
             app->left_down = false;
         } else if(event->type == InputTypeLong) {
-            if(app->screen == MorseFlipperScreenTxGroups) morse_flipper_leave_tx_groups(app, now_ms);
+            if(app->screen == MorseFlipperScreenTxGroups)
+                morse_flipper_leave_tx_groups(app, now_ms);
             else morse_flipper_leave_live_screen(app, now_ms);
         }
         return;

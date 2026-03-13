@@ -204,15 +204,19 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_set_pc_mode(&app, app.pc_mode_pref);
     app.view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_set_event_callback_context(app.view_dispatcher, &app);
-    view_dispatcher_set_custom_event_callback(app.view_dispatcher, morse_flipper_custom_event_callback);
-    view_dispatcher_set_navigation_event_callback(app.view_dispatcher, morse_flipper_back_event_callback);
-    view_dispatcher_set_tick_event_callback(app.view_dispatcher, morse_flipper_tick_callback, MORSE_FLIPPER_POLL_MS);
+    view_dispatcher_set_custom_event_callback(
+        app.view_dispatcher, morse_flipper_custom_event_callback);
+    view_dispatcher_set_navigation_event_callback(
+        app.view_dispatcher, morse_flipper_back_event_callback);
+    view_dispatcher_set_tick_event_callback(
+        app.view_dispatcher, morse_flipper_tick_callback, MORSE_FLIPPER_POLL_MS);
     view_dispatcher_attach_to_gui(app.view_dispatcher, app.gui, ViewDispatcherTypeFullscreen);
 
     app.scene_manager = scene_manager_alloc(&morse_flipper_scene_handlers, &app);
 
     app.submenu = submenu_alloc();
-    view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewMenu, submenu_get_view(app.submenu));
+    view_dispatcher_add_view(
+        app.view_dispatcher, MorseFlipperViewMenu, submenu_get_view(app.submenu));
 
     app.text_input = text_input_alloc();
     view_dispatcher_add_view(
@@ -221,11 +225,15 @@ MorseFlipperApp* morse_flipper_boot(void) {
         text_input_get_view(app.text_input));
 
     app.settings_list = variable_item_list_alloc();
-    view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewSettings, variable_item_list_get_view(app.settings_list));
+    view_dispatcher_add_view(
+        app.view_dispatcher,
+        MorseFlipperViewSettings,
+        variable_item_list_get_view(app.settings_list));
 
     app.widget = widget_alloc();
     app.help_text = furi_string_alloc();
-    view_dispatcher_add_view(app.view_dispatcher, MorseFlipperViewWidget, widget_get_view(app.widget));
+    view_dispatcher_add_view(
+        app.view_dispatcher, MorseFlipperViewWidget, widget_get_view(app.widget));
 
     app.live_view = view_alloc();
     view_set_context(app.live_view, &app);

@@ -182,7 +182,8 @@ static bool txg_raw_boundaries(const MorseFlipperTxGroup* g, uint16_t dit_ms, bo
 
     if(g == 0 || boundary == 0 || dit_ms == 0U) return false;
     memset(boundary, 0, MORSE_FLIPPER_TX_GROUP_MAX_EDGES * sizeof(boundary[0]));
-    if(g->mark_count < MORSE_FLIPPER_TX_GROUP_LEN || g->space_count < MORSE_FLIPPER_TX_GROUP_LEN - 1U)
+    if(g->mark_count < MORSE_FLIPPER_TX_GROUP_LEN ||
+       g->space_count < MORSE_FLIPPER_TX_GROUP_LEN - 1U)
         return false;
 
     usable_spaces = g->space_count;
@@ -385,10 +386,17 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g) {
     }
 
     if(g->result.timed_out) {
-        txg_fault_try(&best, &sev, &delta, len == 0U ? "no answer" : "incomplete group", 220U, 100U);
+        txg_fault_try(
+            &best, &sev, &delta, len == 0U ? "no answer" : "incomplete group", 220U, 100U);
     }
     if(!g->result.correct_pass)
-        txg_fault_try(&best, &sev, &delta, "wrong letter sent", 210U, (uint16_t)(5U - g->result.correct) * 20U);
+        txg_fault_try(
+            &best,
+            &sev,
+            &delta,
+            "wrong letter sent",
+            210U,
+            (uint16_t)(5U - g->result.correct) * 20U);
 
     if(!g->result.speed_pass)
         txg_fault_try(
@@ -404,7 +412,8 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g) {
             &best,
             &sev,
             &delta,
-            g->result.letter_gap_pct > txg_pass_max(g) ? "letter gaps too long" : "letters gaps too short",
+            g->result.letter_gap_pct > txg_pass_max(g) ? "letter gaps too long" :
+                                                         "letters gaps too short",
             lgap_sev,
             txg_abs100(g->result.letter_gap_pct));
 

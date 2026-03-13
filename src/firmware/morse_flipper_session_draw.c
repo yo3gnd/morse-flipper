@@ -28,7 +28,11 @@ static uint8_t morse_flipper_session_slot_centers(uint8_t size, uint8_t* out) {
     return size;
 }
 
-static void morse_flipper_session_answer_text(const MorseFlipperApp* app, char* out, size_t out_sz, uint8_t max_chars) {
+static void morse_flipper_session_answer_text(
+    const MorseFlipperApp* app,
+    char* out,
+    size_t out_sz,
+    uint8_t max_chars) {
     char preview = 0;
     size_t wi = 0U;
     size_t i;
@@ -97,7 +101,8 @@ static void morse_flipper_session_title(const MorseFlipperApp* app, char* out, s
     if(app == NULL) return;
 
     if(app->trainer.custom_set_idx == 0U) {
-        morse_trainer_lesson_label(morse_trainer_lesson(&app->trainer), lesson_label, sizeof(lesson_label));
+        morse_trainer_lesson_label(
+            morse_trainer_lesson(&app->trainer), lesson_label, sizeof(lesson_label));
         snprintf(out, out_sz, "Lesson %s", lesson_label);
         return;
     }
@@ -266,7 +271,8 @@ static void morse_flipper_draw_session_bottom(Canvas* canvas, const MorseFlipper
     good = (uint8_t)(scored - fail);
     if(total != 0U && asked != 0U) fill = (uint8_t)(((uint16_t)asked * 100U) / total);
 
-    snprintf(size_line, sizeof(size_line), "size %u", (unsigned)morse_trainer_group_size(&app->trainer));
+    snprintf(
+        size_line, sizeof(size_line), "size %u", (unsigned)morse_trainer_group_size(&app->trainer));
     snprintf(count_line, sizeof(count_line), "%u/%u", (unsigned)asked, (unsigned)total);
     snprintf(score_line, sizeof(score_line), "%u/%u", (unsigned)good, (unsigned)asked);
 

@@ -6,13 +6,28 @@ static void morse_flipper_scene_menu_main_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuMain);
     submenu_set_header(app->submenu, "Morse Flipper");
-    submenu_add_item(app->submenu, "Training", MorseFlipperSceneMenuTraining, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Settings", MorseFlipperSceneMenuSettings, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Help", MorseFlipperSceneMenuHelp, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Flipper Radio", MorseFlipperSceneMenuRf, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Ham Keyer", MorseFlipperSceneMenuHam, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "About", MorseFlipperSceneAbout, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "Training",
+        MorseFlipperSceneMenuTraining,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Settings",
+        MorseFlipperSceneMenuSettings,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu, "Help", MorseFlipperSceneMenuHelp, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Flipper Radio", MorseFlipperSceneMenuRf, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Free Practice", MorseFlipperSceneRun, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Ham Keyer", MorseFlipperSceneMenuHam, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "About", MorseFlipperSceneAbout, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneRun && sel != MorseFlipperSceneMenuRf &&
        sel != MorseFlipperSceneMenuTraining && sel != MorseFlipperSceneMenuSettings &&
        sel != MorseFlipperSceneMenuHelp && sel != MorseFlipperSceneMenuHam &&
@@ -50,9 +65,24 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuTraining);
     submenu_set_header(app->submenu, "Training");
-    submenu_add_item(app->submenu, "Koch - LCWO groups", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Straight trainer", MorseFlipperSceneStraight, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "TX Groups of 5 letters", MorseFlipperSceneTxGroups, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "Koch - LCWO groups",
+        MorseFlipperSceneSession,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Straight trainer",
+        MorseFlipperSceneStraight,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "TX Groups of 5 letters",
+        MorseFlipperSceneTxGroups,
+        morse_flipper_scene_menu_pick,
+        app);
     if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight &&
        sel != MorseFlipperSceneTxGroups)
         sel = MorseFlipperSceneSession;
@@ -68,7 +98,8 @@ static bool morse_flipper_scene_menu_training_on_event(void* context, SceneManag
     }
 
     if(event.type == SceneManagerEventTypeCustom) {
-        scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneMenuTraining, event.event);
+        scene_manager_set_scene_state(
+            app->scene_manager, MorseFlipperSceneMenuTraining, event.event);
         scene_manager_next_scene(app->scene_manager, event.event);
         return true;
     }
@@ -87,15 +118,32 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuSettings);
     submenu_set_header(app->submenu, "Settings");
-    submenu_add_item(app->submenu, "Keying", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Audio output", MorseFlipperSceneAudioCfg, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Koch - LCWO", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Straight trainer", MorseFlipperSceneStraightCfg, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Groups of 5", MorseFlipperSceneTxGroupsCfg, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Keying", MorseFlipperSceneHome, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "Audio output",
+        MorseFlipperSceneAudioCfg,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu, "Koch - LCWO", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "Straight trainer",
+        MorseFlipperSceneStraightCfg,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Groups of 5",
+        MorseFlipperSceneTxGroupsCfg,
+        morse_flipper_scene_menu_pick,
+        app);
     submenu_add_item(app->submenu, "USB", MorseFlipperScenePc, morse_flipper_scene_menu_pick, app);
-    if(sel != MorseFlipperSceneHome && sel != MorseFlipperSceneAudioCfg && sel != MorseFlipperSceneTrainer &&
-       sel != MorseFlipperSceneStraightCfg && sel != MorseFlipperSceneTxGroupsCfg &&
-       sel != MorseFlipperScenePc)
+    if(sel != MorseFlipperSceneHome && sel != MorseFlipperSceneAudioCfg &&
+       sel != MorseFlipperSceneTrainer && sel != MorseFlipperSceneStraightCfg &&
+       sel != MorseFlipperSceneTxGroupsCfg && sel != MorseFlipperScenePc)
         sel = MorseFlipperSceneHome;
     submenu_set_selected_item(app->submenu, sel);
 }
@@ -109,7 +157,8 @@ static bool morse_flipper_scene_menu_settings_on_event(void* context, SceneManag
     }
 
     if(event.type == SceneManagerEventTypeCustom) {
-        scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneMenuSettings, event.event);
+        scene_manager_set_scene_state(
+            app->scene_manager, MorseFlipperSceneMenuSettings, event.event);
         scene_manager_next_scene(app->scene_manager, event.event);
         return true;
     }
@@ -128,15 +177,48 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuHelp);
     submenu_set_header(app->submenu, "Help");
-    submenu_add_item(app->submenu, "First steps", MorseFlipperHelpFirstSteps, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Input & keys", MorseFlipperHelpInputKeys, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Connecting the paddle", MorseFlipperHelpConnectingPaddle, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "LCWO", MorseFlipperHelpLcwo, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Prepping", MorseFlipperHelpPrepping, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "A complete Morse contact", MorseFlipperHelpContact, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Contesting", MorseFlipperHelpContesting, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "USB & live practice", MorseFlipperHelpUsbLive, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Moving forward", MorseFlipperHelpMovingForward, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "First steps",
+        MorseFlipperHelpFirstSteps,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Input & keys",
+        MorseFlipperHelpInputKeys,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Connecting the paddle",
+        MorseFlipperHelpConnectingPaddle,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu, "LCWO", MorseFlipperHelpLcwo, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Prepping", MorseFlipperHelpPrepping, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "A complete Morse contact",
+        MorseFlipperHelpContact,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu, "Contesting", MorseFlipperHelpContesting, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu,
+        "USB & live practice",
+        MorseFlipperHelpUsbLive,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Moving forward",
+        MorseFlipperHelpMovingForward,
+        morse_flipper_scene_menu_pick,
+        app);
     if(sel >= MorseFlipperHelpCount) sel = MorseFlipperHelpFirstSteps;
     submenu_set_selected_item(app->submenu, sel);
 }
@@ -171,9 +253,12 @@ static void morse_flipper_scene_menu_rf_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuRf);
     submenu_set_header(app->submenu, "Flipper Radio");
-    submenu_add_item(app->submenu, "Transmit", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Receive monitor", MorseFlipperSceneRfRx, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Frequency", MorseFlipperSceneRfFreq, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Transmit", MorseFlipperSceneRf, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Receive monitor", MorseFlipperSceneRfRx, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Frequency", MorseFlipperSceneRfFreq, morse_flipper_scene_menu_pick, app);
     if(sel != MorseFlipperSceneRf && sel != MorseFlipperSceneRfRx &&
        sel != MorseFlipperSceneRfFreq)
         sel = MorseFlipperSceneRf;
@@ -214,8 +299,10 @@ static void morse_flipper_scene_menu_ham_on_enter(void* context) {
         sizeof(logging),
         "Logging: %s",
         app->ham_keyer.logging_enabled ? "On" : "Off");
-    submenu_add_item(app->submenu, "Start", MorseFlipperHamMenuStart, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, logging, MorseFlipperHamMenuLogging, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Start", MorseFlipperHamMenuStart, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, logging, MorseFlipperHamMenuLogging, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
         app->submenu,
         "Configure messages",
@@ -255,7 +342,8 @@ static bool morse_flipper_scene_menu_ham_on_event(void* context, SceneManagerEve
     if(event.event == MorseFlipperHamMenuLogging) {
         app->ham_keyer.logging_enabled = !app->ham_keyer.logging_enabled;
         morse_flipper_save_config(app);
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuHam);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuHam);
         return true;
     }
 
@@ -283,7 +371,8 @@ static void morse_flipper_scene_ham_configure_on_enter(void* context) {
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneHamConfigure);
     submenu_set_header(app->submenu, "Messages");
-    submenu_add_item(app->submenu, "Add new", MorseFlipperHamConfigureAdd, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Add new", MorseFlipperHamConfigureAdd, morse_flipper_scene_menu_pick, app);
     for(uint8_t i = 0U; i < app->ham_keyer.message_count; i++) {
         submenu_add_item(
             app->submenu,
@@ -333,13 +422,17 @@ static void morse_flipper_scene_ham_configure_on_exit(void* context) {
 
 static void morse_flipper_scene_ham_actions_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneHamMessageActions);
+    uint32_t sel =
+        scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneHamMessageActions);
 
     morse_flipper_scene_enter_now(app, MorseFlipperSceneHamMessageActions);
     submenu_set_header(app->submenu, "Message");
-    submenu_add_item(app->submenu, "Assign", MorseFlipperHamActionAssign, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Edit", MorseFlipperHamActionEdit, morse_flipper_scene_menu_pick, app);
-    submenu_add_item(app->submenu, "Delete", MorseFlipperHamActionDelete, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Assign", MorseFlipperHamActionAssign, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Edit", MorseFlipperHamActionEdit, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
+        app->submenu, "Delete", MorseFlipperHamActionDelete, morse_flipper_scene_menu_pick, app);
     if(sel < MorseFlipperHamActionAssign || sel > MorseFlipperHamActionDelete)
         sel = MorseFlipperHamActionAssign;
     submenu_set_selected_item(app->submenu, sel);
@@ -354,7 +447,8 @@ static bool morse_flipper_scene_ham_actions_on_event(void* context, SceneManager
     }
 
     if(event.type != SceneManagerEventTypeCustom) return false;
-    scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneHamMessageActions, event.event);
+    scene_manager_set_scene_state(
+        app->scene_manager, MorseFlipperSceneHamMessageActions, event.event);
 
     if(event.event == MorseFlipperHamActionAssign) {
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamAssign);
@@ -612,7 +706,8 @@ static bool morse_flipper_scene_startup_probe_on_event(void* context, SceneManag
 
     if(event.type == SceneManagerEventTypeBack) {
         app->startup_gpio_probe_state = MorseFlipperGpioProbeOk;
-        scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuMain);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuMain);
         return true;
     }
 
