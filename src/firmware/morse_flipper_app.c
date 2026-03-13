@@ -123,7 +123,6 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .trainer = {0},
         .ham_keyer = {0},
         .custom_sets = {0},
-        .straight_stats = {0},
         .straight_hist_cnt = {0},
         .straight_hist_sum = {0},
         .straight_worst_line = {0},
@@ -190,7 +189,6 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_straight_trainer_init(&app.straight_trainer);
     morse_flipper_tx_group_init(&app.tx_group);
     morse_trainer_load_custom_sets(&app.custom_sets);
-    morse_trainer_load_straight_stats(&app.straight_stats);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_load_config(&app);
     morse_flipper_load_rf_config(&app);
