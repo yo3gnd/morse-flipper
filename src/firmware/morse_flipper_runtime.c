@@ -465,6 +465,51 @@ const char* morse_flipper_input_line(const MorseFlipperApp* app, char* buf, size
     return buf;
 }
 
+static void morse_flipper_session_mode_tick(MorseFlipperApp* app, uint32_t now_ms) {
+    if(app->session_started && morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
+        morse_trainer_tick(
+            &app->trainer, MORSE_FLIPPER_POLL_MS, (uint32_t)app->trainer_answer_timeout_s * 1000U);
+    }
+    morse_flipper_tick_session(app, now_ms);
+}
+
+static void morse_flipper_rf_mode_tick(MorseFlipperApp* app, uint32_t now_ms) {
+    morse_flipper_tick_live_rf(app, now_ms);
+#if MORSE_FLIPPER_RF_LIVE_DECODERS
+    morse_flipper_radio_drain_rx(&app->radio);
+#else
+    UNUSED(now_ms);
+#endif
+}
+
+void morse_flipper_active_mode_tick(MorseFlipperApp* app, uint32_t now_ms) {
+    if(app == NULL) return;
+
+    switch(app->screen) {
+    case MorseFlipperScreenSession:
+        morse_flipper_session_mode_tick(app, now_ms);
+        break;
+    case MorseFlipperScreenStraight:
+        morse_flipper_tick_straight(app, now_ms);
+        break;
+    case MorseFlipperScreenTxGroups:
+    case MorseFlipperScreenTxGroupsResult:
+        morse_flipper_tick_tx_groups(app, now_ms);
+        break;
+    case MorseFlipperScreenHamRun:
+        morse_flipper_tick_ham_macro(app, now_ms);
+        break;
+    case MorseFlipperScreenRun:
+    case MorseFlipperScreenTrace:
+    case MorseFlipperScreenRf:
+    case MorseFlipperScreenRfRx:
+        morse_flipper_rf_mode_tick(app, now_ms);
+        break;
+    default:
+        break;
+    }
+}
+
 void morse_flipper_poll(MorseFlipperApp* app) {
     uint32_t now_ms = furi_get_tick();
     bool old_tone = app->tone_on;
@@ -487,16 +532,7 @@ void morse_flipper_poll(MorseFlipperApp* app) {
             morse_flipper_audio_pwm_set_tone_hz(&app->audio_pwm, pwm_tone_hz);
     }
 
-    if(app->screen == MorseFlipperScreenSession && app->session_started &&
-       morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat) {
-        morse_trainer_tick(
-            &app->trainer, MORSE_FLIPPER_POLL_MS, (uint32_t)app->trainer_answer_timeout_s * 1000U);
-    }
-
-    morse_flipper_tick_session(app, now_ms);
-    morse_flipper_tick_straight(app, now_ms);
-    morse_flipper_tick_tx_groups(app, now_ms);
-    morse_flipper_tick_ham_macro(app, now_ms);
+    morse_flipper_active_mode_tick(app, now_ms);
     morse_flipper_gpio_probe_tick(app, now_ms);
 
     app->transport_connected = morse_flipper_transport_connected(app);
@@ -577,10 +613,6 @@ void morse_flipper_poll(MorseFlipperApp* app) {
     morse_flipper_maybe_finish_tx_group_raw(app, now_ms);
     morse_flipper_ham_log_flush_if_idle(app, now_ms);
 
-    morse_flipper_tick_live_rf(app, now_ms);
-#if MORSE_FLIPPER_RF_LIVE_DECODERS
-    morse_flipper_radio_drain_rx(&app->radio);
-#endif
     if(app->screen == MorseFlipperScreenSessionEnd && morse_flipper_session_end_flash(app))
         app->session_end_flash_phase = (uint8_t)((now_ms / 250U) & 1U);
     else

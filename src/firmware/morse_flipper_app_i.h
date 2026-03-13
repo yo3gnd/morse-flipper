@@ -758,6 +758,8 @@ void morse_flipper_trainer_chars_changed(VariableItem* item);
 void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app);
 bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event);
 bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms);
+void morse_flipper_active_mode_tick(MorseFlipperApp* app, uint32_t now_ms);
+bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms);
 
 MorseFlipperApp* morse_flipper_boot(void);
 ViewDispatcher* morse_flipper_view_dispatcher_get(MorseFlipperApp* app);

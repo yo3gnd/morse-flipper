@@ -577,19 +577,43 @@ static bool morse_flipper_run_trace_home_input(MorseFlipperApp* app, InputEvent*
     return false;
 }
 
-bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
-    if(morse_flipper_trainer_input(app, event)) return true;
-    if(morse_flipper_straight_input(app, event, now_ms)) return true;
-    if(morse_flipper_tx_groups_input(app, event, now_ms)) return true;
-    if(morse_flipper_tx_groups_result_input(app, event, now_ms)) return true;
-    if(morse_flipper_tx_groups_final_input(app, event, now_ms)) return true;
-    if(morse_flipper_session_input(app, event, now_ms)) return true;
-    if(morse_flipper_session_end_input(app, event, now_ms)) return true;
-    if(morse_flipper_rf_freq_input(app, event)) return true;
-    if(morse_flipper_rf_rx_input(app, event)) return true;
-    if(morse_flipper_rf_input(app, event)) return true;
-    if(morse_flipper_run_trace_home_input(app, event)) return true;
+bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
+    if(app == NULL || event == NULL) return false;
+
+    switch(app->screen) {
+    case MorseFlipperScreenTrainer:
+        return morse_flipper_trainer_input(app, event);
+    case MorseFlipperScreenStraight:
+        return morse_flipper_straight_input(app, event, now_ms);
+    case MorseFlipperScreenTxGroups:
+        return morse_flipper_tx_groups_input(app, event, now_ms);
+    case MorseFlipperScreenTxGroupsResult:
+        return morse_flipper_tx_groups_result_input(app, event, now_ms);
+    case MorseFlipperScreenTxGroupsFinal:
+        return morse_flipper_tx_groups_final_input(app, event, now_ms);
+    case MorseFlipperScreenSession:
+        return morse_flipper_session_input(app, event, now_ms);
+    case MorseFlipperScreenSessionEnd:
+        return morse_flipper_session_end_input(app, event, now_ms);
+    case MorseFlipperScreenRfFreq:
+        return morse_flipper_rf_freq_input(app, event);
+    case MorseFlipperScreenRfRx:
+        return morse_flipper_rf_rx_input(app, event);
+    case MorseFlipperScreenRf:
+        return morse_flipper_rf_input(app, event);
+    case MorseFlipperScreenRun:
+    case MorseFlipperScreenTrace:
+    case MorseFlipperScreenHome:
+        return morse_flipper_run_trace_home_input(app, event);
+    default:
+        break;
+    }
+
     return false;
+}
+
+bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
+    return morse_flipper_active_mode_input(app, event, now_ms);
 }
 
 static bool
@@ -755,7 +779,7 @@ bool morse_flipper_live_input(InputEvent* event, void* ctx) {
 
     if(morse_flipper_input_chunk_a(app, event)) return true;
     if(morse_flipper_session_live_keying_input(app, event)) return true;
-    if(morse_flipper_input_chunk_b(app, event, now_ms)) return true;
+    if(morse_flipper_active_mode_input(app, event, now_ms)) return true;
     return false;
 }
 
