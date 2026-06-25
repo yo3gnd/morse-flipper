@@ -12,6 +12,7 @@
 #include <string.h>
 
 static const char morse_trainer_koch_order[] = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X";
+#define MORSE_TRAINER_DEFAULT_SEED 1U
 
 static void morse_trainer_note_session_result(MorseTrainer* trainer, bool missed) {
     if(trainer == NULL || !trainer->session_active) {
@@ -93,8 +94,16 @@ void morse_trainer_init(MorseTrainer* trainer) {
     trainer->group_size = 3U;
     trainer->session_groups = 10U;
     trainer->local_dit_ms = 100U;
-    trainer->rng_state = 1U;
+    trainer->rng_state = MORSE_TRAINER_DEFAULT_SEED;
     trainer->last_missed = false;
+}
+
+void morse_trainer_set_seed(MorseTrainer* trainer, uint32_t seed) {
+    if(trainer == NULL) {
+        return;
+    }
+
+    trainer->rng_state = seed ? seed : MORSE_TRAINER_DEFAULT_SEED;
 }
 
 size_t morse_trainer_lesson_count(void) {

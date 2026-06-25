@@ -16,6 +16,8 @@
 #define COUNT_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+#define STRAIGHT_TRAINER_DEFAULT_SEED 7U
+
 static uint32_t straight_rand(MorseFlipperStraightTrainer* trainer) {
     trainer->rng_state = trainer->rng_state * 1103515245u + 12345u;
     return trainer->rng_state;
@@ -199,10 +201,17 @@ void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer) {
     trainer->target_morse[0] = '.';
     trainer->target_code = cw('E');
     trainer->target_symbol_count = cw_symbol_count(trainer->target_code);
-    trainer->rng_state = 7U;
+    trainer->rng_state = STRAIGHT_TRAINER_DEFAULT_SEED;
     trainer->worst_space_score = 100U;
     trainer->worst_dit_score = 100U;
     trainer->worst_dah_score = 100U;
+}
+
+void morse_flipper_straight_trainer_set_seed(
+    MorseFlipperStraightTrainer* trainer,
+    uint32_t seed) {
+    if(!trainer) return;
+    trainer->rng_state = seed ? seed : STRAIGHT_TRAINER_DEFAULT_SEED;
 }
 
 void morse_flipper_straight_trainer_start(

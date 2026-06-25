@@ -51,6 +51,7 @@ typedef struct {
 } MorseFlipperTxGroup;
 
 void morse_flipper_tx_group_init(MorseFlipperTxGroup* g);
+void morse_flipper_tx_group_set_seed(MorseFlipperTxGroup* g, uint32_t seed);
 void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk);
 void morse_flipper_tx_group_feed_mark(MorseFlipperTxGroup* g, uint16_t ms);
 void morse_flipper_tx_group_feed_space(MorseFlipperTxGroup* g, uint16_t ms);

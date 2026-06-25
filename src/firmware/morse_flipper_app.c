@@ -198,6 +198,9 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_run_history_reset(&app.run_history);
     morse_flipper_straight_trainer_init(&app.straight_trainer);
     morse_flipper_tx_group_init(&app.tx_group);
+    morse_trainer_set_seed(&app.trainer, furi_hal_random_get());
+    morse_flipper_straight_trainer_set_seed(&app.straight_trainer, furi_hal_random_get());
+    morse_flipper_tx_group_set_seed(&app.tx_group, furi_hal_random_get());
     morse_trainer_load_custom_sets(&app.custom_sets);
     morse_flipper_apply_trainer_charset_choice(&app);
     morse_flipper_load_config(&app);
