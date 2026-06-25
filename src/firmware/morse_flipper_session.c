@@ -336,7 +336,10 @@ static void morse_flipper_session_draw_inverted_cell(
     uint8_t box_h,
     uint8_t ch) {
     char s[2];
+    char w_txt[2] = {'W', '\0'};
+    uint8_t box_w;
     uint8_t w;
+    uint8_t box_x;
     uint8_t x;
 
     if(canvas == NULL || ch == 0U) return;
@@ -345,9 +348,11 @@ static void morse_flipper_session_draw_inverted_cell(
 
     s[0] = (char)ch;
     s[1] = '\0';
+    box_w = (uint8_t)(canvas_string_width(canvas, w_txt) + 2U);
     w = canvas_string_width(canvas, s);
+    box_x = (uint8_t)(center - (box_w / 2U));
     x = (uint8_t)(center - (w / 2U));
-    canvas_draw_box(canvas, (uint8_t)(x - 1U), box_y, w + 2U, box_h);
+    canvas_draw_box(canvas, box_x, box_y, box_w, box_h);
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_str(canvas, x, y, s);
     canvas_set_color(canvas, ColorBlack);
@@ -532,8 +537,8 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
     const char* group = morse_trainer_last_group(&app->trainer);
     uint8_t top_y;
     uint8_t bot_y;
-    uint8_t box_y;
-    uint8_t box_h;
+    uint8_t text_h;
+    uint8_t wrong_box_h;
     size_t ans_len;
     uint8_t prompt_count;
     uint8_t answer_count;
@@ -550,21 +555,19 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
         row_font = FontPrimary;
         top_y = 15U;
         bot_y = 29U;
-        box_y = 5U;
-        box_h = 11U;
+        text_h = 11U;
     } else if(size <= 8U) {
         row_font = FontSecondary;
         top_y = 16U;
         bot_y = 28U;
-        box_y = 9U;
-        box_h = 8U;
+        text_h = 8U;
     } else {
         row_font = FontKeyboard;
         top_y = 16U;
         bot_y = 27U;
-        box_y = 8U;
-        box_h = 9U;
+        text_h = 9U;
     }
+    wrong_box_h = (uint8_t)(text_h + 2U);
     morse_flipper_session_slot_centers(size, centers);
     morse_flipper_session_answer_text(app, answers, sizeof(answers), size);
     ans_len = strlen(answers);
@@ -597,13 +600,11 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
         bool have = i < ans_len;
         bool ok = false;
         bool bad = false;
-        bool missing_done = false;
 
         if(group[i] != '\0') q = morse_flipper_upper_char(group[i]);
         if(have) a = morse_flipper_upper_char(answers[i]);
         if(q != '\0' && a != '\0' && q == a) ok = true;
-        if(q != '\0' && i < answer_count && !ok) bad = true;
-        if(done && q != '\0' && i >= answer_count) missing_done = true;
+        if(done && q != '\0' && i < answer_count && !ok) bad = true;
 
         if(i >= prompt_count) continue;
 
@@ -615,23 +616,21 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
         if(rep || done) {
             if(done && q != '\0') {
                 top = q;
-            } else if(rep && have && q != '\0') {
-                top = q;
             }
             if(have && a != '\0') {
                 bot = a;
             }
 
-            if(done && (bad || missing_done)) {
-                morse_flipper_session_draw_inverted_cell(
-                    canvas, centers[i], top_y, box_y, box_h, (uint8_t)q);
-            } else {
-                morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);
-            }
+            morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);
 
             if(bad) {
                 morse_flipper_session_draw_inverted_cell(
-                    canvas, centers[i], bot_y, (uint8_t)(bot_y - box_h), box_h, (uint8_t)bot);
+                    canvas,
+                    centers[i],
+                    bot_y,
+                    (uint8_t)(bot_y - text_h - 1U),
+                    wrong_box_h,
+                    (uint8_t)bot);
             } else {
                 morse_flipper_session_draw_cell(canvas, centers[i], bot_y, (uint8_t)bot);
             }
