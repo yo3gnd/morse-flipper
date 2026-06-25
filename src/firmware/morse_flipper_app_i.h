@@ -749,6 +749,7 @@ void morse_flipper_trainer_group_pause_changed(VariableItem* item);
 void morse_flipper_trainer_group_size_changed(VariableItem* item);
 void morse_flipper_trainer_groups_changed(VariableItem* item);
 void morse_flipper_trainer_chars_changed(VariableItem* item);
+void morse_flipper_trainer_sync_farn_item(MorseFlipperApp* app);
 void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app);
 bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event);
 bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms);
