@@ -350,11 +350,11 @@ uint32_t morse_flipper_straight_answer_settle_ms(const MorseFlipperApp* app) {
 
     if(answer_symbols == 0U) return 0U;
     if(app->input_source == MorseFlipperInputSourceButtons) {
-        if(answer_symbols >= target_symbols) return dit_ms * 3U;
-        return dit_ms * 4U;
+        if(answer_symbols >= target_symbols) return dit_ms * 6U;
+        return dit_ms * 8U;
     }
-    if(answer_symbols >= target_symbols) return dit_ms * 2U;
-    return dit_ms * 3U;
+    if(answer_symbols >= target_symbols) return dit_ms * 5U;
+    return dit_ms * 6U;
 }
 
 static bool

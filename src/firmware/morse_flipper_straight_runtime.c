@@ -7,6 +7,26 @@
 
 #include "morse_flipper_app_i.h"
 
+static void morse_flipper_release_straight_keying(MorseFlipperApp* app, uint32_t now_ms) {
+    if(app == NULL) return;
+
+    if(app->straight_key_down && app->straight_mark_started_at != 0U) {
+        uint32_t mark_ms = now_ms - app->straight_mark_started_at;
+
+        if(mark_ms > UINT16_MAX) mark_ms = UINT16_MAX;
+        morse_flipper_feed_straight_mark(app, (uint16_t)mark_ms, now_ms);
+    }
+
+    app->straight_key_down = false;
+    app->straight_mark_started_at = 0U;
+
+    if(app->input_source == MorseFlipperInputSourceButtons) app->ok_down = false;
+    morse_flipper_straight_filter_reset(&app->straight_filter);
+    morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_BTN, false);
+    morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, false);
+    morse_flipper_update_sidetone(app);
+}
+
 void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
 
@@ -161,6 +181,7 @@ void morse_flipper_start_straight_countdown(MorseFlipperApp* app, uint32_t now_m
 void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
 
+    morse_flipper_release_straight_keying(app, now_ms);
     app->straight_wait_answer = false;
     app->straight_done = true;
     app->straight_trainer.active = false;
