@@ -628,7 +628,7 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
                     canvas,
                     centers[i],
                     bot_y,
-                    (uint8_t)(bot_y - text_h - 1U),
+                    (uint8_t)(bot_y - text_h + 1U),
                     wrong_box_h,
                     (uint8_t)bot);
             } else {

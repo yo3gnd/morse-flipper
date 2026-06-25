@@ -68,6 +68,10 @@ bool morse_flipper_any_active_notes(const MorseFlipperApp* app) {
     return app->note_sources[0] != 0U || app->note_sources[1] != 0U || app->note_sources[2] != 0U;
 }
 
+static bool morse_flipper_training_input_muted(const MorseFlipperApp* app) {
+    return app != NULL && app->screen == MorseFlipperScreenSession && app->trainer_playback_active;
+}
+
 void morse_flipper_tone_stop(MorseFlipperApp* app) {
     if(furi_hal_speaker_is_mine()) {
         furi_hal_speaker_stop();
@@ -196,6 +200,7 @@ void morse_flipper_set_note_source(
     uint32_t now_ms;
 
     if(note >= COUNT_OF(app->note_sources)) return;
+    if(active && morse_flipper_training_input_muted(app)) active = false;
 
     uint32_t before = app->note_sources[note];
     uint32_t after = active ? (before | source_mask) : (before & ~source_mask);
@@ -280,6 +285,7 @@ void morse_flipper_set_paddle_source(
     bool active,
     uint32_t now_ms) {
     if(paddle >= MorseKeyerPaddleCount) return;
+    if(active && morse_flipper_training_input_muted(app)) active = false;
 
     uint32_t before = app->paddle_sources[paddle];
     uint32_t after = active ? (before | source_mask) : (before & ~source_mask);
