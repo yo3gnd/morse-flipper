@@ -13,6 +13,7 @@
 
 #define TXG_DEFAULT_PASS_MIN 90U
 #define TXG_DEFAULT_PASS_MAX 110U
+#define TXG_DEFAULT_SEED     0x55443322U
 
 static uint32_t txg_rand(MorseFlipperTxGroup* g) {
     g->rng = g->rng * 1103515245u + 12345u;
@@ -132,10 +133,15 @@ static void txg_expected(
 void morse_flipper_tx_group_init(MorseFlipperTxGroup* g) {
     if(g == 0) return;
     memset(g, 0, sizeof(*g));
-    g->rng = 0x55443322U;
+    g->rng = TXG_DEFAULT_SEED;
     g->pass_min = TXG_DEFAULT_PASS_MIN;
     g->pass_max = TXG_DEFAULT_PASS_MAX;
     memcpy(g->target, "ABCDE", MORSE_FLIPPER_TX_GROUP_LEN + 1U);
+}
+
+void morse_flipper_tx_group_set_seed(MorseFlipperTxGroup* g, uint32_t seed) {
+    if(g == 0) return;
+    g->rng = seed ? seed : TXG_DEFAULT_SEED;
 }
 
 void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk) {
@@ -145,7 +151,7 @@ void morse_flipper_tx_group_start(MorseFlipperTxGroup* g, bool sk) {
     uint8_t pass_max;
 
     if(g == 0) return;
-    oldrng = g->rng ? g->rng : 0x55443322U;
+    oldrng = g->rng ? g->rng : TXG_DEFAULT_SEED;
     pass_min = txg_pass_min(g);
     pass_max = txg_pass_max(g);
     memset(g, 0, sizeof(*g));

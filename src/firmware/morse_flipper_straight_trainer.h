@@ -40,6 +40,9 @@ typedef struct {
 } MorseFlipperStraightTrainer;
 
 void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer);
+void morse_flipper_straight_trainer_set_seed(
+    MorseFlipperStraightTrainer* trainer,
+    uint32_t seed);
 void morse_flipper_straight_trainer_start(
     MorseFlipperStraightTrainer* trainer,
     const char* charset,

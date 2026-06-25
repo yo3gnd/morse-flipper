@@ -328,6 +328,31 @@ static void
     canvas_draw_str(canvas, x, y, s);
 }
 
+static void morse_flipper_session_draw_inverted_cell(
+    Canvas* canvas,
+    uint8_t center,
+    uint8_t y,
+    uint8_t box_y,
+    uint8_t box_h,
+    uint8_t ch) {
+    char s[2];
+    uint8_t w;
+    uint8_t x;
+
+    if(canvas == NULL || ch == 0U) return;
+
+    if(morse_flipper_cw_token_is_private(ch)) ch = '#';
+
+    s[0] = (char)ch;
+    s[1] = '\0';
+    w = canvas_string_width(canvas, s);
+    x = (uint8_t)(center - (w / 2U));
+    canvas_draw_box(canvas, (uint8_t)(x - 1U), box_y, w + 2U, box_h);
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_str(canvas, x, y, s);
+    canvas_set_color(canvas, ColorBlack);
+}
+
 static uint8_t morse_flipper_session_slot_centers(uint8_t size, uint8_t* out) {
     static const uint8_t slot_pos[9][9] = {
         {64},
@@ -565,57 +590,55 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
     canvas_set_font(canvas, row_font);
 
     for(i = 0U; i < size; i++) {
-        char mark[2] = {'_', '\0'};
-        char bot_mark[2] = {'_', '\0'};
-        char q[2] = {'\0', '\0'};
-        char a[2] = {'\0', '\0'};
+        char q = '\0';
+        char a = '\0';
+        char top = '_';
+        char bot = '_';
         bool have = i < ans_len;
         bool ok = false;
         bool bad = false;
+        bool missing_done = false;
 
-        if(group[i] != '\0') q[0] = morse_flipper_upper_char(group[i]);
-        if(have) a[0] = morse_flipper_upper_char(answers[i]);
-        if(q[0] != '\0' && a[0] != '\0' && q[0] == a[0]) ok = true;
-        if(q[0] != '\0' && i < answer_count && !ok) bad = true;
+        if(group[i] != '\0') q = morse_flipper_upper_char(group[i]);
+        if(have) a = morse_flipper_upper_char(answers[i]);
+        if(q != '\0' && a != '\0' && q == a) ok = true;
+        if(q != '\0' && i < answer_count && !ok) bad = true;
+        if(done && q != '\0' && i >= answer_count) missing_done = true;
 
         if(i >= prompt_count) continue;
 
         if(app->trainer_playback_active || idle) {
-#if _SHOW_ANSWER_WHILE_TRAINING_LCWO
-            if(app->trainer_playback_active && q[0] != '\0') mark[0] = q[0];
-#endif
-            morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)mark[0]);
+            morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);
             continue;
         }
 
         if(rep || done) {
-#if _SHOW_ANSWER_WHILE_TRAINING_LCWO
-            if(q[0] != '\0') mark[0] = q[0];
-#else
-            if(ok && q[0] != '\0') mark[0] = q[0];
-#endif
-            if(bad || (done && i >= answer_count && q[0] != '\0')) {
-                uint8_t bw = canvas_string_width(canvas, q);
-                uint8_t bx = (uint8_t)(centers[i] - (bw / 2U) - 1U);
+            if(done && q != '\0') {
+                top = q;
+            } else if(rep && have && q != '\0') {
+                top = q;
+            }
+            if(have && a != '\0') {
+                bot = a;
+            }
 
-                canvas_draw_box(canvas, bx, box_y, bw + 2U, box_h);
-                canvas_set_color(canvas, ColorWhite);
-                canvas_draw_str(canvas, (uint8_t)(centers[i] - (bw / 2U)), top_y, q);
-                canvas_set_color(canvas, ColorBlack);
+            if(done && (bad || missing_done)) {
+                morse_flipper_session_draw_inverted_cell(
+                    canvas, centers[i], top_y, box_y, box_h, (uint8_t)q);
             } else {
-                morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)mark[0]);
+                morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);
             }
 
-            morse_flipper_session_draw_cell(canvas, centers[i], bot_y, (uint8_t)bot_mark[0]);
-#if _SHOW_ANSWER_WHILE_TRAINING_LCWO
-            if(have) {
-                morse_flipper_session_draw_cell(canvas, centers[i], bot_y, (uint8_t)a[0]);
+            if(bad) {
+                morse_flipper_session_draw_inverted_cell(
+                    canvas, centers[i], bot_y, (uint8_t)(bot_y - box_h), box_h, (uint8_t)bot);
+            } else {
+                morse_flipper_session_draw_cell(canvas, centers[i], bot_y, (uint8_t)bot);
             }
-#endif
             continue;
         }
 
-        morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)mark[0]);
+        morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);
     }
 }
 
