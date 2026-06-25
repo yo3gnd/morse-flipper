@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish compact RF timing buffers and helper API.
+ * Owns: timing ring layout and diagnostic log limits.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_rf.c and tests/test_decoder_rf_integration.c.
+ */
+
 #ifndef yo3gnd_rf_timing_2230
 #define yo3gnd_rf_timing_2230
 

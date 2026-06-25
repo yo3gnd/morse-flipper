@@ -1,3 +1,10 @@
+/*
+ * Purpose: Run host-safe LCWO/Koch trainer sessions.
+ * Owns: character set selection, prompts, answers, scoring, and session stats.
+ * Depends on: trainer.h and cw.h.
+ * Tests: tests/test_trainer.c.
+ */
+
 #include "trainer.h"
 #include "cw.h"
 

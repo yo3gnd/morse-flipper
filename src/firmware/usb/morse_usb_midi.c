@@ -1,3 +1,10 @@
+/*
+ * Purpose: Implement the USB MIDI interface used by Morse keying.
+ * Owns: USB descriptors, endpoint state, RX callback, and MIDI packet writes.
+ * Depends on: morse_usb_midi.h and Flipper USB services.
+ * Tests: firmware build; USB behaviour is hardware-only.
+ */
+
 #include "morse_usb_midi.h"
 
 #include <furi.h>

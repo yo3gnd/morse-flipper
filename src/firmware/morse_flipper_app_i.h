@@ -1,3 +1,10 @@
+/*
+ * Purpose: Share private Morse Flipper app state and internal declarations.
+ * Owns: screen/scene enums, grouped runtime state, constants, and module glue.
+ * Depends on: Flipper GUI/HAL services plus all host-tested feature headers.
+ * Tests: firmware build and feature-specific host tests.
+ */
+
 #pragma once
 
 #include <furi.h>

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Run LCWO-style listen/repeat training sessions.
+ * Owns: session state resets, answer text, scoring, and prompt progression.
+ * Depends on: morse_flipper_app_i.h, trainer.h, and CW token helpers.
+ * Tests: tests/test_trainer.c covers the host trainer core.
+ */
+
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 

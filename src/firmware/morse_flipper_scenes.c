@@ -1,3 +1,10 @@
+/*
+ * Purpose: Register Flipper scenes and populate menus/settings entries.
+ * Owns: scene manager handlers, submenu contents, and scene transitions.
+ * Depends on: morse_flipper_app_i.h and Flipper scene/menu modules.
+ * Tests: firmware build; scene flow is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static void morse_flipper_scene_menu_main_on_enter(void* context) {

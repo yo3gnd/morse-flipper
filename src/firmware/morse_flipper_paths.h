@@ -1,3 +1,10 @@
+/*
+ * Purpose: Centralise storage paths for firmware and host test builds.
+ * Owns: state, custom character, session log, and ham keyer log paths.
+ * Depends on: Flipper APP_DATA_PATH/EXT_PATH in FAP builds.
+ * Tests: tests/test_trainer_files.c.
+ */
+
 #ifndef yo3gnd_paths_12039f
 #define yo3gnd_paths_12039f
 

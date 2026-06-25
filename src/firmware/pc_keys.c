@@ -1,3 +1,10 @@
+/*
+ * Purpose: Name and resolve USB keyboard/mouse key presets.
+ * Owns: PC paddle and straight key preset tables.
+ * Depends on: pc_keys.h.
+ * Tests: tests/test_keyboard_presets.c.
+ */
+
 #include "pc_keys.h"
 
 #include <stddef.h>

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Run the Morse keyer state machine for paddles and straight input.
+ * Owns: keyer timing, queueing, relay pulses, and event emission.
+ * Depends on: keyer.h and host-safe string routines.
+ * Tests: tests/test_keyer.c and tests/test_vail_modes.c.
+ */
+
 #include "keyer.h"
 
 #include <string.h>

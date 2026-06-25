@@ -1,3 +1,10 @@
+/*
+ * Purpose: Load and save persistent Morse Flipper settings.
+ * Owns: config record layout, legacy path cleanup, and default clamping.
+ * Depends on: morse_flipper_app_i.h, storage paths, and Flipper Storage.
+ * Tests: firmware build; persistence is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 #define MORSE_FLIPPER_OLD_RF_CONFIG_PATH  APP_DATA_PATH("rf.bin")

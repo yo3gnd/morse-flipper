@@ -1,3 +1,10 @@
+/*
+ * Purpose: Manage stored ham keyer messages and macro playback queues.
+ * Owns: message slots, assignments, pending text, and log stamp formatting.
+ * Depends on: morse_flipper_ham_keyer.h.
+ * Tests: tests/test_ham_keyer.c.
+ */
+
 #include "morse_flipper_ham_keyer.h"
 
 #include <string.h>

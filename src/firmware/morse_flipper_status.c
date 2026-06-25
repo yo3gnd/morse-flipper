@@ -1,3 +1,10 @@
+/*
+ * Purpose: Compute status strings and input gating for active screens.
+ * Owns: footer/status text, live input eligibility, and mode labels.
+ * Depends on: morse_flipper_app_i.h and runtime feature state.
+ * Tests: firmware build plus feature-specific host tests.
+ */
+
 #include "morse_flipper_app_i.h"
 
 MorseFlipperInputGate morse_flipper_input_gate(const MorseFlipperApp* app) {

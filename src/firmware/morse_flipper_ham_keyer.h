@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define the host-safe ham keyer data model.
+ * Owns: message limits, assignment IDs, macro state, and public keyer API.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_ham_keyer.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

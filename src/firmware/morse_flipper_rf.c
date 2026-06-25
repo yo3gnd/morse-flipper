@@ -1,3 +1,10 @@
+/*
+ * Purpose: Maintain host-safe RF Morse transmit and receive state.
+ * Owns: RF config, TX/RX logs, edge capture, and decoder feed helpers.
+ * Depends on: morse_flipper_rf.h and optional app glue in FAP builds.
+ * Tests: tests/test_rf.c and tests/test_decoder_rf_integration.c.
+ */
+
 #include "morse_flipper_rf.h"
 
 #ifdef MORSE_FLIPPER_FAP

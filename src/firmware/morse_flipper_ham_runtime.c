@@ -1,3 +1,10 @@
+/*
+ * Purpose: Bridge ham keyer macros to GPIO, audio, logging, and UI state.
+ * Owns: ham run startup, macro ticking, assignment flow, and text input glue.
+ * Depends on: morse_flipper_app_i.h, cw.h, and morse_flipper_ham_keyer.h.
+ * Tests: tests/test_ham_keyer.c plus firmware build.
+ */
+
 #include "morse_flipper_app_i.h"
 #include "cw.h"
 #include "morse_flipper_cw_token.h"

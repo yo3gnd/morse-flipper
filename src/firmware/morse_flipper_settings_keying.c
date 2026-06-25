@@ -1,3 +1,10 @@
+/*
+ * Purpose: Handle WPM, input source, keyer, and handedness settings rows.
+ * Owns: keying settings callbacks and persistence side effects.
+ * Depends on: morse_flipper_app_i.h, keyer state, and trainer sync helpers.
+ * Tests: tests/test_keyer.c covers underlying keyer behaviour.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_settings_wpm_changed(VariableItem* item) {

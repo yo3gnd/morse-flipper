@@ -1,3 +1,10 @@
+/*
+ * Purpose: Generate and grade TX Groups keying drills.
+ * Owns: group targets, edge capture, timing metrics, and pass/fail grading.
+ * Depends on: morse_flipper_tx_groups.h, cw.h, and CW token helpers.
+ * Tests: tests/test_tx_groups.c.
+ */
+
 #include "morse_flipper_tx_groups.h"
 #include "cw.h"
 #include "morse_flipper_cw_token.h"

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish the GPIO P2 PWM audio backend interface.
+ * Owns: audio PWM constants, backend state, and lifecycle API.
+ * Depends on: host-safe integer types; FAP-only code lives in the .c file.
+ * Tests: tests/test_audio_pwm.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

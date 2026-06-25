@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish run-history layout rows and underline metadata.
+ * Owns: row buffers, glyph callback type, and layout result shape.
+ * Depends on: morse_flipper_run_history.h.
+ * Tests: tests/test_run_layout.c.
+ */
+
 #pragma once
 
 #include "morse_flipper_run_history.h"

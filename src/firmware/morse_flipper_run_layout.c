@@ -1,3 +1,10 @@
+/*
+ * Purpose: Lay out run-history text rows for the live view.
+ * Owns: wrapping, underline placement, and token-aware glyph measurement.
+ * Depends on: morse_flipper_run_layout.h and morse_flipper_cw_token.h.
+ * Tests: tests/test_run_layout.c.
+ */
+
 #include "morse_flipper_run_layout.h"
 #include "morse_flipper_cw_token.h"
 

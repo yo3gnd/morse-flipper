@@ -1,3 +1,10 @@
+/*
+ * Purpose: Classify paddle startup shorts and safety states.
+ * Owns: probe state derivation and straight-key fallback rules.
+ * Depends on: morse_flipper_gpio_probe.h.
+ * Tests: tests/test_gpio_probe.c.
+ */
+
 #ifdef MORSE_FLIPPER_FAP
 #include "morse_flipper_app_i.h"
 #else

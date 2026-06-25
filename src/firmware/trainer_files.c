@@ -1,3 +1,10 @@
+/*
+ * Purpose: Load custom trainer character sets from storage.
+ * Owns: custom set parsing, path override, and host/FAP file access.
+ * Depends on: trainer_files.h, trainer.h, and morse_flipper_paths.h.
+ * Tests: tests/test_trainer_files.c.
+ */
+
 #include "trainer.h"
 #include "trainer_files.h"
 #include "morse_flipper_paths.h"

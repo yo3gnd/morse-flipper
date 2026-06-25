@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish host-safe Morse code encoding helpers.
+ * Owns: CW_INVALID and the public cw_* conversion API.
+ * Depends on: stdbool/stddef/stdint only.
+ * Tests: tests/test_trainer.c and tests/test_keyer.c cover callers.
+ */
+
 #pragma once
 
 #include <stdbool.h>

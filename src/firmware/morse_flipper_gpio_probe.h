@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish startup GPIO probe states and decisions.
+ * Owns: probe enum and helpers for short/block/fallback detection.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_gpio_probe.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Encode and inspect International Morse code symbols.
+ * Owns: ASCII-to-CW lookup data and symbol/unit helpers.
+ * Depends on: cw.h and host-safe integer types.
+ * Tests: tests/test_trainer.c and tests/test_keyer.c cover callers.
+ */
+
 #include "cw.h"
 
 // clang-format off

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish the low-level Morse radio backend API.
+ * Owns: radio profile enum, backend state, and TX/RX control declarations.
+ * Depends on: host-safe integer types; CC1101 code is isolated in the .c file.
+ * Tests: tests/test_rf.c.
+ */
+
 #ifndef yo3gnd_radio_2230ff
 #define yo3gnd_radio_2230ff
 

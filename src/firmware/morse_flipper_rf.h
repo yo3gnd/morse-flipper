@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define RF Morse state and host-safe RF operations.
+ * Owns: frequency defaults, TX/RX log buffers, and RF timing aggregation.
+ * Depends on: morse_flipper_rf_timing.h.
+ * Tests: tests/test_rf.c and tests/test_decoder_rf_integration.c.
+ */
+
 #ifndef yo3gnd_rf_2239
 #define yo3gnd_rf_2239
 

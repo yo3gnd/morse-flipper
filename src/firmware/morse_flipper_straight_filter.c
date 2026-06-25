@@ -1,3 +1,10 @@
+/*
+ * Purpose: Debounce straight-key release transitions.
+ * Owns: straight filter state updates and release debounce policy.
+ * Depends on: morse_flipper_straight_filter.h.
+ * Tests: tests/test_straight_filter.c.
+ */
+
 #include "morse_flipper_straight_filter.h"
 
 #include <stddef.h>

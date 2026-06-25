@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define the rolling text history used by Free Practice.
+ * Owns: history size limits and public append/reset/read API.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_run_history.c.
+ */
+
 #pragma once
 
 #include <stdint.h>

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Generate optional high-definition PWM sidetone on GPIO P2.
+ * Owns: PWM buffers, fade/ramp state, and Flipper FAP timer/DMA setup.
+ * Depends on: morse_flipper_audio_pwm.h and Flipper HAL PWM resources.
+ * Tests: tests/test_audio_pwm.c plus firmware build for HAL integration.
+ */
+
 #include "morse_flipper_audio_pwm.h"
 
 #include <string.h>
