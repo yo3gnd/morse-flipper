@@ -1,3 +1,5 @@
+#include "morse_flipper_app_i.h"
+
 static const char* const morse_help_first_steps[] = {
     "Welcome to Morse Flipper.\nThis is a practical little CW trainer for learning to copy real Morse with your own ears.",
     "Good telegraphy is less about keying and more about learning to copy with the bit between your ears.",

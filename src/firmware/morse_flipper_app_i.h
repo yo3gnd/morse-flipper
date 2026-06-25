@@ -566,6 +566,11 @@ void morse_flipper_tone_nudge(MorseFlipperApp* app, int dir);
 bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app);
 bool morse_flipper_audio_output_is_pwm(const MorseFlipperApp* app);
 bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app);
+bool morse_flipper_scene_supports_audio_pwm(uint8_t scene);
+bool morse_flipper_audio_wait_transition(
+    const MorseFlipperApp* app,
+    uint8_t old_scene,
+    uint8_t new_scene);
 bool morse_flipper_any_active_notes(const MorseFlipperApp* app);
 uint8_t morse_flipper_p2_volume_pct(const MorseFlipperApp* app);
 void morse_flipper_sync_audio_output(MorseFlipperApp* app);

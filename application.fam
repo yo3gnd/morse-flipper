@@ -11,6 +11,10 @@ App(
     sources=[
         "src/firmware/morse_flipper_fap.c",
         "src/firmware/morse_flipper_core.c",
+        "src/firmware/morse_flipper_screen.c",
+        "src/firmware/morse_flipper_status.c",
+        "src/firmware/morse_flipper_audio_route.c",
+        "src/firmware/morse_flipper_help.c",
         "src/firmware/morse_flipper_app.c",
         "src/firmware/morse_flipper_flow.c",
         "src/firmware/morse_flipper_scenes.c",
