@@ -401,8 +401,8 @@ static bool morse_flipper_scene_ham_configure_on_event(void* context, SceneManag
     scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneHamConfigure, event.event);
 
     if(event.event == MorseFlipperHamConfigureAdd) {
-        app->ham_text_mode = MorseFlipperHamTextModeAdd;
-        app->ham_text_buffer[0] = '\0';
+        app->ham.text_mode = MorseFlipperHamTextModeAdd;
+        app->ham.text_buffer[0] = '\0';
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamTextInput);
         return true;
     }
@@ -410,7 +410,7 @@ static bool morse_flipper_scene_ham_configure_on_event(void* context, SceneManag
     if(event.event >= MorseFlipperHamConfigureMessageBase &&
        event.event <
            (uint32_t)MorseFlipperHamConfigureMessageBase + app->ham_keyer.message_count) {
-        app->ham_selected_message = (uint8_t)(event.event - MorseFlipperHamConfigureMessageBase);
+        app->ham.selected_message = (uint8_t)(event.event - MorseFlipperHamConfigureMessageBase);
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamMessageActions);
     }
 
@@ -455,10 +455,10 @@ static bool morse_flipper_scene_ham_actions_on_event(void* context, SceneManager
     if(event.event == MorseFlipperHamActionAssign) {
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamAssign);
     } else if(event.event == MorseFlipperHamActionEdit) {
-        app->ham_text_mode = MorseFlipperHamTextModeEdit;
+        app->ham.text_mode = MorseFlipperHamTextModeEdit;
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHamTextInput);
     } else if(event.event == MorseFlipperHamActionDelete) {
-        morse_flipper_ham_keyer_delete_message(&app->ham_keyer, app->ham_selected_message);
+        morse_flipper_ham_keyer_delete_message(&app->ham_keyer, app->ham.selected_message);
         morse_flipper_save_config(app);
         if(!scene_manager_search_and_switch_to_previous_scene(
                app->scene_manager, MorseFlipperSceneHamConfigure))
@@ -487,16 +487,16 @@ static void morse_flipper_scene_ham_text_input_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneHamTextInput);
     text_input_reset(app->text_input);
 
-    if(app->ham_text_mode == MorseFlipperHamTextModeEdit &&
-       app->ham_selected_message < app->ham_keyer.message_count) {
+    if(app->ham.text_mode == MorseFlipperHamTextModeEdit &&
+       app->ham.selected_message < app->ham_keyer.message_count) {
         strncpy(
-            app->ham_text_buffer,
-            app->ham_keyer.messages[app->ham_selected_message],
-            sizeof(app->ham_text_buffer) - 1U);
-        app->ham_text_buffer[sizeof(app->ham_text_buffer) - 1U] = '\0';
+            app->ham.text_buffer,
+            app->ham_keyer.messages[app->ham.selected_message],
+            sizeof(app->ham.text_buffer) - 1U);
+        app->ham.text_buffer[sizeof(app->ham.text_buffer) - 1U] = '\0';
         text_input_set_header_text(app->text_input, "Edit message");
     } else {
-        app->ham_text_buffer[0] = '\0';
+        app->ham.text_buffer[0] = '\0';
         text_input_set_header_text(app->text_input, "Add message");
     }
 
@@ -504,9 +504,9 @@ static void morse_flipper_scene_ham_text_input_on_enter(void* context) {
         app->text_input,
         morse_flipper_ham_text_input_callback,
         app,
-        app->ham_text_buffer,
-        sizeof(app->ham_text_buffer),
-        app->ham_text_mode == MorseFlipperHamTextModeAdd);
+        app->ham.text_buffer,
+        sizeof(app->ham.text_buffer),
+        app->ham.text_mode == MorseFlipperHamTextModeAdd);
 }
 
 static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneManagerEvent event) {
@@ -520,15 +520,15 @@ static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneMana
     if(event.type != SceneManagerEventTypeCustom || event.event != MorseFlipperCustomHamTextDone)
         return false;
 
-    for(size_t i = 0U; app->ham_text_buffer[i] != '\0'; i++) {
-        if(app->ham_text_buffer[i] == '_') app->ham_text_buffer[i] = ' ';
+    for(size_t i = 0U; app->ham.text_buffer[i] != '\0'; i++) {
+        if(app->ham.text_buffer[i] == '_') app->ham.text_buffer[i] = ' ';
     }
 
-    if(app->ham_text_mode == MorseFlipperHamTextModeEdit) {
+    if(app->ham.text_mode == MorseFlipperHamTextModeEdit) {
         morse_flipper_ham_keyer_edit_message(
-            &app->ham_keyer, app->ham_selected_message, app->ham_text_buffer);
-    } else if(app->ham_text_mode == MorseFlipperHamTextModeAdd) {
-        morse_flipper_ham_keyer_add_message(&app->ham_keyer, app->ham_text_buffer);
+            &app->ham_keyer, app->ham.selected_message, app->ham.text_buffer);
+    } else if(app->ham.text_mode == MorseFlipperHamTextModeAdd) {
+        morse_flipper_ham_keyer_add_message(&app->ham_keyer, app->ham.text_buffer);
     }
     morse_flipper_save_config(app);
 
@@ -543,7 +543,7 @@ static bool morse_flipper_scene_ham_text_input_on_event(void* context, SceneMana
 static void morse_flipper_scene_ham_text_input_on_exit(void* context) {
     MorseFlipperApp* app = context;
 
-    app->ham_text_mode = MorseFlipperHamTextModeNone;
+    app->ham.text_mode = MorseFlipperHamTextModeNone;
     text_input_reset(app->text_input);
 }
 

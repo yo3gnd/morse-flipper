@@ -50,14 +50,14 @@ void morse_flipper_draw_ham_run(Canvas* canvas, MorseFlipperApp* app) {
         "Back: Bkin %s hold L exit",
         app->ham_keyer.break_in_enabled ? "on" : "off");
     morse_flipper_draw_tx_history_screen_custom(canvas, app, "P16 PTT  P15 Key", browse_line);
-    if(app->ham_macro_active && app->ham_macro_dir < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) {
+    if(app->ham.macro_active && app->ham.macro_dir < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) {
         snprintf(
             browse_line,
             sizeof(browse_line),
             "Send %s",
-            morse_flipper_ham_keyer_dir_label(app->ham_macro_dir));
+            morse_flipper_ham_keyer_dir_label(app->ham.macro_dir));
         canvas_draw_str(canvas, 92, 54, browse_line);
-    } else if(app->ham_notice[0] != '\0' && now_ms < app->ham_notice_until) {
-        canvas_draw_str(canvas, 98, 54, app->ham_notice);
+    } else if(app->ham.notice[0] != '\0' && now_ms < app->ham.notice_until) {
+        canvas_draw_str(canvas, 98, 54, app->ham.notice);
     }
 }

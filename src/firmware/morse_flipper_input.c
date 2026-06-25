@@ -74,7 +74,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
         }
 
         if(event->key == InputKeyBack && event->type == InputTypeShort) {
-            if(app->ham_macro_active) {
+            if(app->ham.macro_active) {
                 morse_flipper_ham_stop_macro(app);
                 morse_flipper_update_sidetone(app);
                 morse_flipper_view_dirty(app);
@@ -115,14 +115,14 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
 
                 if(text[0] != '\0') {
                     morse_flipper_ham_start_macro(app, text, furi_get_tick());
-                    app->ham_macro_dir = dir;
+                    app->ham.macro_dir = dir;
                 } else {
                     snprintf(
-                        app->ham_notice,
-                        sizeof(app->ham_notice),
+                        app->ham.notice,
+                        sizeof(app->ham.notice),
                         "No %s",
                         morse_flipper_ham_keyer_dir_label(dir));
-                    app->ham_notice_until = furi_get_tick() + 700U;
+                    app->ham.notice_until = furi_get_tick() + 700U;
                     morse_flipper_view_dirty(app);
                 }
                 return true;
@@ -135,7 +135,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
     if(app->screen == MorseFlipperScreenHamAssign && event->type == InputTypeShort) {
         dir = morse_flipper_ham_dir_from_key(event->key);
         if(dir < MORSE_FLIPPER_HAM_KEYER_ASSIGNMENTS) {
-            morse_flipper_ham_keyer_assign(&app->ham_keyer, dir, app->ham_selected_message);
+            morse_flipper_ham_keyer_assign(&app->ham_keyer, dir, app->ham.selected_message);
             morse_flipper_save_config(app);
             morse_flipper_scene_back(app);
             return true;

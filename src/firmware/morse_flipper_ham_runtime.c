@@ -17,7 +17,7 @@ void morse_flipper_ham_gpio_apply(MorseFlipperApp* app) {
     furi_hal_gpio_init(ptt_pin, GpioModeOutputPushPull, GpioPullNo, GpioSpeedLow);
     furi_hal_gpio_write(key_pin, false);
     furi_hal_gpio_write(ptt_pin, false);
-    app->ham_key_level = false;
+    app->ham.key_level = false;
     app->ptt_level = false;
     app->ptt_tail_until = 0U;
 }
@@ -27,7 +27,7 @@ void morse_flipper_ham_gpio_release(MorseFlipperApp* app) {
 
     furi_hal_gpio_write(morse_flipper_gpio_pins[MorseFlipperGpioPinP15], false);
     furi_hal_gpio_write(morse_flipper_gpio_pins[MorseFlipperGpioPinP16], false);
-    app->ham_key_level = false;
+    app->ham.key_level = false;
     app->ptt_level = false;
     app->ptt_tail_until = 0U;
     morse_flipper_gpio_apply(app);
@@ -36,13 +36,13 @@ void morse_flipper_ham_gpio_release(MorseFlipperApp* app) {
 void morse_flipper_ham_stop_macro(MorseFlipperApp* app) {
     if(app == NULL) return;
 
-    app->ham_macro_active = false;
-    app->ham_macro_mark = false;
-    app->ham_macro_char_idx = 0U;
-    app->ham_macro_mark_idx = 0U;
-    app->ham_macro_dir = MORSE_FLIPPER_HAM_KEYER_UNASSIGNED;
-    app->ham_macro_next_at = 0U;
-    app->ham_macro_text[0] = '\0';
+    app->ham.macro_active = false;
+    app->ham.macro_mark = false;
+    app->ham.macro_char_idx = 0U;
+    app->ham.macro_mark_idx = 0U;
+    app->ham.macro_dir = MORSE_FLIPPER_HAM_KEYER_UNASSIGNED;
+    app->ham.macro_next_at = 0U;
+    app->ham.macro_text[0] = '\0';
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_HAM_MACRO, false);
 }
 
@@ -50,10 +50,10 @@ void morse_flipper_ham_start_macro(MorseFlipperApp* app, const char* text, uint3
     if(app == NULL || text == NULL || text[0] == '\0') return;
 
     morse_flipper_ham_stop_macro(app);
-    strncpy(app->ham_macro_text, text, sizeof(app->ham_macro_text) - 1U);
-    app->ham_macro_text[sizeof(app->ham_macro_text) - 1U] = '\0';
-    app->ham_macro_active = true;
-    app->ham_macro_next_at = now_ms;
+    strncpy(app->ham.macro_text, text, sizeof(app->ham.macro_text) - 1U);
+    app->ham.macro_text[sizeof(app->ham.macro_text) - 1U] = '\0';
+    app->ham.macro_active = true;
+    app->ham.macro_next_at = now_ms;
     morse_flipper_view_dirty(app);
 }
 
@@ -65,21 +65,21 @@ void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms) {
     uint32_t dit_ms;
     uint8_t marks;
 
-    if(app == NULL || !app->ham_macro_active) return;
+    if(app == NULL || !app->ham.macro_active) return;
 
     if(app->screen != MorseFlipperScreenHamRun) {
         morse_flipper_ham_stop_macro(app);
         return;
     }
 
-    if(now_ms < app->ham_macro_next_at) return;
+    if(now_ms < app->ham.macro_next_at) return;
 
     dit_ms = morse_flipper_current_dit_ms(app);
     if(morse_flipper_cw_token_parse(
-           &app->ham_macro_text[app->ham_macro_char_idx], &token, &consumed)) {
+           &app->ham.macro_text[app->ham.macro_char_idx], &token, &consumed)) {
         ch = token;
     } else {
-        ch = (uint8_t)morse_flipper_ham_upper(app->ham_macro_text[app->ham_macro_char_idx]);
+        ch = (uint8_t)morse_flipper_ham_upper(app->ham.macro_text[app->ham.macro_char_idx]);
         consumed = 1U;
     }
 
@@ -89,40 +89,40 @@ void morse_flipper_tick_ham_macro(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
-    if(!app->ham_macro_mark && ch == ' ') {
-        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
-        app->ham_macro_mark_idx = 0U;
-        app->ham_macro_next_at = now_ms + (dit_ms * 7U);
+    if(!app->ham.macro_mark && ch == ' ') {
+        app->ham.macro_char_idx = (uint8_t)(app->ham.macro_char_idx + consumed);
+        app->ham.macro_mark_idx = 0U;
+        app->ham.macro_next_at = now_ms + (dit_ms * 7U);
         return;
     }
 
     cw_code = token ? morse_flipper_cw_token_code(token) : cw((char)ch);
     marks = cw_symbol_count(cw_code);
     if(cw_code == CW_INVALID || marks == 0U) {
-        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
-        app->ham_macro_mark_idx = 0U;
-        app->ham_macro_next_at = now_ms + (dit_ms * 3U);
+        app->ham.macro_char_idx = (uint8_t)(app->ham.macro_char_idx + consumed);
+        app->ham.macro_mark_idx = 0U;
+        app->ham.macro_next_at = now_ms + (dit_ms * 3U);
         return;
     }
 
-    if(!app->ham_macro_mark) {
-        app->ham_macro_mark = true;
+    if(!app->ham.macro_mark) {
+        app->ham.macro_mark = true;
         morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_HAM_MACRO, true);
-        app->ham_macro_next_at =
-            now_ms + (dit_ms * cw_symbol_units(cw_code, app->ham_macro_mark_idx));
+        app->ham.macro_next_at =
+            now_ms + (dit_ms * cw_symbol_units(cw_code, app->ham.macro_mark_idx));
         morse_flipper_view_dirty(app);
         return;
     }
 
-    app->ham_macro_mark = false;
+    app->ham.macro_mark = false;
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_HAM_MACRO, false);
-    if(app->ham_macro_mark_idx + 1U < marks) {
-        app->ham_macro_mark_idx++;
-        app->ham_macro_next_at = now_ms + dit_ms;
+    if(app->ham.macro_mark_idx + 1U < marks) {
+        app->ham.macro_mark_idx++;
+        app->ham.macro_next_at = now_ms + dit_ms;
     } else {
-        app->ham_macro_char_idx = (uint8_t)(app->ham_macro_char_idx + consumed);
-        app->ham_macro_mark_idx = 0U;
-        app->ham_macro_next_at = now_ms + (dit_ms * 3U);
+        app->ham.macro_char_idx = (uint8_t)(app->ham.macro_char_idx + consumed);
+        app->ham.macro_mark_idx = 0U;
+        app->ham.macro_next_at = now_ms + (dit_ms * 3U);
     }
     morse_flipper_view_dirty(app);
 }
@@ -220,7 +220,7 @@ void morse_flipper_ham_log_flush(MorseFlipperApp* app) {
 
 void morse_flipper_ham_log_flush_if_idle(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL || app->screen != MorseFlipperScreenHamRun) return;
-    if(morse_flipper_any_active_notes(app) || app->ham_macro_active) return;
+    if(morse_flipper_any_active_notes(app) || app->ham.macro_active) return;
     if(morse_flipper_ham_keyer_should_flush(&app->ham_keyer, now_ms))
         morse_flipper_ham_log_flush(app);
 }
