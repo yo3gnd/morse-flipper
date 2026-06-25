@@ -280,6 +280,22 @@ typedef enum {
     MorseFlipperUsbSettingMouseSwap,
 } MorseFlipperUsbSettingIndex;
 
+typedef struct {
+    uint8_t selected_message;
+    uint8_t text_mode;
+    bool key_level;
+    bool macro_active;
+    bool macro_mark;
+    uint8_t macro_char_idx;
+    uint8_t macro_mark_idx;
+    uint8_t macro_dir;
+    uint32_t macro_next_at;
+    uint32_t notice_until;
+    char text_buffer[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
+    char macro_text[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
+    char notice[16];
+} MorseFlipperHamRuntimeState;
+
 typedef struct MorseFlipperApp {
     FuriMessageQueue* q;
     ViewPort* view_port;
@@ -336,8 +352,7 @@ typedef struct MorseFlipperApp {
     uint8_t help_topic;
     uint8_t help_page;
     uint8_t about_ok_count;
-    uint8_t ham_selected_message;
-    uint8_t ham_text_mode;
+    MorseFlipperHamRuntimeState ham;
     uint8_t rf_freq_focus;
     uint8_t trainer_farnsworth_wpm;
     uint8_t trainer_answer_timeout_s;
@@ -427,7 +442,6 @@ typedef struct MorseFlipperApp {
     bool rf_monitor_tone;
     bool audio_wait_active;
     bool ptt_level;
-    bool ham_key_level;
     bool gpio_level;
     bool gpio_gap_flushed;
     uint8_t straight_mark_idx;
@@ -443,19 +457,9 @@ typedef struct MorseFlipperApp {
     uint16_t rf_rssi_samples;
     uint16_t rf_rx_edges_window;
     uint16_t rf_rx_activity;
-    bool ham_macro_active;
-    bool ham_macro_mark;
-    uint8_t ham_macro_char_idx;
-    uint8_t ham_macro_mark_idx;
-    uint8_t ham_macro_dir;
-    uint32_t ham_macro_next_at;
-    uint32_t ham_notice_until;
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
-    char ham_text_buffer[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
-    char ham_macro_text[MORSE_FLIPPER_HAM_KEYER_MESSAGE_LEN + 1U];
-    char ham_notice[16];
     MorseFlipperRunHistory run_history;
     MorseFlipperAudioPwm audio_pwm;
     MorseFlipperStraightFilter straight_filter;

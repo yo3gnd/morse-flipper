@@ -255,9 +255,9 @@ void morse_flipper_sync_ptt(MorseFlipperApp* app, uint32_t now_ms) {
                     (tx_active || (app->ptt_tail_until != 0U && now_ms < app->ptt_tail_until));
         if(!want_high) app->ptt_tail_until = 0U;
 
-        if(app->ham_key_level != want_key) {
+        if(app->ham.key_level != want_key) {
             furi_hal_gpio_write(ham_key_pin, want_key);
-            app->ham_key_level = want_key;
+            app->ham.key_level = want_key;
         }
         if(app->ptt_level != want_high) {
             furi_hal_gpio_write(ham_ptt_pin, want_high);
