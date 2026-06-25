@@ -1,3 +1,10 @@
+/*
+ * Purpose: Provide shared drawing helpers for live-view screens.
+ * Owns: common hints, dividers, progress, and prompt glyph rendering.
+ * Depends on: morse_flipper_app_i.h and fonts/morse_flipper_terminus24.h.
+ * Tests: tests/test_prompt_font.c plus firmware build.
+ */
+
 #include "fonts/morse_flipper_terminus24.h"
 #include "morse_flipper_app_i.h"
 

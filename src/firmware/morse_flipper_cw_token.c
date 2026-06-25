@@ -1,3 +1,10 @@
+/*
+ * Purpose: Map private CW prosign tokens to labels, text, and codes.
+ * Owns: token definitions and token-aware text helpers.
+ * Depends on: morse_flipper_cw_token.h.
+ * Tests: tests/test_cw_token.c and tests/test_prompt_font.c.
+ */
+
 #include "morse_flipper_cw_token.h"
 
 #include <string.h>

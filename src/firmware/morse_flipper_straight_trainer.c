@@ -1,3 +1,10 @@
+/*
+ * Purpose: Generate and grade straight-key timing exercises.
+ * Owns: target selection, mark timing comparison, metrics, and hints.
+ * Depends on: morse_flipper_straight_trainer.h and cw.h.
+ * Tests: tests/test_straight_trainer.c.
+ */
+
 #include "morse_flipper_straight_trainer.h"
 #include "cw.h"
 

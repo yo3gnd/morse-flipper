@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define LCWO/Koch trainer state and public operations.
+ * Owns: trainer phase enum, buffers, lesson settings, and scoring fields.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_trainer.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

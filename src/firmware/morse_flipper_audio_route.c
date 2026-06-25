@@ -1,3 +1,10 @@
+/*
+ * Purpose: Decide when each scene may use audio and vibration outputs.
+ * Owns: audio route eligibility and wait-for-transition policy.
+ * Depends on: morse_flipper_app_i.h scene/audio state.
+ * Tests: firmware build; behaviour is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 bool morse_flipper_scene_supports_audio_pwm(uint8_t scene) {

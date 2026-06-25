@@ -1,3 +1,10 @@
+/*
+ * Purpose: Handle GPIO pin settings and startup probe notices.
+ * Owns: GPIO settings row callbacks, conflict text, and probe screen entry.
+ * Depends on: morse_flipper_app_i.h plus GPIO and probe modules.
+ * Tests: tests/test_gpio.c and tests/test_gpio_probe.c cover decisions.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static const uint8_t morse_flipper_gpio_ui_pins[] = {

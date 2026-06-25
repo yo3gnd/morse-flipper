@@ -1,3 +1,10 @@
+/*
+ * Purpose: Draw LCWO, straight trainer, and TX Groups training screens.
+ * Owns: training score lines, answer prompts, and large glyph layouts.
+ * Depends on: morse_flipper_app_i.h, trainer state, and prompt font data.
+ * Tests: trainer host tests cover data; rendering is hardware-only.
+ */
+
 #include "fonts/morse_flipper_terminus24.h"
 #include "morse_flipper_app_i.h"
 

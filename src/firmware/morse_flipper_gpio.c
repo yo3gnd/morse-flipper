@@ -1,3 +1,10 @@
+/*
+ * Purpose: Name and resolve Flipper GPIO pins used by Morse inputs.
+ * Owns: pin lookup tables, default pin choices, and conflict helpers.
+ * Depends on: morse_flipper_gpio.h and Flipper HAL GPIO when built as FAP.
+ * Tests: tests/test_gpio.c.
+ */
+
 #ifdef MORSE_FLIPPER_FAP
 #include "morse_flipper_app_i.h"
 #else

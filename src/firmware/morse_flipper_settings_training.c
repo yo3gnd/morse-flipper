@@ -1,3 +1,10 @@
+/*
+ * Purpose: Handle LCWO, straight trainer, and TX Groups settings rows.
+ * Owns: training setting callbacks, clamps, labels, and persistence hooks.
+ * Depends on: morse_flipper_app_i.h plus trainer and TX Groups modules.
+ * Tests: trainer, straight trainer, and TX Groups host tests cover models.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_trainer_sync_farn_item(MorseFlipperApp* app) {

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define the reusable Morse keyer model and public operations.
+ * Owns: keyer modes, queued actions, events, and runtime state layout.
+ * Depends on: stdbool/stddef/stdint only.
+ * Tests: tests/test_keyer.c and tests/test_vail_modes.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

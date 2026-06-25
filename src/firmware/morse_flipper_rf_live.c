@@ -1,3 +1,10 @@
+/*
+ * Purpose: Connect live RF edge callbacks to app UI and decoder state.
+ * Owns: RF live carrier counters, RX timing capture, and decoded text updates.
+ * Depends on: morse_flipper_app_i.h, radio callbacks, and CW decoder state.
+ * Tests: tests/test_decoder_rf_integration.c covers host RF decoding.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms) {

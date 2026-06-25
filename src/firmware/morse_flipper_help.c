@@ -1,3 +1,10 @@
+/*
+ * Purpose: Populate and navigate the in-app help pages.
+ * Owns: help text arrays, selected chapter/page state, and widget refresh.
+ * Depends on: morse_flipper_app_i.h and Flipper Widget APIs.
+ * Tests: firmware build; UI text flow is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static const char* const morse_help_first_steps[] = {

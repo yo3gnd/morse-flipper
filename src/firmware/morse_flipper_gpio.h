@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish logical GPIO pin IDs and conflict checks.
+ * Owns: Morse GPIO pin enum, names, defaults, and pin pair validation API.
+ * Depends on: Flipper GPIO types only in FAP builds.
+ * Tests: tests/test_gpio.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

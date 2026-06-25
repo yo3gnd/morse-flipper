@@ -1,3 +1,10 @@
+/*
+ * Purpose: Draw RF TX/RX, frequency edit, and trace screens.
+ * Owns: RF live-view layout, frequency digits, and trace display text.
+ * Depends on: morse_flipper_app_i.h and RF runtime state.
+ * Tests: tests/test_rf.c covers data paths; rendering is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static void morse_flipper_rf_edit_text(char* out, size_t out_sz, uint32_t khz) {

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Draw ham keyer run, refusal, and assignment screens.
+ * Owns: ham-specific live-view layout and status text.
+ * Depends on: morse_flipper_app_i.h and ham runtime state.
+ * Tests: firmware build; rendering is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_draw_ham_start_refusal(Canvas* canvas) {

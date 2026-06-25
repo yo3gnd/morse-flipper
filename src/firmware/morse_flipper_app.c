@@ -1,3 +1,10 @@
+/*
+ * Purpose: Allocate, initialise, and tear down the Morse Flipper application.
+ * Owns: top-level object lifetime and Flipper record/module allocation.
+ * Depends on: morse_flipper_app_i.h and Flipper GUI/storage services.
+ * Tests: firmware build; runtime behaviour is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 MorseFlipperApp* morse_flipper_boot(void) {

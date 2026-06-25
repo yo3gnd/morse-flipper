@@ -1,3 +1,10 @@
+/*
+ * Purpose: Provide central constants and shared app utility functions.
+ * Owns: tone tables, USB mode names, notifications, and cross-feature helpers.
+ * Depends on: morse_flipper_app_i.h, cw.h, and Flipper notification services.
+ * Tests: firmware build plus feature-specific host tests.
+ */
+
 #include "morse_flipper_app_i.h"
 #include "cw.h"
 

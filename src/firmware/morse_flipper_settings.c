@@ -1,3 +1,10 @@
+/*
+ * Purpose: Provide shared settings-list helpers and scene glue.
+ * Owns: VariableItemList state mirroring and common settings lifecycle code.
+ * Depends on: morse_flipper_app_i.h and split settings modules.
+ * Tests: firmware build; settings UI is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 uint32_t morse_flipper_settings_list_state(VariableItemList* list) {

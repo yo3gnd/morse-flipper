@@ -1,3 +1,10 @@
+/*
+ * Purpose: Tick live runtime features and GPIO input sampling.
+ * Owns: periodic app updates, trainer/keyer/radio ticks, and result notes.
+ * Depends on: morse_flipper_app_i.h plus keyer, trainer, RF, and GPIO modules.
+ * Tests: feature host tests cover models; scheduler flow is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static void morse_flipper_note_tx_group_result(MorseFlipperApp* app);

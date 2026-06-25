@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish the USB MIDI interface and packet I/O API.
+ * Owns: MIDI USB interface declaration, RX callback hooks, and write helpers.
+ * Depends on: Flipper USB HAL.
+ * Tests: firmware build; USB behaviour is hardware-only.
+ */
+
 #pragma once
 
 #include <stddef.h>

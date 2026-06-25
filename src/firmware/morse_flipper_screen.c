@@ -1,3 +1,10 @@
+/*
+ * Purpose: Apply screen changes and their immediate side effects.
+ * Owns: screen/scene transition state, audio waits, and per-screen resets.
+ * Depends on: morse_flipper_app_i.h and runtime feature modules.
+ * Tests: firmware build; screen flow is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_enter_screen(

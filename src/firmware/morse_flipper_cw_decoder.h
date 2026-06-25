@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish the timing-based CW decoder state and API.
+ * Owns: decoder buffers, dit estimates, and text output limits.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_cw_decoder.c and tests/test_decoder_rf_integration.c.
+ */
+
 #ifndef yo3gnd_cw_decoder_2288
 #define yo3gnd_cw_decoder_2288
 

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish custom trainer character set storage helpers.
+ * Owns: custom set limits, parsed set model, and load/path APIs.
+ * Depends on: trainer.h.
+ * Tests: tests/test_trainer_files.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

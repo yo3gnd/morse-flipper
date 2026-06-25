@@ -1,3 +1,10 @@
+/*
+ * Purpose: Store compact RF mark/space timing history.
+ * Owns: RF timing ring buffer and diagnostic log formatting.
+ * Depends on: morse_flipper_rf_timing.h.
+ * Tests: tests/test_rf.c and tests/test_decoder_rf_integration.c.
+ */
+
 #include "morse_flipper_rf_timing.h"
 
 #include <stdio.h>

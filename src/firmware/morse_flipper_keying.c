@@ -1,3 +1,10 @@
+/*
+ * Purpose: Convert keying sources into tone, HID/MIDI, GPIO, and trainer input.
+ * Owns: audio preview state, source masks, WPM updates, and PC output routing.
+ * Depends on: morse_flipper_app_i.h, keyer.h, and Flipper HID/notification APIs.
+ * Tests: tests/test_keyer.c and tests/test_vail_modes.c cover core keyer paths.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static const MorseFlipperTone* morse_flipper_current_tone(const MorseFlipperApp* app) {

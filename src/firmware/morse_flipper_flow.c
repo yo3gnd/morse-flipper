@@ -1,3 +1,10 @@
+/*
+ * Purpose: Glue live view redraws, scene opening, and dispatcher transitions.
+ * Owns: dirty signalling and scene/view activation helpers.
+ * Depends on: morse_flipper_app_i.h and Flipper view dispatcher APIs.
+ * Tests: firmware build; UI transitions are hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_view_dirty(MorseFlipperApp* app) {

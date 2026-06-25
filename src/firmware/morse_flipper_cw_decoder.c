@@ -1,3 +1,10 @@
+/*
+ * Purpose: Decode keyed mark/space timings into text.
+ * Owns: adaptive dit tracking, pending timing samples, and decoder output.
+ * Depends on: cw.h and morse_flipper_cw_token.h.
+ * Tests: tests/test_cw_decoder.c and tests/test_decoder_rf_integration.c.
+ */
+
 #include "morse_flipper_cw_decoder.h"
 #include "cw.h"
 #include "morse_flipper_cw_token.h"

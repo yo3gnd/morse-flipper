@@ -1,3 +1,10 @@
+/*
+ * Purpose: Bridge keying events to USB keyboard, mouse, and MIDI transports.
+ * Owns: PC mode state names, HID key mapping, and MIDI note output.
+ * Depends on: morse_flipper_app_i.h, pc_keys.h, Flipper HID, and USB MIDI.
+ * Tests: tests/test_keyboard_presets.c covers preset mapping data.
+ */
+
 #include "morse_flipper_app_i.h"
 
 const char* morse_flipper_pc_state_name(const MorseFlipperApp* app) {

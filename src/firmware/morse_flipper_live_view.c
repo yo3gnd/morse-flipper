@@ -1,3 +1,10 @@
+/*
+ * Purpose: Dispatch live drawing for every Morse Flipper screen.
+ * Owns: top-level canvas clearing, status lines, and screen draw selection.
+ * Depends on: morse_flipper_app_i.h and split live-view drawing modules.
+ * Tests: firmware build; rendering is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 

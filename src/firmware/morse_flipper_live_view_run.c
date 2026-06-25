@@ -1,3 +1,10 @@
+/*
+ * Purpose: Draw Free Practice run and TX history screens.
+ * Owns: run text layout, prompt glyph drawing, and history presentation.
+ * Depends on: morse_flipper_app_i.h and morse_flipper_run_layout.h.
+ * Tests: tests/test_run_layout.c and tests/test_run_history.c cover layout data.
+ */
+
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 #include "morse_flipper_run_layout.h"

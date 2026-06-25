@@ -1,3 +1,10 @@
+/*
+ * Purpose: Publish USB keyboard/mouse key identifiers and presets.
+ * Owns: PC key enum, preset lookup declarations, and key name API.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_keyboard_presets.c.
+ */
+
 #pragma once
 
 #include <stdbool.h>

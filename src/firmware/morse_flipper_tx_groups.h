@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define TX Groups training state and scoring API.
+ * Owns: group length limits, edge buffers, results, and trainer phases.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_tx_groups.c.
+ */
+
 #ifndef yo3gnd_txgroup_90pq
 #define yo3gnd_txgroup_90pq
 

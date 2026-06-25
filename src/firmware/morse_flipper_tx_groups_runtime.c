@@ -1,3 +1,10 @@
+/*
+ * Purpose: Bridge TX Groups drills into app input, audio, and screen flow.
+ * Owns: TX Groups session lifecycle, runtime ticking, and result transitions.
+ * Depends on: morse_flipper_app_i.h and morse_flipper_tx_groups.h.
+ * Tests: tests/test_tx_groups.c covers the host model.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static bool morse_flipper_tx_groups_sk_now(const MorseFlipperApp* app) {

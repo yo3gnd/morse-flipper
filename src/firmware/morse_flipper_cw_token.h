@@ -1,3 +1,10 @@
+/*
+ * Purpose: Define private CW prosign tokens shared by trainer and UI code.
+ * Owns: token identifiers and token label/conversion declarations.
+ * Depends on: host-safe integer types only.
+ * Tests: tests/test_cw_token.c and tests/test_prompt_font.c.
+ */
+
 #ifndef MORSE_FLIPPER_CW_TOKEN_H
 #define MORSE_FLIPPER_CW_TOKEN_H
 

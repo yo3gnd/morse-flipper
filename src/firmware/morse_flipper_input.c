@@ -1,3 +1,10 @@
+/*
+ * Purpose: Route physical input events into active app features.
+ * Owns: screen-specific button handling and custom event dispatch.
+ * Depends on: morse_flipper_app_i.h and Flipper input events.
+ * Tests: firmware build; button flow is hardware-only.
+ */
+
 #include "morse_flipper_app_i.h"
 
 static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* event) {

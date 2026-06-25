@@ -1,3 +1,10 @@
+/*
+ * Purpose: Control the CC1101 radio backend for Morse RF modes.
+ * Owns: radio profile setup, TX/RX state, edge callbacks, and RSSI reads.
+ * Depends on: morse_flipper_radio.h and Flipper Sub-GHz HAL in FAP builds.
+ * Tests: tests/test_rf.c covers host-side fallback paths.
+ */
+
 #include "morse_flipper_radio.h"
 
 #include <string.h>

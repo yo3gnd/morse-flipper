@@ -1,3 +1,10 @@
+/*
+ * Purpose: Keep the rolling Free Practice text history.
+ * Owns: append, trimming, and reset behaviour for run-history text.
+ * Depends on: morse_flipper_run_history.h.
+ * Tests: tests/test_run_history.c.
+ */
+
 #include "morse_flipper_run_history.h"
 
 #include <string.h>

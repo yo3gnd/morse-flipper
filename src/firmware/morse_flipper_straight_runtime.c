@@ -1,3 +1,10 @@
+/*
+ * Purpose: Bridge straight trainer model state into app runtime.
+ * Owns: straight trainer resets, playback ticks, answer capture, and scoring.
+ * Depends on: morse_flipper_app_i.h and morse_flipper_straight_trainer.h.
+ * Tests: tests/test_straight_trainer.c covers the host trainer model.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms) {

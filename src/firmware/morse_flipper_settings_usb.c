@@ -1,3 +1,10 @@
+/*
+ * Purpose: Handle USB keyboard, mouse, and MIDI settings rows.
+ * Owns: USB mode and key preset callbacks plus persistence side effects.
+ * Depends on: morse_flipper_app_i.h, pc_keys.h, and USB MIDI/HID services.
+ * Tests: tests/test_keyboard_presets.c covers preset data.
+ */
+
 #include "morse_flipper_app_i.h"
 
 void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
