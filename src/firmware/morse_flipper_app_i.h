@@ -644,6 +644,27 @@ void morse_flipper_rf_bump_focus(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_bump_digit(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_commit_edit(MorseFlipperApp* app);
 void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
+uint8_t morse_flipper_live_upper_char(uint8_t ch);
+void morse_flipper_draw_left_exit_hint(Canvas* canvas);
+void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
+void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch);
+void morse_flipper_draw_gpio_probe_overlay(Canvas* canvas, const MorseFlipperApp* app);
+void morse_flipper_draw_startup_gpio_probe(Canvas* canvas, const MorseFlipperApp* app);
+void morse_flipper_draw_tx_history_screen(Canvas* canvas, MorseFlipperApp* app, const char* second_line);
+void morse_flipper_draw_tx_history_screen_custom(
+    Canvas* canvas,
+    MorseFlipperApp* app,
+    const char* second_line,
+    const char* hint_override);
+void morse_flipper_draw_trainer_setup(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_tx_groups_screen(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* app);
+void morse_flipper_draw_rf_rx_screen(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_ham_start_refusal(Canvas* canvas);
+void morse_flipper_draw_ham_assign(Canvas* canvas);
+void morse_flipper_draw_ham_assignments(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_ham_run(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw(Canvas* canvas, void* ctx);
 void morse_flipper_view_dirty(MorseFlipperApp* app);
 void morse_flipper_scene_open(MorseFlipperApp* app, uint32_t scene);
