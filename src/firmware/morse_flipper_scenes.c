@@ -205,7 +205,11 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
         morse_flipper_scene_menu_pick,
         app);
     submenu_add_item(
-        app->submenu, "LCWO", MorseFlipperHelpLcwo, morse_flipper_scene_menu_pick, app);
+        app->submenu,
+        "How to practice",
+        MorseFlipperHelpPractice,
+        morse_flipper_scene_menu_pick,
+        app);
     submenu_add_item(
         app->submenu, "Prepping", MorseFlipperHelpPrepping, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
@@ -226,6 +230,18 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
         app->submenu,
         "Moving forward",
         MorseFlipperHelpMovingForward,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Ham usage",
+        MorseFlipperHelpHamUsage,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Troubleshooting",
+        MorseFlipperHelpTroubleshooting,
         morse_flipper_scene_menu_pick,
         app);
     if(sel >= MorseFlipperHelpCount) sel = MorseFlipperHelpFirstSteps;

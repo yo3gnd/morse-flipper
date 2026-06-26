@@ -68,8 +68,7 @@ static void morse_flipper_append_text(char* dst, size_t dst_sz, const char* add)
     memcpy(dst + len, add, add_len + 1U);
 }
 
-static void
-    morse_flipper_decoder_drain_into(MorseFlipperCwDecoder* decoder, char* out, size_t out_sz) {
+void morse_flipper_decoder_drain_into(MorseFlipperCwDecoder* decoder, char* out, size_t out_sz) {
     if(decoder == NULL || out == NULL || out_sz < 2U) return;
 
     if(morse_flipper_cw_decoder_output(decoder)[0] != '\0') {
@@ -483,9 +482,9 @@ static void morse_flipper_session_mode_tick(MorseFlipperApp* app, uint32_t now_m
 static void morse_flipper_rf_mode_tick(MorseFlipperApp* app, uint32_t now_ms) {
     morse_flipper_tick_live_rf(app, now_ms);
 #if MORSE_FLIPPER_RF_LIVE_DECODERS
-    morse_flipper_radio_drain_rx(&app->radio);
-#else
-    UNUSED(now_ms);
+    if(app->screen == MorseFlipperScreenRfRx) {
+        morse_flipper_radio_drain_rx(&app->radio);
+    }
 #endif
 }
 

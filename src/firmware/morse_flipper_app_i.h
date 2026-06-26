@@ -59,7 +59,7 @@
 #define MORSE_FLIPPER_RF_TX_TAIL_DITS               2U
 #define MORSE_FLIPPER_RF_RSSI_WINDOW_MS             160U
 #define MORSE_FLIPPER_RF_RSSI_PEAK_DECAY_MS         240U
-#define MORSE_FLIPPER_RF_LIVE_DECODERS              0U
+#define MORSE_FLIPPER_RF_LIVE_DECODERS              1U
 #define MORSE_FLIPPER_TRAINER_TIMEOUT_DEFAULT_S     6U
 #define MORSE_FLIPPER_TRAINER_TIMEOUT_MIN_S         3U
 #define MORSE_FLIPPER_TRAINER_TIMEOUT_MAX_S         10U
@@ -231,12 +231,14 @@ typedef enum {
     MorseFlipperHelpFirstSteps = 0,
     MorseFlipperHelpInputKeys,
     MorseFlipperHelpConnectingPaddle,
-    MorseFlipperHelpLcwo,
+    MorseFlipperHelpPractice,
     MorseFlipperHelpPrepping,
     MorseFlipperHelpContact,
     MorseFlipperHelpContesting,
     MorseFlipperHelpUsbLive,
     MorseFlipperHelpMovingForward,
+    MorseFlipperHelpHamUsage,
+    MorseFlipperHelpTroubleshooting,
     MorseFlipperHelpCount,
 } MorseFlipperHelpTopic;
 
@@ -427,6 +429,9 @@ typedef struct MorseFlipperApp {
     uint32_t session_complete_at;
     uint32_t rf_tx_tail_until;
     uint32_t rf_tx_edge_at;
+    uint32_t rf_rx_edge_at;
+    uint32_t rf_rx_sample_next_at;
+    uint32_t rf_rx_view_next_at;
     uint32_t rf_rssi_next_at;
     uint32_t rf_rssi_peak_decay_at;
     uint32_t gpio_edge_at;
@@ -455,10 +460,14 @@ typedef struct MorseFlipperApp {
     bool txg_start_holdoff;
     bool rf_live_active;
     bool rf_tx_level;
+    bool rf_rx_level;
+    bool rf_rx_candidate_level;
     bool rf_tx_gap_flushed;
+    bool rf_rx_gap_flushed;
     bool rf_rssi_valid;
     bool rf_carrier_present;
     bool rf_monitor_tone;
+    bool rf_rx_audio_enabled;
     bool audio_wait_active;
     bool ptt_level;
     bool gpio_level;
@@ -476,6 +485,8 @@ typedef struct MorseFlipperApp {
     uint16_t rf_rssi_samples;
     uint16_t rf_rx_edges_window;
     uint16_t rf_rx_activity;
+    uint8_t rf_rx_candidate_samples;
+    uint8_t rf_rx_wpm_hint;
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
@@ -483,6 +494,7 @@ typedef struct MorseFlipperApp {
     MorseFlipperAudioPwm audio_pwm;
     MorseFlipperStraightFilter straight_filter;
     MorseFlipperRf rf;
+    MorseFlipperRfTicker rf_rx_ticker;
     MorseFlipperRadio radio;
     MorseFlipperCwDecoder rf_decoder;
     MorseFlipperCwDecoder tx_decoder;
@@ -555,6 +567,7 @@ void morse_flipper_set_note_source(
 void morse_flipper_resync_button_paddles(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_clear_button_keying(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_drain_keyer_events(MorseFlipperApp* app);
+void morse_flipper_decoder_drain_into(MorseFlipperCwDecoder* decoder, char* out, size_t out_sz);
 void morse_flipper_tone_stop(MorseFlipperApp* app);
 void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_poll(MorseFlipperApp* app);
@@ -667,6 +680,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms);
 int8_t morse_flipper_rf_clamp_dbm(int8_t dbm);
 int8_t morse_flipper_rssi_dbm_round(float rssi);
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz);
+void morse_flipper_rf_reset_rx_runtime(MorseFlipperApp* app);
+void morse_flipper_rf_rx_bump_wpm(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_reset_edit(MorseFlipperApp* app);
 void morse_flipper_rf_bump_focus(MorseFlipperApp* app, int dir);
 void morse_flipper_rf_bump_digit(MorseFlipperApp* app, int dir);
@@ -675,6 +690,7 @@ void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
 uint8_t morse_flipper_live_upper_char(uint8_t ch);
 void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
+void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text);
 void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch);
 void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_tick_about(MorseFlipperApp* app, uint32_t now_ms);
@@ -755,6 +771,7 @@ const char* morse_flipper_run_keyer_name(const MorseFlipperApp* app);
 const char* morse_flipper_run_usb_name(const MorseFlipperApp* app);
 const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz);
 const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, size_t buf_sz);
+const char* morse_flipper_rf_rx_wpm_line(const MorseFlipperApp* app, char* buf, size_t buf_sz);
 const char* morse_flipper_source_short_name(const MorseFlipperApp* app, char* buf, size_t buf_sz);
 void morse_flipper_reset_run_state(MorseFlipperApp* app);
 const char* morse_flipper_trace_hint(const MorseFlipperApp* app, char* buf, size_t buf_sz);

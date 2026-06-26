@@ -51,7 +51,7 @@ static const char* const morse_help_connecting_paddle[] = {
     "Regardless of layout, you always need a ground. P3 can be reassigned if that is more convenient, or you can use the Flipper's normal ground pins. If your key has no ground contact, it will not work.",
 };
 
-static const char* const morse_help_lcwo[] = {
+static const char* const morse_help_practice[] = {
     "You can become perfectly competent at CW and still do most of your sending from a computer. I rarely touch my key unless I have to.",
     "LCWO.net is the gold standard for learning to tell letters apart by sound. It starts with two letters.",
     "Once you stop making mistakes on those two, you add another.",
@@ -63,6 +63,8 @@ static const char* const morse_help_lcwo[] = {
     "You REALLY want to stop thinking out the sound. Remember how you were taught the multiplication table.",
     "Use Farnsworth to open up the gaps. The spacing should help you hear the rhythm, not tempt you back into counting.",
     "You need to hear letters, not inventory. If you only copy shapes back as \"three dots, one dash\", you are practising parroting, not Morse. Doing this will not help you.",
+    "You can also use this app to sharpen straight-key sending and practise five-character sending groups competitively.\n\nDo not make those the main event too early. Copying characters by ear comes first. If you cannot hear the letters reliably, better sending just makes tidier nonsense.",
+    "Straight-key sending is a skill of its own. The line between a recognisable personal fist and sloppy sending is subtle, and beginners usually cannot hear the difference yet.\n\nThe Straight trainer grades your marks, gaps and dah/dit ratio. Groups of 5 has Easy, Medium and IARU HST scoring. Use Medium as the first serious target and start around 15 WPM. Drop to Easy if the timing feels impossible, but remember that Easy still permits sending that would sound rough on the air.",
     "Music practice is oddly useful, especially rhythm work with a metronome. Pitch drills, not so much. Do use a metronome if you want clean skill transfer. You should use a metronome anyway during music practice. Hanons helped me with transmit speed.",
 };
 
@@ -146,6 +148,22 @@ static const char* const morse_help_moving_forward[] = {
     "If you do get licensed, send me a note at yo3gnd.dev.fzcw@yo3gnd.ro. I would be glad to hear how it went.\n\n\n\nIf you read this far, there is a QSL waiting for you. Send in the secret code 821073",
 };
 
+static const char* const morse_help_ham_usage[] = {
+    "Ham usage\n\nHam Keyer is a field keyer and logger in one slightly opinionated box. It can send fixed lines like RR UR 5NN BK or POTA RO-0038 K, while also keying and logging whatever you send on the paddles.\n\nBREAK-IN off logs only. BREAK-IN on transmits and logs. Handy for POTA/SOTA, where the operator already has enough plates wobbling. Logs are dated on the SD card, and each change is timestamped.",
+    "Rig keying uses P15 for key and P16 for PTT. Do not wire a radio on optimism.\n\nCheck the rig input, polarity, and ground arrangement. Use a transistor or optocoupler where the radio deserves it.",
+    "Back toggles BREAK-IN. Long-press Left exits.\n\nWith BREAK-IN off, paddle input is logged but not sent to the rig. With BREAK-IN on, the rig is keyed and PTT is held briefly after the last element.",
+    "Assign short messages to Up, Down, Left, and Right. Use them for field exchanges, not essays.\n\nIf logging is enabled, entries go to /ext/ham/morse-flipper-ham-keyer-YYYY-MM-DD.txt.",
+};
+
+static const char* const morse_help_troubleshooting[] = {
+    "Troubleshooting\n\nStart simple: joystick OK is a straight key. Then try OK + Back as button paddles. Then plug in a real key.\n\nSettings -> Keying is always source plus mode: where the signal comes from, and how the app turns it into Morse.",
+    "A straight key uses dit/SK. A paddle needs dit, dah, and ground.\n\nDefault jack wiring is P3 ground, P7 dit/SK, and P5 dah. Check that before inventing new physics.",
+    "Some people swap hands, paddles, or both. Use Swap paddles.\n\nWhen Back is not exiting, it is being used as a paddle. The arrow is the app waving you toward long-press Left.",
+    "A GPIO short warning means the jack wiring looks wrong for the chosen input. Unplug the key and check it.\n\nA mono straight key in the paddle jack will be treated as a straight key. That bit is deliberate.",
+    "For USB output, choose Keyboard, Mouse, or MIDI, then let the host reconnect.\n\nCustom character sets and Ham logs live on the SD card under /ext/ham. No card, no files.",
+    "P2 HD audio only runs on supported live screens and needs external wiring.\n\nUse Buzzer for the Flipper speaker. Wire P2 if you want the high quality sidetone path.",
+};
+
 uint8_t morse_flipper_help_card_count(uint8_t t) {
     switch(t) {
     case MorseFlipperHelpFirstSteps:
@@ -154,8 +172,8 @@ uint8_t morse_flipper_help_card_count(uint8_t t) {
         return COUNT_OF(morse_help_input_keys);
     case MorseFlipperHelpConnectingPaddle:
         return COUNT_OF(morse_help_connecting_paddle);
-    case MorseFlipperHelpLcwo:
-        return COUNT_OF(morse_help_lcwo);
+    case MorseFlipperHelpPractice:
+        return COUNT_OF(morse_help_practice);
     case MorseFlipperHelpPrepping:
         return COUNT_OF(morse_help_prepping);
     case MorseFlipperHelpContact:
@@ -164,6 +182,12 @@ uint8_t morse_flipper_help_card_count(uint8_t t) {
         return COUNT_OF(morse_help_contesting);
     case MorseFlipperHelpUsbLive:
         return COUNT_OF(morse_help_usb_live);
+    case MorseFlipperHelpMovingForward:
+        return COUNT_OF(morse_help_moving_forward);
+    case MorseFlipperHelpHamUsage:
+        return COUNT_OF(morse_help_ham_usage);
+    case MorseFlipperHelpTroubleshooting:
+        return COUNT_OF(morse_help_troubleshooting);
     default:
         return COUNT_OF(morse_help_moving_forward);
     }
@@ -177,8 +201,8 @@ static const char* morse_flipper_help_card(uint8_t t, uint8_t i) {
         return i < COUNT_OF(morse_help_input_keys) ? morse_help_input_keys[i] : "";
     case MorseFlipperHelpConnectingPaddle:
         return i < COUNT_OF(morse_help_connecting_paddle) ? morse_help_connecting_paddle[i] : "";
-    case MorseFlipperHelpLcwo:
-        return i < COUNT_OF(morse_help_lcwo) ? morse_help_lcwo[i] : "";
+    case MorseFlipperHelpPractice:
+        return i < COUNT_OF(morse_help_practice) ? morse_help_practice[i] : "";
     case MorseFlipperHelpPrepping:
         return i < COUNT_OF(morse_help_prepping) ? morse_help_prepping[i] : "";
     case MorseFlipperHelpContact:
@@ -187,6 +211,12 @@ static const char* morse_flipper_help_card(uint8_t t, uint8_t i) {
         return i < COUNT_OF(morse_help_contesting) ? morse_help_contesting[i] : "";
     case MorseFlipperHelpUsbLive:
         return i < COUNT_OF(morse_help_usb_live) ? morse_help_usb_live[i] : "";
+    case MorseFlipperHelpMovingForward:
+        return i < COUNT_OF(morse_help_moving_forward) ? morse_help_moving_forward[i] : "";
+    case MorseFlipperHelpHamUsage:
+        return i < COUNT_OF(morse_help_ham_usage) ? morse_help_ham_usage[i] : "";
+    case MorseFlipperHelpTroubleshooting:
+        return i < COUNT_OF(morse_help_troubleshooting) ? morse_help_troubleshooting[i] : "";
     default:
         return i < COUNT_OF(morse_help_moving_forward) ? morse_help_moving_forward[i] : "";
     }
