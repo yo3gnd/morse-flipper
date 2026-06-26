@@ -213,6 +213,19 @@ void morse_flipper_set_run_wpm(MorseFlipperApp* app, uint8_t wpm) {
     morse_flipper_view_dirty(app);
 }
 
+void morse_flipper_clear_run_wpm(MorseFlipperApp* app, uint32_t now_ms) {
+    uint16_t dit_ms;
+
+    if(app == NULL || app->run_dit_ms == 0U) return;
+
+    app->run_dit_ms = 0U;
+    dit_ms = morse_flipper_current_dit_ms(app);
+    morse_flipper_cw_decoder_init(&app->rf_decoder, dit_ms);
+    morse_flipper_cw_decoder_init(&app->tx_decoder, dit_ms);
+    morse_flipper_cw_decoder_init(&app->gpio_decoder, dit_ms);
+    morse_flipper_refresh_keyer(app, now_ms);
+}
+
 uint8_t morse_flipper_straight_wpm(const MorseFlipperApp* app) {
     uint16_t dit;
     uint8_t wpm;
