@@ -27,6 +27,18 @@ static void morse_flipper_release_straight_keying(MorseFlipperApp* app, uint32_t
     morse_flipper_update_sidetone(app);
 }
 
+static void morse_flipper_silence_straight_keying(MorseFlipperApp* app) {
+    if(app == NULL) return;
+
+    app->straight_key_down = false;
+    app->straight_mark_started_at = 0U;
+    if(app->input_source == MorseFlipperInputSourceButtons) app->ok_down = false;
+    morse_flipper_straight_filter_reset(&app->straight_filter);
+    morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_BTN, false);
+    morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_GPIO, false);
+    morse_flipper_update_sidetone(app);
+}
+
 void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
 
@@ -39,9 +51,11 @@ void morse_flipper_reset_straight_state(MorseFlipperApp* app, uint32_t now_ms) {
     app->straight_mark_idx = 0U;
     app->straight_next_at = 0U;
     app->straight_wait_started_at = 0U;
+    app->straight_answer_started_at = 0U;
     app->straight_last_input_at = 0U;
     app->straight_mark_started_at = 0U;
     app->straight_next_draw_s = 0xFFU;
+    app->straight_cutoff_wait_release = false;
     app->straight_trainer.active = false;
     app->straight_trainer.answer[0] = '\0';
     morse_flipper_set_note_source(app, 0U, MORSE_SOURCE_STRAIGHT_BTN, false);
@@ -67,81 +81,13 @@ void morse_flipper_start_straight_round(MorseFlipperApp* app, uint32_t now_ms) {
     morse_flipper_view_dirty(app);
 }
 
-static uint8_t morse_flipper_straight_hist_idx(char ch) {
-    if(ch >= 'A' && ch <= 'Z') return (uint8_t)(ch - 'A');
-    if(ch >= '0' && ch <= '9') return (uint8_t)(26U + (ch - '0'));
-    return 0xFFU;
-}
-
-static uint16_t morse_flipper_straight_attempt_sum(const MorseFlipperApp* app) {
-    uint16_t sum = 0U;
-
-    if(app == NULL) return 0U;
-    if(morse_flipper_straight_trainer_answer(&app->straight_trainer)[0] == '\0') return 0U;
-    if(!morse_flipper_straight_trainer_symbol_count_match(&app->straight_trainer)) return 0U;
-    sum += morse_flipper_straight_trainer_worst_space_score(&app->straight_trainer);
-    sum += morse_flipper_straight_trainer_worst_dit_score(&app->straight_trainer);
-    sum += morse_flipper_straight_trainer_worst_dah_score(&app->straight_trainer);
-    return sum;
-}
-
-static void morse_flipper_straight_refresh_worst(MorseFlipperApp* app) {
-    uint8_t pick[5] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
-    size_t at = 0U;
-
-    if(app == NULL) return;
-
-    for(uint8_t j = 0U; j < 5U; j++) {
-        uint8_t best = 0xFFU;
-        uint16_t best_avg = 0xFFFFU;
-
-        for(uint8_t i = 0U; i < 36U; i++) {
-            bool used = false;
-            uint16_t avg;
-
-            if(app->straight_hist_cnt[i] < 3U) continue;
-            for(uint8_t k = 0U; k < j; k++)
-                if(pick[k] == i) used = true;
-            if(used) continue;
-
-            avg = (uint16_t)(app->straight_hist_sum[i] / app->straight_hist_cnt[i]);
-            if(avg < best_avg) {
-                best_avg = avg;
-                best = i;
-            }
-        }
-
-        pick[j] = best;
-    }
-
-    memset(app->straight_worst_line, 0, sizeof(app->straight_worst_line));
-    memcpy(app->straight_worst_line, "Wo:", 3U);
-    at = 3U;
-    for(uint8_t j = 0U; j < 5U; j++) {
-        char ch;
-
-        if(pick[j] == 0xFFU) break;
-        ch = pick[j] < 26U ? (char)('A' + pick[j]) : (char)('0' + (pick[j] - 26U));
-        if(at + 3U >= sizeof(app->straight_worst_line)) break;
-        app->straight_worst_line[at++] = ' ';
-        app->straight_worst_line[at++] = ch;
-    }
-
-    if(at == 3U) snprintf(app->straight_worst_line, sizeof(app->straight_worst_line), "Wo: -");
-}
-
 void morse_flipper_reset_straight_session(MorseFlipperApp* app) {
     if(app == NULL) return;
     app->straight_session_total = 0U;
     app->straight_session_good = 0U;
-    memset(app->straight_hist_cnt, 0, sizeof(app->straight_hist_cnt));
-    memset(app->straight_hist_sum, 0, sizeof(app->straight_hist_sum));
-    snprintf(app->straight_worst_line, sizeof(app->straight_worst_line), "Wo: -");
 }
 
 void morse_flipper_note_straight_session(MorseFlipperApp* app) {
-    uint8_t idx;
-
     if(app == NULL) return;
 
     app->straight_session_total++;
@@ -149,15 +95,6 @@ void morse_flipper_note_straight_session(MorseFlipperApp* app) {
            morse_flipper_straight_trainer_target_morse(&app->straight_trainer),
            morse_flipper_straight_trainer_answer(&app->straight_trainer)) == 0)
         app->straight_session_good++;
-
-    idx = morse_flipper_straight_hist_idx(
-        morse_flipper_straight_trainer_target_char(&app->straight_trainer));
-    if(idx != 0xFFU) {
-        if(app->straight_hist_cnt[idx] != 0xFFU) app->straight_hist_cnt[idx]++;
-        app->straight_hist_sum[idx] += morse_flipper_straight_attempt_sum(app);
-    }
-
-    morse_flipper_straight_refresh_worst(app);
 }
 
 bool morse_flipper_straight_countdown_active(const MorseFlipperApp* app) {
@@ -184,11 +121,42 @@ void morse_flipper_finish_straight_round(MorseFlipperApp* app, uint32_t now_ms) 
     morse_flipper_release_straight_keying(app, now_ms);
     app->straight_wait_answer = false;
     app->straight_done = true;
+    app->straight_cutoff_wait_release = false;
     app->straight_trainer.active = false;
     app->straight_next_at = now_ms + ((uint32_t)app->straight_next_delay_s * 1000U);
     app->straight_next_draw_s = 0xFFU;
     morse_flipper_note_straight_session(app);
     morse_flipper_view_dirty(app);
+}
+
+static uint32_t morse_flipper_straight_target_ms(const MorseFlipperApp* app) {
+    uint32_t units;
+    uint32_t dit_ms;
+
+    if(app == NULL) return MORSE_FLIPPER_DEFAULT_DIT_MS;
+
+    units = morse_flipper_straight_trainer_target_total_units(&app->straight_trainer);
+    if(units == 0U) units = 1U;
+    dit_ms = morse_flipper_current_straight_dit_ms(app);
+    return units * dit_ms;
+}
+
+static void morse_flipper_cutoff_straight_answer(MorseFlipperApp* app, uint32_t now_ms) {
+    uint32_t mark_ms;
+
+    if(app == NULL || app->straight_cutoff_wait_release) return;
+
+    if(app->straight_key_down && app->straight_mark_started_at != 0U) {
+        mark_ms = now_ms - app->straight_mark_started_at;
+        if(mark_ms > UINT16_MAX) mark_ms = UINT16_MAX;
+        if(mark_ms != 0U) morse_flipper_feed_straight_mark(app, (uint16_t)mark_ms, now_ms);
+        app->straight_cutoff_wait_release = true;
+        morse_flipper_silence_straight_keying(app);
+        morse_flipper_view_dirty(app);
+        return;
+    }
+
+    morse_flipper_finish_straight_round(app, now_ms);
 }
 
 void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms) {
@@ -199,6 +167,18 @@ void morse_flipper_tick_straight(MorseFlipperApp* app, uint32_t now_ms) {
     uint8_t left_s;
 
     if(app == NULL) return;
+
+    if(app->straight_wait_answer && !app->straight_done && app->straight_answer_started_at != 0U &&
+       !app->straight_cutoff_wait_release) {
+        uint32_t limit_ms = morse_flipper_straight_target_ms(app) * 4U;
+
+        if(limit_ms != 0U && now_ms - app->straight_answer_started_at > limit_ms) {
+            morse_flipper_cutoff_straight_answer(app, now_ms);
+            return;
+        }
+    }
+
+    if(app->straight_cutoff_wait_release) return;
 
     if(morse_flipper_straight_countdown_active(app)) {
         if(now_ms >= app->straight_next_at) {

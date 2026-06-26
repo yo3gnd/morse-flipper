@@ -17,6 +17,8 @@
 #endif
 
 #define STRAIGHT_TRAINER_DEFAULT_SEED 7U
+#define STRAIGHT_WEIGHT_RARE         1U
+#define STRAIGHT_WEIGHT_NORMAL       20U
 
 static uint32_t straight_rand(MorseFlipperStraightTrainer* trainer) {
     trainer->rng_state = trainer->rng_state * 1103515245u + 12345u;
@@ -31,7 +33,8 @@ static uint16_t straight_code(char ch) {
 }
 
 static uint8_t straight_weight(char ch) {
-    return (ch == 'E' || ch == 'T') ? 1U : 10U;
+    return (ch == 'E' || ch == 'T' || ch == 'I') ? STRAIGHT_WEIGHT_RARE :
+                                                    STRAIGHT_WEIGHT_NORMAL;
 }
 
 static char straight_pick(MorseFlipperStraightTrainer* trainer, const char* charset) {

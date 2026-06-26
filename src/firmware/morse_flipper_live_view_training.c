@@ -215,48 +215,89 @@ static void morse_flipper_draw_tx_groups_final(Canvas* canvas, MorseFlipperApp* 
         morse_flipper_draw_left_exit_hint(canvas);
 }
 
-static uint8_t morse_flipper_straight_units_from_ms(uint16_t ms, uint16_t dit_ms) {
-    uint32_t u;
-
-    if(dit_ms == 0U) return 1U;
-    u = (ms + (dit_ms / 2U)) / dit_ms;
-    if(u == 0U) u = 1U;
-    if(u > 9U) u = 9U;
-    return (uint8_t)u;
+static uint16_t morse_flipper_straight_symbol_ms(char elem, uint16_t dit_ms) {
+    return (uint16_t)((elem == '-' ? 3U : 1U) * (uint32_t)dit_ms);
 }
 
-static uint8_t morse_flipper_straight_strip_units(
+static uint32_t morse_flipper_straight_strip_total_ms(
     const char* code,
     const uint16_t* marks_ms,
     const uint16_t* spaces_ms,
     uint16_t dit_ms,
     bool use_ms) {
-    uint8_t total = 0U;
+    uint32_t total;
     size_t i;
 
     if(code == NULL || code[0] == '\0') return 0U;
+    if(dit_ms == 0U) dit_ms = MORSE_FLIPPER_DEFAULT_DIT_MS;
 
+    total = (uint32_t)dit_ms * 2U;
     for(i = 0U; code[i] != '\0'; i++) {
-        uint8_t u;
-
-        if(use_ms && marks_ms != NULL && marks_ms[i] != 0U) {
-            u = morse_flipper_straight_units_from_ms(marks_ms[i], dit_ms);
+        if(use_ms && marks_ms != NULL) {
+            total += marks_ms[i];
         } else {
-            u = code[i] == '-' ? 3U : 1U;
+            total += morse_flipper_straight_symbol_ms(code[i], dit_ms);
         }
-        total = (uint8_t)(total + u);
 
         if(code[i + 1U] == '\0') continue;
 
-        if(use_ms && spaces_ms != NULL && spaces_ms[i] != 0U) {
-            u = morse_flipper_straight_units_from_ms(spaces_ms[i], dit_ms);
+        if(use_ms && spaces_ms != NULL) {
+            total += spaces_ms[i];
         } else {
-            u = 1U;
+            total += dit_ms;
         }
-        total = (uint8_t)(total + u);
     }
 
     return total;
+}
+
+static uint8_t morse_flipper_straight_segment_px(
+    uint32_t ms,
+    uint32_t ref_ms,
+    uint8_t w,
+    bool visible) {
+    uint32_t px;
+
+    if(ref_ms == 0U) ref_ms = 1U;
+    px = ((ms * (uint32_t)w) + (ref_ms / 2U)) / ref_ms;
+    if(visible && ms != 0U && px == 0U) px = 1U;
+    if(px > w) px = w;
+    return (uint8_t)px;
+}
+
+static void morse_flipper_draw_straight_low_segment(
+    Canvas* canvas,
+    int32_t* pos,
+    int32_t end_x,
+    uint8_t low_y,
+    uint8_t px) {
+    int32_t next;
+
+    if(canvas == NULL || pos == NULL || px == 0U || *pos >= end_x) return;
+
+    next = *pos + px;
+    if(next > end_x) next = end_x;
+    canvas_draw_line(canvas, *pos, low_y, next, low_y);
+    *pos = next;
+}
+
+static void morse_flipper_draw_straight_mark_segment(
+    Canvas* canvas,
+    int32_t* pos,
+    int32_t end_x,
+    uint8_t low_y,
+    uint8_t hi_y,
+    uint8_t px) {
+    int32_t next;
+
+    if(canvas == NULL || pos == NULL || px == 0U || *pos >= end_x) return;
+
+    next = *pos + px;
+    if(next > end_x) next = end_x;
+    canvas_draw_line(canvas, *pos, low_y, *pos, hi_y);
+    canvas_draw_line(canvas, *pos, hi_y, next, hi_y);
+    *pos = next;
+    canvas_draw_line(canvas, *pos, hi_y, *pos, low_y);
 }
 
 static void morse_flipper_draw_straight_strip(
@@ -268,63 +309,60 @@ static void morse_flipper_draw_straight_strip(
     const uint16_t* marks_ms,
     const uint16_t* spaces_ms,
     uint16_t dit_ms,
-    uint8_t ref_units,
+    uint32_t ref_ms,
     bool use_ms) {
-    uint8_t unit_px;
     uint8_t low_y = y + 6U;
     uint8_t hi_y = y + 1U;
-    uint8_t pos;
-    uint8_t draw_units;
+    int32_t pos;
+    int32_t end_x;
     size_t i;
 
-    if(canvas == NULL || code == NULL || ref_units == 0U) return;
-    draw_units = morse_flipper_straight_strip_units(code, marks_ms, spaces_ms, dit_ms, use_ms);
-    if(draw_units < ref_units) draw_units = ref_units;
-    unit_px = w / (uint8_t)(draw_units + 2U);
-    if(unit_px == 0U) unit_px = 1U;
-    pos = x;
+    if(canvas == NULL || code == NULL || code[0] == '\0') return;
+    if(dit_ms == 0U) dit_ms = MORSE_FLIPPER_DEFAULT_DIT_MS;
+    if(ref_ms == 0U)
+        ref_ms = morse_flipper_straight_strip_total_ms(code, marks_ms, spaces_ms, dit_ms, use_ms);
 
-    canvas_draw_line(canvas, pos, low_y, pos + unit_px, low_y);
-    pos = (uint8_t)(pos + unit_px);
+    pos = x;
+    end_x = (int32_t)x + w;
+
+    morse_flipper_draw_straight_low_segment(
+        canvas,
+        &pos,
+        end_x,
+        low_y,
+        morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
 
     for(i = 0U; code[i] != '\0'; i++) {
-        uint8_t u = 1U;
+        uint32_t ms;
         uint8_t px;
 
-        if(use_ms) {
-            if(marks_ms != NULL && marks_ms[i] != 0U) {
-                u = morse_flipper_straight_units_from_ms(marks_ms[i], dit_ms);
-            } else {
-                u = code[i] == '-' ? 3U : 1U;
-            }
+        if(use_ms && marks_ms != NULL) {
+            ms = marks_ms[i];
         } else {
-            u = code[i] == '-' ? 3U : 1U;
+            ms = morse_flipper_straight_symbol_ms(code[i], dit_ms);
         }
 
-        px = (uint8_t)(u * unit_px);
-        canvas_draw_line(canvas, pos, low_y, pos, hi_y);
-        canvas_draw_line(canvas, pos, hi_y, pos + px, hi_y);
-        pos = (uint8_t)(pos + px);
-        canvas_draw_line(canvas, pos, hi_y, pos, low_y);
+        px = morse_flipper_straight_segment_px(ms, ref_ms, w, true);
+        morse_flipper_draw_straight_mark_segment(canvas, &pos, end_x, low_y, hi_y, px);
 
         if(code[i + 1U] == '\0') break;
 
-        if(use_ms) {
-            if(spaces_ms != NULL && spaces_ms[i] != 0U) {
-                u = morse_flipper_straight_units_from_ms(spaces_ms[i], dit_ms);
-            } else {
-                u = 1U;
-            }
+        if(use_ms && spaces_ms != NULL) {
+            ms = spaces_ms[i];
         } else {
-            u = 1U;
+            ms = dit_ms;
         }
 
-        px = (uint8_t)(u * unit_px);
-        canvas_draw_line(canvas, pos, low_y, pos + px, low_y);
-        pos = (uint8_t)(pos + px);
+        px = morse_flipper_straight_segment_px(ms, ref_ms, w, ms != 0U);
+        morse_flipper_draw_straight_low_segment(canvas, &pos, end_x, low_y, px);
     }
 
-    canvas_draw_line(canvas, pos, low_y, pos + unit_px, low_y);
+    morse_flipper_draw_straight_low_segment(
+        canvas,
+        &pos,
+        end_x,
+        low_y,
+        morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
 }
 
 static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFlipperApp* app) {
@@ -339,6 +377,21 @@ static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFli
     left_ms = app->straight_next_at - now;
     snprintf(wait_txt, sizeof(wait_txt), "%u", (unsigned)((left_ms + 999U) / 1000U));
     canvas_draw_str(canvas, 2, 64, wait_txt);
+}
+
+static void
+    morse_flipper_straight_ratio_text(const MorseFlipperApp* app, char* out, size_t out_sz) {
+    uint16_t ratio;
+
+    if(out == NULL || out_sz == 0U) return;
+
+    ratio = app != NULL ? morse_flipper_straight_trainer_ratio_x100(&app->straight_trainer) : 0U;
+    if(ratio >= 600U) {
+        snprintf(out, out_sz, "6+");
+        return;
+    }
+
+    snprintf(out, out_sz, "%u.%02u", (unsigned)(ratio / 100U), (unsigned)(ratio % 100U));
 }
 
 static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipperApp* app) {
@@ -398,12 +451,7 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
                 sizeof(da_txt),
                 "%u",
                 (unsigned)morse_flipper_straight_trainer_worst_dah_score(&app->straight_trainer));
-        snprintf(
-            ra_txt,
-            sizeof(ra_txt),
-            "%u.%02u",
-            (unsigned)(morse_flipper_straight_trainer_ratio_x100(&app->straight_trainer) / 100U),
-            (unsigned)(morse_flipper_straight_trainer_ratio_x100(&app->straight_trainer) % 100U));
+        morse_flipper_straight_ratio_text(app, ra_txt, sizeof(ra_txt));
     }
 
     if(app->straight_session_total != 0U)
@@ -433,8 +481,6 @@ static void morse_flipper_draw_straight_metrics(Canvas* canvas, const MorseFlipp
     }
 
     canvas_set_font(canvas, FontKeyboard);
-    canvas_draw_str(
-        canvas, 2, 56, app->straight_worst_line[0] ? app->straight_worst_line : "Wo: -");
     if(app->straight_done) morse_flipper_draw_straight_countdown(canvas, app);
     x = (uint8_t)(126U - canvas_string_width(canvas, cnt));
     canvas_draw_str(canvas, x, 64, cnt);
@@ -485,6 +531,11 @@ void morse_flipper_draw_trainer_setup(Canvas* canvas, MorseFlipperApp* app) {
 }
 
 void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app) {
+    uint16_t dit_ms;
+    uint32_t target_ms;
+    uint32_t answer_ms;
+    uint32_t ref_ms;
+
     if(canvas == NULL || app == NULL) return;
 
     if(morse_flipper_gpio_probe_notice_active(app) || morse_flipper_gpio_probe_blocks_start(app)) {
@@ -512,8 +563,24 @@ void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app) {
     morse_flipper_draw_straight_prompt(
         canvas, 19, 18, morse_flipper_straight_trainer_target_char(&app->straight_trainer));
 
+    dit_ms = morse_flipper_current_straight_dit_ms(app);
+
     if(app->straight_done &&
        morse_flipper_straight_trainer_answer(&app->straight_trainer)[0] != '\0') {
+        target_ms = morse_flipper_straight_strip_total_ms(
+            morse_flipper_straight_trainer_target_morse(&app->straight_trainer),
+            app->straight_trainer.target_marks_ms,
+            NULL,
+            dit_ms,
+            true);
+        answer_ms = morse_flipper_straight_strip_total_ms(
+            morse_flipper_straight_trainer_answer(&app->straight_trainer),
+            app->straight_trainer.answer_marks_ms,
+            app->straight_trainer.answer_spaces_ms,
+            dit_ms,
+            true);
+        ref_ms = target_ms > answer_ms ? target_ms : answer_ms;
+
         morse_flipper_draw_straight_strip(
             canvas,
             39,
@@ -522,9 +589,9 @@ void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app) {
             morse_flipper_straight_trainer_target_morse(&app->straight_trainer),
             app->straight_trainer.target_marks_ms,
             NULL,
-            morse_flipper_current_straight_dit_ms(app),
-            morse_flipper_straight_trainer_ref_units_max(&app->straight_trainer),
-            false);
+            dit_ms,
+            ref_ms,
+            true);
         morse_flipper_draw_straight_strip(
             canvas,
             39,
@@ -533,8 +600,8 @@ void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app) {
             morse_flipper_straight_trainer_answer(&app->straight_trainer),
             app->straight_trainer.answer_marks_ms,
             app->straight_trainer.answer_spaces_ms,
-            morse_flipper_current_straight_dit_ms(app),
-            morse_flipper_straight_trainer_ref_units_max(&app->straight_trainer),
+            dit_ms,
+            ref_ms,
             true);
     }
 

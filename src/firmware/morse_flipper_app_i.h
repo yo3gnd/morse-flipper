@@ -403,6 +403,7 @@ typedef struct MorseFlipperApp {
     uint32_t trainer_next_at;
     uint32_t straight_next_at;
     uint32_t straight_wait_started_at;
+    uint32_t straight_answer_started_at;
     uint32_t straight_last_input_at;
     uint32_t straight_mark_started_at;
     uint32_t txg_wait_started_at;
@@ -444,15 +445,13 @@ typedef struct MorseFlipperApp {
     MorseTrainer trainer;
     MorseFlipperHamKeyer ham_keyer;
     MorseTrainerCustomSets custom_sets;
-    uint8_t straight_hist_cnt[36];
-    uint16_t straight_hist_sum[36];
-    char straight_worst_line[24];
     bool straight_playback_active;
     bool straight_playback_mark;
     bool straight_started;
     bool straight_wait_answer;
     bool straight_done;
     bool straight_key_down;
+    bool straight_cutoff_wait_release;
     bool txg_started;
     bool txg_wait_answer;
     bool txg_done;
