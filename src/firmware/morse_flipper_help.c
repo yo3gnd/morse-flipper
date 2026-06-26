@@ -239,6 +239,51 @@ static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void
     view_dispatcher_send_custom_event(app->view_dispatcher, ev);
 }
 
+static void morse_flipper_help_add_page_label(MorseFlipperApp* app) {
+    const uint8_t button_height = 12U;
+    const uint8_t button_width = 40U;
+    const uint8_t x = (uint8_t)((128U - button_width) / 2U);
+    const uint8_t y = 64U;
+    const uint8_t top = (uint8_t)(y - button_height);
+    const uint8_t text_height = 13U;
+    char label[12];
+    char inverse[16];
+
+    snprintf(label, sizeof(label), "Page %u", (unsigned)(app->help_page + 1U));
+    snprintf(inverse, sizeof(inverse), "\e!%s\e!", label);
+
+    widget_add_rect_element(app->widget, x, top, button_width, button_height, 0U, true);
+    widget_add_line_element(app->widget, (uint8_t)(x - 1U), y, (uint8_t)(x - 1U), top);
+    widget_add_line_element(
+        app->widget, (uint8_t)(x - 2U), y, (uint8_t)(x - 2U), (uint8_t)(top + 1U));
+    widget_add_line_element(
+        app->widget, (uint8_t)(x - 3U), y, (uint8_t)(x - 3U), (uint8_t)(top + 2U));
+    widget_add_line_element(
+        app->widget, (uint8_t)(x + button_width), y, (uint8_t)(x + button_width), top);
+    widget_add_line_element(
+        app->widget,
+        (uint8_t)(x + button_width + 1U),
+        y,
+        (uint8_t)(x + button_width + 1U),
+        (uint8_t)(top + 1U));
+    widget_add_line_element(
+        app->widget,
+        (uint8_t)(x + button_width + 2U),
+        y,
+        (uint8_t)(x + button_width + 2U),
+        (uint8_t)(top + 2U));
+    widget_add_text_box_element(
+        app->widget,
+        x,
+        (uint8_t)(top + 2U),
+        button_width,
+        text_height,
+        AlignCenter,
+        AlignCenter,
+        inverse,
+        false);
+}
+
 static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     uint8_t n;
     char b[16];
@@ -254,6 +299,8 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     furi_string_cat(app->help_text, "\n");
     widget_add_text_scroll_element(
         app->widget, 0, 0, 128, 52, furi_string_get_cstr(app->help_text));
+
+    morse_flipper_help_add_page_label(app);
 
     if(app->help_page > 0U) {
         snprintf(b, sizeof(b), "%u", (unsigned)app->help_page);
