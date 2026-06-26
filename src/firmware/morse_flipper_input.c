@@ -7,21 +7,93 @@
 
 #include "morse_flipper_app_i.h"
 
+#define MORSE_FLIPPER_ABOUT_OK_FAST_MS 500U
+
 static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* event) {
+    Canvas* canvas;
+    uint8_t max_scroll;
+    uint32_t now_ms;
+
     if(app->screen != MorseFlipperScreenAbout) return false;
 
-    if(event->key == InputKeyOk && event->type == InputTypeShort) {
-        app->about_ok_count++;
+    if(app->about_mode == MorseFlipperAboutModeText && event->key == InputKeyRight &&
+       event->type == InputTypeShort) {
+        app->about_mode = MorseFlipperAboutModeEaster;
+        app->about_ok_count = 0U;
+        app->about_last_ok_ms = 0U;
+        morse_flipper_view_dirty(app);
+        return true;
+    }
+
+    if(app->about_mode == MorseFlipperAboutModeLanding && event->type == InputTypeShort) {
+        if(app->about_show_next) {
+            app->about_mode = MorseFlipperAboutModeText;
+            app->about_scroll = 0U;
+            app->about_ok_count = 0U;
+            app->about_last_ok_ms = 0U;
+            morse_flipper_view_dirty(app);
+        }
+        return true;
+    }
+
+    if(app->about_mode == MorseFlipperAboutModeText && event->key == InputKeyOk &&
+       event->type == InputTypeShort) {
+        now_ms = furi_get_tick();
+        if(app->about_last_ok_ms != 0U &&
+           now_ms - app->about_last_ok_ms <= MORSE_FLIPPER_ABOUT_OK_FAST_MS) {
+            app->about_ok_count++;
+        } else {
+            app->about_ok_count = 1U;
+        }
+        app->about_last_ok_ms = now_ms;
+
         if(app->about_ok_count >= 3U) {
             app->about_ok_count = 0U;
+            app->about_last_ok_ms = 0U;
             morse_flipper_scene_open(app, MorseFlipperSceneTrace);
+            return true;
         }
+
+        canvas = gui_direct_draw_acquire(app->gui);
+        max_scroll = morse_flipper_about_max_scroll(canvas);
+        gui_direct_draw_release(app->gui);
+        if(app->about_scroll < max_scroll) app->about_scroll++;
+        morse_flipper_view_dirty(app);
+        return true;
+    }
+
+    if(app->about_mode == MorseFlipperAboutModeText && event->key == InputKeyDown &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        app->about_ok_count = 0U;
+        app->about_last_ok_ms = 0U;
+        canvas = gui_direct_draw_acquire(app->gui);
+        max_scroll = morse_flipper_about_max_scroll(canvas);
+        gui_direct_draw_release(app->gui);
+        if(app->about_scroll < max_scroll) app->about_scroll++;
+        morse_flipper_view_dirty(app);
+        return true;
+    }
+
+    if(app->about_mode == MorseFlipperAboutModeText && event->key == InputKeyUp &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        app->about_ok_count = 0U;
+        app->about_last_ok_ms = 0U;
+        if(app->about_scroll > 0U) app->about_scroll--;
+        morse_flipper_view_dirty(app);
         return true;
     }
 
     if(event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        if(app->about_mode == MorseFlipperAboutModeEaster) {
+            app->about_mode = MorseFlipperAboutModeText;
+            morse_flipper_view_dirty(app);
+            return true;
+        }
+        app->about_mode = MorseFlipperAboutModeLanding;
+        app->about_scroll = 0U;
         app->about_ok_count = 0U;
+        app->about_last_ok_ms = 0U;
         morse_flipper_scene_back(app);
         return true;
     }

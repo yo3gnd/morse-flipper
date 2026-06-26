@@ -637,9 +637,11 @@ void morse_flipper_poll(MorseFlipperApp* app) {
 
 void morse_flipper_tick_callback(void* context) {
     MorseFlipperApp* app = context;
+    uint32_t now_ms = furi_get_tick();
 
     morse_flipper_poll(app);
-    morse_flipper_tick_trainer_playback(app, furi_get_tick());
+    morse_flipper_tick_trainer_playback(app, now_ms);
+    morse_flipper_tick_about(app, now_ms);
 
     if(app->preview_ticks > 0U) {
         app->preview_ticks--;

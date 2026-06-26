@@ -47,6 +47,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .session_result_hold = false,
         .session_result_tone = false,
         .session_result_good = false,
+        .about_show_next = false,
         .midi_rx_pending = false,
         .screen = MorseFlipperScreenMenu,
         .scene = MorseFlipperSceneMenuMain,
@@ -75,7 +76,13 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .trainer_char_idx = 0U,
         .trainer_mark_idx = 0U,
         .session_wait_draw_s = 0xFFU,
+        .about_mode = 0U,
+        .about_scroll = 0U,
         .about_ok_count = 0U,
+        .about_social_idx = 0U,
+        .about_footer_seq_i = 0U,
+        .about_last_ok_ms = 0U,
+        .about_social_next_ms = 0U,
         .ham =
             {
                 .selected_message = 0U,

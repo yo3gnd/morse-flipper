@@ -633,7 +633,7 @@ static void morse_flipper_scene_help_on_enter(void* context) {
 static void morse_flipper_scene_about_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_enter_now(app, MorseFlipperSceneAbout);
-    app->about_ok_count = 0U;
+    morse_flipper_about_reset(app, furi_get_tick());
     morse_flipper_about_open(app);
 }
 

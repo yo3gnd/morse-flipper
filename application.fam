@@ -1,5 +1,25 @@
 # For details and options, see documentation/AppManifests.md in the firmware tree
 
+import os
+import sys
+
+app_dir = os.path.dirname(app_manifest_path)
+if app_dir and app_dir not in sys.path:
+    sys.path.insert(0, app_dir)
+
+git_commit = "fail"
+git_host = "fail"
+git_built = "fail"
+
+try:
+    import gitver
+
+    git_commit = getattr(gitver, "git_commit", "fail")
+    git_host = getattr(gitver, "git_host", "fail")
+    git_built = getattr(gitver, "git_built", "fail")
+except Exception:
+    pass
+
 App(
     appid="morse_flipper",
     name="Morse Flipper",
@@ -7,7 +27,12 @@ App(
     entry_point="morse_flipper_fap",
     requires=["gui"],
     stack_size=16 * 1024,
-    cdefines=["MORSE_FLIPPER_FAP=1"],
+    cdefines=[
+        "MORSE_FLIPPER_FAP=1",
+        f'APP_BUILD_COMMIT=\\"{git_commit}\\"',
+        f'APP_BUILD_HOST=\\"{git_host}\\"',
+        f'APP_BUILD_TIME=\\"{git_built}\\"',
+    ],
     sources=[
         "src/firmware/morse_flipper_fap.c",
         "src/firmware/morse_flipper_core.c",
@@ -31,6 +56,7 @@ App(
         "src/firmware/morse_flipper_runtime.c",
         "src/firmware/morse_flipper_session.c",
         "src/firmware/morse_flipper_rf_live.c",
+        "src/firmware/morse_flipper_about.c",
         "src/firmware/morse_flipper_live_view.c",
         "src/firmware/morse_flipper_live_view_common.c",
         "src/firmware/morse_flipper_live_view_run.c",
@@ -63,4 +89,5 @@ App(
     ],
     targets=["f7"],
     fap_category="Tools",
+    fap_icon="morse-flipper.png",
 )

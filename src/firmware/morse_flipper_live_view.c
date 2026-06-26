@@ -28,12 +28,7 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenAbout) {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 4, 14, "About");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 4, 30, "Nothing here yet.");
-        canvas_draw_str(canvas, 4, 42, "That is the whole point.");
-        canvas_draw_str(canvas, 4, 64, "Bk back");
+        morse_flipper_draw_about(canvas, app);
         return;
     }
 

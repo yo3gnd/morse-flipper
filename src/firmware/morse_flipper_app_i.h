@@ -119,6 +119,12 @@ typedef enum {
 } MorseFlipperTxgDifficulty;
 
 typedef enum {
+    MorseFlipperAboutModeLanding = 0,
+    MorseFlipperAboutModeText,
+    MorseFlipperAboutModeEaster,
+} MorseFlipperAboutMode;
+
+typedef enum {
     MorseFlipperScreenHome = 0,
     MorseFlipperScreenRun = 1,
     MorseFlipperScreenTrace = 2,
@@ -338,6 +344,7 @@ typedef struct MorseFlipperApp {
     bool session_result_hold;
     bool session_result_tone;
     bool session_result_good;
+    bool about_show_next;
     volatile bool midi_rx_pending;
     uint8_t screen;
     uint8_t pc_mode;
@@ -357,7 +364,13 @@ typedef struct MorseFlipperApp {
     uint8_t trainer_row;
     uint8_t help_topic;
     uint8_t help_page;
+    uint8_t about_mode;
+    uint8_t about_scroll;
     uint8_t about_ok_count;
+    uint8_t about_social_idx;
+    uint8_t about_footer_seq_i;
+    uint32_t about_last_ok_ms;
+    uint32_t about_social_next_ms;
     MorseFlipperHamRuntimeState ham;
     uint8_t rf_freq_focus;
     uint8_t trainer_farnsworth_wpm;
@@ -663,6 +676,10 @@ uint8_t morse_flipper_live_upper_char(uint8_t ch);
 void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
 void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch);
+void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms);
+void morse_flipper_tick_about(MorseFlipperApp* app, uint32_t now_ms);
+void morse_flipper_draw_about(Canvas* canvas, const MorseFlipperApp* app);
+uint8_t morse_flipper_about_max_scroll(Canvas* canvas);
 void morse_flipper_draw_gpio_probe_overlay(Canvas* canvas, const MorseFlipperApp* app);
 void morse_flipper_draw_startup_gpio_probe(Canvas* canvas, const MorseFlipperApp* app);
 void morse_flipper_draw_tx_history_screen(Canvas* canvas, MorseFlipperApp* app, const char* second_line);
