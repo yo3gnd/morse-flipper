@@ -87,6 +87,149 @@ void morse_flipper_rf_capture_rx_timing(MorseFlipperRf* rf, bool mark, uint16_t 
     morse_flipper_rf_timing_capture(&rf->rx_timing, mark, duration_ms, rf->frequency_text);
 }
 
+void morse_flipper_rf_ticker_reset(MorseFlipperRfTicker* ticker) {
+    if(ticker == NULL) return;
+    memset(ticker, 0, sizeof(*ticker));
+}
+
+void morse_flipper_rf_ticker_prune(MorseFlipperRfTicker* ticker, uint32_t now_ms) {
+    if(ticker == NULL) return;
+
+    while(ticker->count != 0U) {
+        const MorseFlipperRfTickerMark* mark = &ticker->marks[ticker->start];
+
+        if((uint32_t)(now_ms - mark->end_ms) <= MORSE_FLIPPER_RF_RX_TICKER_WINDOW_MS) {
+            return;
+        }
+
+        ticker->start = (ticker->start + 1U) % MORSE_FLIPPER_RF_RX_TICKER_CAPACITY;
+        ticker->count--;
+    }
+}
+
+static void morse_flipper_rf_ticker_capture_inner(
+    MorseFlipperRfTicker* ticker,
+    bool mark,
+    uint16_t duration_ms,
+    uint32_t end_ms,
+    bool glitch) {
+    size_t slot;
+
+    if(ticker == NULL || !mark || duration_ms == 0U) return;
+
+    morse_flipper_rf_ticker_prune(ticker, end_ms);
+
+    if(ticker->count < MORSE_FLIPPER_RF_RX_TICKER_CAPACITY) {
+        slot = (ticker->start + ticker->count) % MORSE_FLIPPER_RF_RX_TICKER_CAPACITY;
+        ticker->count++;
+    } else {
+        slot = ticker->start;
+        ticker->start = (ticker->start + 1U) % MORSE_FLIPPER_RF_RX_TICKER_CAPACITY;
+    }
+
+    ticker->marks[slot] = (MorseFlipperRfTickerMark){
+        .end_ms = end_ms,
+        .duration_ms = duration_ms,
+        .glitch = glitch,
+    };
+}
+
+void morse_flipper_rf_ticker_capture(
+    MorseFlipperRfTicker* ticker,
+    bool mark,
+    uint16_t duration_ms,
+    uint32_t end_ms) {
+    morse_flipper_rf_ticker_capture_inner(ticker, mark, duration_ms, end_ms, false);
+}
+
+void morse_flipper_rf_ticker_capture_glitch(
+    MorseFlipperRfTicker* ticker,
+    uint16_t duration_ms,
+    uint32_t end_ms) {
+    morse_flipper_rf_ticker_capture_inner(ticker, true, duration_ms, end_ms, true);
+}
+
+size_t morse_flipper_rf_ticker_count(const MorseFlipperRfTicker* ticker) {
+    return ticker == NULL ? 0U : ticker->count;
+}
+
+bool morse_flipper_rf_ticker_mark(
+    const MorseFlipperRfTicker* ticker,
+    size_t idx,
+    MorseFlipperRfTickerMark* out) {
+    size_t slot;
+
+    if(ticker == NULL || out == NULL || idx >= ticker->count) return false;
+
+    slot = (ticker->start + idx) % MORSE_FLIPPER_RF_RX_TICKER_CAPACITY;
+    *out = ticker->marks[slot];
+    return true;
+}
+
+uint8_t morse_flipper_rf_clamp_wpm(uint8_t wpm) {
+    if(wpm < MORSE_FLIPPER_RF_RX_WPM_MIN) return MORSE_FLIPPER_RF_RX_WPM_MIN;
+    if(wpm > MORSE_FLIPPER_RF_RX_WPM_MAX) return MORSE_FLIPPER_RF_RX_WPM_MAX;
+    return wpm;
+}
+
+uint8_t morse_flipper_rf_wpm_from_dit_ms(uint16_t dit_ms) {
+    uint16_t wpm_tenths;
+
+    if(dit_ms == 0U) return 0U;
+
+    wpm_tenths = morse_flipper_rf_wpm_tenths_from_dit_ms(dit_ms);
+    return (uint8_t)((wpm_tenths + 5U) / 10U);
+}
+
+uint16_t morse_flipper_rf_wpm_tenths_from_dit_ms(uint16_t dit_ms) {
+    uint16_t wpm_tenths;
+    const uint16_t min_tenths = (uint16_t)(MORSE_FLIPPER_RF_RX_WPM_MIN * 10U);
+    const uint16_t max_tenths = (uint16_t)(MORSE_FLIPPER_RF_RX_WPM_MAX * 10U);
+
+    if(dit_ms == 0U) return 0U;
+
+    wpm_tenths = (uint16_t)((12000U + (dit_ms / 2U)) / dit_ms);
+    if(wpm_tenths < min_tenths) return min_tenths;
+    if(wpm_tenths > max_tenths) return max_tenths;
+    return wpm_tenths;
+}
+
+uint16_t morse_flipper_rf_decoder_mark_ms(uint16_t duration_ms, uint16_t dit_ms) {
+    uint32_t dah_threshold;
+
+    if(duration_ms == 0U || dit_ms == 0U) return duration_ms;
+
+    dah_threshold = ((uint32_t)dit_ms * 5U) / 2U;
+    return (uint32_t)duration_ms < dah_threshold ? dit_ms : (uint16_t)(dit_ms * 3U);
+}
+
+const char* morse_flipper_rf_format_wpm_line(
+    char* buf,
+    size_t buf_sz,
+    uint8_t hint_wpm,
+    uint16_t tracked_dit_ms,
+    bool tracked) {
+    uint8_t wpm;
+    uint16_t wpm_tenths;
+
+    if(buf == NULL || buf_sz == 0U) return "";
+
+    wpm = morse_flipper_rf_clamp_wpm(hint_wpm);
+    if(tracked && tracked_dit_ms != 0U) {
+        wpm_tenths = morse_flipper_rf_wpm_tenths_from_dit_ms(tracked_dit_ms);
+        snprintf(
+            buf,
+            buf_sz,
+            "auto wpm %u.%u",
+            (unsigned)(wpm_tenths / 10U),
+            (unsigned)(wpm_tenths % 10U));
+        return buf;
+    }
+
+    snprintf(buf, buf_sz, "wpm %u", (unsigned)wpm);
+    return buf;
+}
+
 uint32_t morse_flipper_rf_frequency_hz(const MorseFlipperRf* rf) {
     return rf ? rf->frequency_hz : 0;
 }
@@ -146,6 +289,62 @@ static bool morse_flipper_rf_tx_allowed_hz(uint32_t hz) {
 
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz) {
     return morse_flipper_rf_tx_allowed_hz(khz * 1000U);
+}
+
+void morse_flipper_rf_reset_rx_runtime(MorseFlipperApp* app) {
+    if(app == NULL) return;
+
+    app->rf_live_active = true;
+    app->rf_rssi_valid = false;
+    app->rf_rssi_dbm = 0;
+    app->rf_rssi_peak_dbm = 0;
+    app->rf_rssi_sum_dbm = 0;
+    app->rf_rssi_samples = 0U;
+    app->rf_rssi_next_at = 0U;
+    app->rf_rx_sample_next_at = 0U;
+    app->rf_rx_view_next_at = 0U;
+    app->rf_rx_edges_window = 0U;
+    app->rf_rx_activity = 0U;
+    app->rf_rssi_peak_decay_at = 0U;
+    app->rf_carrier_present = false;
+    app->rf_monitor_tone = false;
+    app->rf_rx_level = false;
+    app->rf_rx_candidate_level = false;
+    app->rf_rx_candidate_samples = 0U;
+    app->rf_rx_edge_at = 0U;
+    app->rf_rx_gap_flushed = true;
+    app->rf_rx_audio_enabled = true;
+    app->rf_rx_wpm_hint = MORSE_FLIPPER_RF_RX_DEFAULT_WPM;
+    app->rf_rx_text[0] = '\0';
+    morse_flipper_rf_ticker_reset(&app->rf_rx_ticker);
+    morse_flipper_rf_reset_live(&app->rf);
+    morse_flipper_cw_decoder_init(
+        &app->rf_decoder, morse_flipper_wpm_to_dit_ms(app->rf_rx_wpm_hint));
+}
+
+void morse_flipper_rf_rx_bump_wpm(MorseFlipperApp* app, int dir) {
+    int next;
+
+    if(app == NULL) return;
+
+    next = app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM : app->rf_rx_wpm_hint;
+    next += dir;
+    if(next < (int)MORSE_FLIPPER_RF_RX_WPM_MIN) next = MORSE_FLIPPER_RF_RX_WPM_MIN;
+    if(next > (int)MORSE_FLIPPER_RF_RX_WPM_MAX) next = MORSE_FLIPPER_RF_RX_WPM_MAX;
+    if(app->rf_rx_wpm_hint == (uint8_t)next) return;
+
+    app->rf_rx_wpm_hint = (uint8_t)next;
+    app->rf_monitor_tone = false;
+    app->rf_rx_level = false;
+    app->rf_rx_candidate_level = false;
+    app->rf_rx_candidate_samples = 0U;
+    app->rf_rx_edge_at = 0U;
+    app->rf_rx_sample_next_at = 0U;
+    app->rf_rx_gap_flushed = true;
+    morse_flipper_cw_decoder_init(
+        &app->rf_decoder, morse_flipper_wpm_to_dit_ms(app->rf_rx_wpm_hint));
+    morse_flipper_update_sidetone(app);
+    morse_flipper_view_dirty(app);
 }
 
 void morse_flipper_rf_reset_edit(MorseFlipperApp* app) {
@@ -229,5 +428,23 @@ const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, si
         (int)app->rf_rssi_dbm,
         (int)app->rf_rssi_peak_dbm);
     return buf;
+}
+
+const char* morse_flipper_rf_rx_wpm_line(
+    const MorseFlipperApp* app,
+    char* buf,
+    size_t buf_sz) {
+    uint8_t hint_wpm = MORSE_FLIPPER_RF_RX_DEFAULT_WPM;
+    uint16_t tracked_dit_ms = 0U;
+    bool tracked = false;
+
+    if(app != NULL) {
+        hint_wpm = app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM :
+                                               app->rf_rx_wpm_hint;
+        tracked_dit_ms = morse_flipper_cw_decoder_dit_ms(&app->rf_decoder);
+        tracked = app->rf_decoder.dit_sample_count >= MORSE_FLIPPER_RF_RX_AUTO_WPM_SAMPLES;
+    }
+
+    return morse_flipper_rf_format_wpm_line(buf, buf_sz, hint_wpm, tracked_dit_ms, tracked);
 }
 #endif

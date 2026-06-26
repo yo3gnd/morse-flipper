@@ -107,6 +107,14 @@ void morse_flipper_enter_screen(
         app->rf_rssi_peak_decay_at = 0U;
         app->rf_carrier_present = false;
         app->rf_monitor_tone = false;
+        app->rf_rx_level = false;
+        app->rf_rx_candidate_level = false;
+        app->rf_rx_candidate_samples = 0U;
+        app->rf_rx_edge_at = 0U;
+        app->rf_rx_sample_next_at = 0U;
+        app->rf_rx_view_next_at = 0U;
+        app->rf_rx_gap_flushed = true;
+        app->rf_rx_audio_enabled = true;
         app->rf_rx_text[0] = '\0';
         app->rf_tx_tail_until = 0U;
         morse_flipper_rf_reset_live(&app->rf);
@@ -115,20 +123,7 @@ void morse_flipper_enter_screen(
     }
 
     if(screen == MorseFlipperScreenRfRx && app->screen != MorseFlipperScreenRfRx) {
-        app->rf_live_active = true;
-        app->rf_rssi_valid = false;
-        app->rf_rssi_dbm = 0;
-        app->rf_rssi_peak_dbm = 0;
-        app->rf_rssi_sum_dbm = 0;
-        app->rf_rssi_samples = 0U;
-        app->rf_rssi_next_at = 0U;
-        app->rf_rx_edges_window = 0U;
-        app->rf_rx_activity = 0U;
-        app->rf_rssi_peak_decay_at = 0U;
-        app->rf_carrier_present = false;
-        app->rf_monitor_tone = false;
-        app->rf_rx_text[0] = '\0';
-        morse_flipper_rf_reset_live(&app->rf);
+        morse_flipper_rf_reset_rx_runtime(app);
     }
 
     if(screen == MorseFlipperScreenRfFreq && app->screen != MorseFlipperScreenRfFreq) {

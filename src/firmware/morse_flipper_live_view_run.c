@@ -15,7 +15,7 @@ static uint16_t morse_flipper_canvas_glyph_width(uint8_t ch, void* ctx) {
     return (uint16_t)canvas_glyph_width(canvas, ch);
 }
 
-static void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text) {
+void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text) {
     static const uint8_t aa_glyph[] = {
         0x02U,
         0x02U,
