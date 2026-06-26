@@ -49,14 +49,14 @@ void morse_flipper_enter_screen(
     }
 
     if(app->scene == MorseFlipperSceneRun && scene != MorseFlipperSceneRun) {
-        app->run_dit_ms = 0U;
+        morse_flipper_clear_run_wpm(app, now_ms);
     }
 
     if(app->screen == MorseFlipperScreenHamRun && screen != MorseFlipperScreenHamRun) {
         morse_flipper_ham_log_flush(app);
         morse_flipper_ham_stop_macro(app);
         morse_flipper_ham_gpio_release(app);
-        app->run_dit_ms = 0U;
+        morse_flipper_clear_run_wpm(app, now_ms);
     }
 
     morse_flipper_clear_button_keying(app, now_ms);

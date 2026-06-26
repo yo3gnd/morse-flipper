@@ -576,6 +576,7 @@ void morse_flipper_save_config(const MorseFlipperApp* app);
 uint8_t morse_flipper_local_wpm(const MorseFlipperApp* app);
 void morse_flipper_set_local_wpm(MorseFlipperApp* app, uint8_t wpm);
 void morse_flipper_set_run_wpm(MorseFlipperApp* app, uint8_t wpm);
+void morse_flipper_clear_run_wpm(MorseFlipperApp* app, uint32_t now_ms);
 uint8_t morse_flipper_straight_wpm(const MorseFlipperApp* app);
 void morse_flipper_set_straight_wpm(MorseFlipperApp* app, uint8_t wpm);
 void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app);
