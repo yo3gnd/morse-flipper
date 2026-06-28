@@ -10,13 +10,6 @@
 
 void morse_flipper_draw(Canvas* canvas, void* ctx) {
     MorseFlipperApp* app = ctx;
-    char tone_line[32];
-    char input_line[32];
-    char trace_line1[32];
-    char trace_line2[32];
-    char trace_line3[32];
-    char trace_line4[32];
-    char browse_line[32];
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
@@ -36,6 +29,14 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         morse_flipper_draw_help(canvas, app);
         return;
     }
+
+    char tone_line[32];
+    char input_line[32];
+    char trace_line1[32];
+    char trace_line2[32];
+    char trace_line3[32];
+    char trace_line4[32];
+    char browse_line[32];
 
     if(app->screen == MorseFlipperScreenStartupProbe) {
         morse_flipper_draw_startup_gpio_probe(canvas, app);

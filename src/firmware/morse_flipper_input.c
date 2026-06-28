@@ -35,12 +35,14 @@ static bool morse_flipper_help_input(MorseFlipperApp* app, const InputEvent* eve
 
     if((event->key == InputKeyUp || event->key == InputKeyDown) &&
        (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        int16_t old_target = app->help_md.target_scroll_px;
+
         canvas = gui_direct_draw_acquire(app->gui);
         max_scroll = morse_flipper_help_max_scroll(canvas, app);
         gui_direct_draw_release(app->gui);
         cwmd_scroll_line(
             &app->help_md, event->key == InputKeyDown ? 1 : -1, max_scroll, 8U);
-        morse_flipper_view_dirty(app);
+        if(app->help_md.target_scroll_px != old_target) morse_flipper_view_dirty(app);
         return true;
     }
 
@@ -87,8 +89,9 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
         canvas = gui_direct_draw_acquire(app->gui);
         max_scroll = morse_flipper_about_max_scroll(canvas);
         gui_direct_draw_release(app->gui);
+        int16_t old_target = app->about_md.target_scroll_px;
         cwmd_scroll_line(&app->about_md, 1, max_scroll, 8U);
-        morse_flipper_view_dirty(app);
+        if(app->about_md.target_scroll_px != old_target) morse_flipper_view_dirty(app);
         return true;
     }
 
@@ -99,8 +102,9 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
         canvas = gui_direct_draw_acquire(app->gui);
         max_scroll = morse_flipper_about_max_scroll(canvas);
         gui_direct_draw_release(app->gui);
+        int16_t old_target = app->about_md.target_scroll_px;
         cwmd_scroll_line(&app->about_md, 1, max_scroll, 8U);
-        morse_flipper_view_dirty(app);
+        if(app->about_md.target_scroll_px != old_target) morse_flipper_view_dirty(app);
         return true;
     }
 
@@ -108,8 +112,9 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
        (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
         app->about_ok_count = 0U;
         app->about_last_ok_ms = 0U;
+        int16_t old_target = app->about_md.target_scroll_px;
         cwmd_scroll_line(&app->about_md, -1, 0, 8U);
-        morse_flipper_view_dirty(app);
+        if(app->about_md.target_scroll_px != old_target) morse_flipper_view_dirty(app);
         return true;
     }
 

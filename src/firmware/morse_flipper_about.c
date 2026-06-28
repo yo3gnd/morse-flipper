@@ -294,7 +294,7 @@ void morse_flipper_tick_about(MorseFlipperApp* app, uint32_t now_ms) {
 
 static void morse_flipper_about_text_cfg(CwmdConfig* cfg) {
     cwmd_config_default(cfg, true);
-    cfg->height = 50U;
+    cfg->height = 48U;
     cfg->scrollbar = true;
     cfg->chrome = CwmdChromeLeft;
     cfg->left_label = "Back";

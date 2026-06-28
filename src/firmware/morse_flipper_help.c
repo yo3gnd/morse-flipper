@@ -89,17 +89,17 @@ static const char* const morse_help_prepping[] = {
 static const char* const morse_help_contact[] = {
     "CW has its own little language.\nKeep it short, assume the other fellow is copying by ear, and do not waste his patience.",
     "Every extra word is something the other operator has to copy. Cut it down hard and leave the grammar at the door.",
-    "Common abbreviations:\n\nFER - for\nDE - from\nR - roger, received\nK - over\nES - and\nGA - good afternoon\nGM - good morning\nGE - good evening\n73 - bye bye\nTU, THX - thank you\n88 - hugs\n99 - usually means 'go away', but can be interpreted as a more vulgar 'fuck off'",
-    "More abbreviations:\n\nHW - how\nSK - logging off\nNIL - nothing\nLID - newb\nBK - break\nDX - someone far away\nCQ - calling everyone\nCFM - confirmed\nAGN - again\nUR RST - your signal is\nANT - antenna\nQSO - 2 way radio contact",
-    "A few more:\n\n5NN - very good signal\n3NN - average signal\n2NN / 1NN - weak signal\n= new thought, period\nE E - two dots right at the end of a contact.\n\nOften one side sends slash - the old \"shave and a haircut\" rhythm - and the other replies E E.",
+    "Common abbreviations:\n\n- FER - for\n- DE - from\n- R - roger, received\n- K - over\n- ES - and\n- GA - good afternoon\n- GM - good morning\n- GE - good evening\n- 73 - bye bye\n- TU, THX - thank you\n- 88 - hugs\n- 99 - usually means 'go away', but can be interpreted as a more vulgar 'fuck off'",
+    "More abbreviations:\n\n- HW - how\n- SK - logging off\n- NIL - nothing\n- LID - newb\n- BK - break\n- DX - someone far away\n- CQ - calling everyone\n- CFM - confirmed\n- AGN - again\n- UR RST - your signal is\n- ANT - antenna\n- QSO - 2 way radio contact",
+    "A few more:\n\n- 5NN - very good signal\n- 3NN - average signal\n- 2NN / 1NN - weak signal\n- = new thought, period\n- E E - two dots right at the end of a contact.\n\nOften one side sends slash - the old \"shave and a haircut\" rhythm - and the other replies E E.",
     "OM/YL. The old CW shorthand makes men \"old men\" and women \"young ladies\", which gives the game away rather nicely. XYL means wife, as in ex-YL. Roughly the same energy as calling your wife your ex-girlfriend.",
     "Here is an absolutely real exchange from my log.",
-    "\e*CQ CQ CQ DE YO3GND YO3GND K\n\nThis is YO3GND calling. Is anyone listening?",
-    "\e*DE P5KIM K\n\nThis is P5KIM answering.",
-    "\e*RR P5KIM DE YO3GND = GM UR 5NN HW IS KOREA? BK\n\nRoger P5KIM from YO3GND.\nGood morning, your signal is strong. How is Korea? Back to you.",
-    "\e*BK GM KOREA FB = NEW ANT NEW ICBM NUKE BK\n\nGood morning.\nKorea is doing well, I have a new antenna and a new nuclear ballistic missile. Back to you.",
-    "\e*RR ENJOY TOYS = TU FER QSO ES 73\n\nRoger. Have fun with the new toys. Thank you for the contact, and goodbye.",
-    "\e*RR TU 73 E E\n\nRoger. Thank you and goodbye.",
+    "\e*\ecCQ CQ CQ DE YO3GND YO3GND K\n\nThis is YO3GND calling. Is anyone listening?",
+    "\e*\ecDE P5KIM K\n\nThis is P5KIM answering.",
+    "\e*\ecRR P5KIM DE YO3GND = GM UR 5NN HW IS KOREA? BK\n\nRoger P5KIM from YO3GND.\nGood morning, your signal is strong. How is Korea? Back to you.",
+    "\e*\ecBK GM KOREA FB = NEW ANT NEW ICBM NUKE BK\n\nGood morning.\nKorea is doing well, I have a new antenna and a new nuclear ballistic missile. Back to you.",
+    "\e*\ecRR ENJOY TOYS = TU FER QSO ES 73\n\nRoger. Have fun with the new toys. Thank you for the contact, and goodbye.",
+    "\e*\ecRR TU 73 E E\n\nRoger. Thank you and goodbye.",
     "At that point the contact between P5KIM and YO3GND is complete.",
     "Some people are chatty and send full phrases. That will be slow. Do not expect it as the default.",
     "A contact can be even shorter than that. Just callsigns and signal reports still count perfectly well.",
@@ -248,7 +248,7 @@ static void morse_flipper_help_cfg(
 
     if(n == 0U) n = 1U;
     cwmd_config_default(cfg, true);
-    cfg->height = 50U;
+    cfg->height = 48U;
     cfg->scrollbar = true;
     cfg->chrome = CwmdChromeCenter;
     snprintf(page, page_sz, "%u/%u", (unsigned)(app->help_page + 1U), (unsigned)n);

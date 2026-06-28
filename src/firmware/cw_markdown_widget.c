@@ -8,7 +8,7 @@
 #define CWMD_CHROME_H                 13U
 #define CWMD_SCROLL_W                 1U
 #define CWMD_SCROLL_GAP               2U
-#define CWMD_MAX_ITEMS                48U
+#define CWMD_MAX_ITEMS                32U
 #define CWMD_ITEM_TEXT                24U
 #define CWMD_BULLET_INDENT            8U
 #define CWMD_BULLET_SIZE              4U
@@ -60,6 +60,8 @@ typedef struct {
     CwmdTestStats* stats;
 #endif
 } CwmdParser;
+
+static CwmdLine cwmd_line_buf;
 
 static bool cwmd_ascii_digit(char ch) {
     return ch >= '0' && ch <= '9';
@@ -500,7 +502,7 @@ static uint16_t cwmd_process(
 #endif
 ) {
     CwmdParser parser = {0};
-    CwmdLine line;
+    CwmdLine* line = &cwmd_line_buf;
     uint16_t avail_width;
     uint16_t line_no = 0U;
     int16_t scroll_px = state ? state->scroll_px : 0;
@@ -514,7 +516,7 @@ static uint16_t cwmd_process(
     parser.stats = stats;
 #endif
 
-    while(cwmd_build_line(canvas, cfg, &parser, avail_width, &line)) {
+    while(cwmd_build_line(canvas, cfg, &parser, avail_width, line)) {
         int32_t top = (int32_t)cfg->y + (int32_t)(line_no * cfg->line_height) - scroll_px;
 #ifdef CWMD_HOST_TEST
         uint8_t extra = 0U;
@@ -523,27 +525,27 @@ static uint16_t cwmd_process(
 #ifdef CWMD_HOST_TEST
         if(stats) {
             stats->lines++;
-            stats->atoms += line.item_count;
-            stats->bullets += line.bullet_mark ? 1U : 0U;
-            stats->centered += line.align == CwmdAlignCenter ? 1U : 0U;
-            stats->righted += line.align == CwmdAlignRight ? 1U : 0U;
-            stats->last_line_width = (int16_t)line.width;
-            if(cwmd_line_should_justify(&line, avail_width, &extra)) {
+            stats->atoms += line->item_count;
+            stats->bullets += line->bullet_mark ? 1U : 0U;
+            stats->centered += line->align == CwmdAlignCenter ? 1U : 0U;
+            stats->righted += line->align == CwmdAlignRight ? 1U : 0U;
+            stats->last_line_width = (int16_t)line->width;
+            if(cwmd_line_should_justify(line, avail_width, &extra)) {
                 stats->justified++;
-                stats->last_extra_gap_px = extra / line.gaps;
+                stats->last_extra_gap_px = extra / line->gaps;
             }
-            for(uint8_t i = 0U; i < line.item_count; i++) {
-                if(line.items[i].type == CwmdItemIcon) stats->icons++;
-                if(line.items[i].type == CwmdItemText && line.items[i].style.bold)
+            for(uint8_t i = 0U; i < line->item_count; i++) {
+                if(line->items[i].type == CwmdItemIcon) stats->icons++;
+                if(line->items[i].type == CwmdItemText && line->items[i].style.bold)
                     stats->bold_atoms++;
-                if(line.items[i].type == CwmdItemText && line.items[i].style.mono)
+                if(line->items[i].type == CwmdItemText && line->items[i].style.mono)
                     stats->mono_atoms++;
             }
         }
 #endif
 
-        if(draw && top + cfg->line_height > cfg->y && top < (int32_t)(cfg->y + cfg->height)) {
-            cwmd_draw_line(canvas, cfg, &line, top, avail_width);
+        if(draw && top >= cfg->y && top + cfg->line_height <= (int32_t)(cfg->y + cfg->height)) {
+            cwmd_draw_line(canvas, cfg, line, top, avail_width);
         }
         line_no++;
     }
@@ -580,7 +582,6 @@ void cwmd_scroll_line(CwmdState* state, int8_t dir, int16_t max_scroll_px, uint8
     if(max_scroll_px < 0) max_scroll_px = 0;
     step = (int16_t)line_height * dir;
     state->target_scroll_px = cwmd_clamp_scroll((int16_t)(state->target_scroll_px + step), max_scroll_px);
-    state->scroll_px = state->target_scroll_px;
 }
 
 bool cwmd_scroll_tick(CwmdState* state) {
@@ -642,32 +643,19 @@ static void cwmd_draw_center_chip(Canvas* canvas, const char* label) {
     const uint8_t button_w = 36U;
     const uint8_t button_h = 12U;
     const uint8_t x = (uint8_t)((CWMD_SCREEN_W - button_w) / 2U);
-    const uint8_t y = CWMD_SCREEN_H;
-    const uint8_t top = (uint8_t)(y - button_h);
+    const uint8_t top = (uint8_t)(CWMD_SCREEN_H - button_h);
+    const uint8_t bottom = CWMD_SCREEN_H - 1U;
 
     if(label == NULL) return;
-    canvas_draw_box(canvas, x, top, button_w, button_h);
-    canvas_draw_line(canvas, (int32_t)(x - 1U), y, (int32_t)(x - 1U), top);
-    canvas_draw_line(canvas, (int32_t)(x - 2U), y, (int32_t)(x - 2U), (int32_t)(top + 1U));
-    canvas_draw_line(canvas, (int32_t)(x - 3U), y, (int32_t)(x - 3U), (int32_t)(top + 2U));
-    canvas_draw_line(canvas, (int32_t)(x + button_w), y, (int32_t)(x + button_w), top);
-    canvas_draw_line(
-        canvas,
-        (int32_t)(x + button_w + 1U),
-        y,
-        (int32_t)(x + button_w + 1U),
-        (int32_t)(top + 1U));
-    canvas_draw_line(
-        canvas,
-        (int32_t)(x + button_w + 2U),
-        y,
-        (int32_t)(x + button_w + 2U),
-        (int32_t)(top + 2U));
     canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, x, top, button_w, button_h);
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_line(canvas, x, top, (int32_t)(x + button_w - 1U), top);
+    canvas_draw_line(canvas, x, top, x, bottom);
+    canvas_draw_line(canvas, (int32_t)(x + button_w - 1U), top, (int32_t)(x + button_w - 1U), bottom);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(
-        canvas, x + (button_w / 2U), top + (button_h / 2U) + 1U, AlignCenter, AlignCenter, label);
-    canvas_set_color(canvas, ColorBlack);
+        canvas, x + (button_w / 2U), top + (button_h / 2U), AlignCenter, AlignCenter, label);
 }
 
 static void cwmd_draw_chrome(Canvas* canvas, const CwmdConfig* cfg) {
