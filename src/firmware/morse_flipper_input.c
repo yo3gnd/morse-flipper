@@ -9,9 +9,47 @@
 
 #define MORSE_FLIPPER_ABOUT_OK_FAST_MS 500U
 
+static bool morse_flipper_help_input(MorseFlipperApp* app, const InputEvent* event) {
+    Canvas* canvas;
+    int16_t max_scroll;
+
+    if(app->screen != MorseFlipperScreenHelp) return false;
+
+    if(event->key == InputKeyBack &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        morse_flipper_scene_back(app);
+        return true;
+    }
+
+    if(event->key == InputKeyLeft &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, MorseFlipperCustomHelpPrev);
+        return true;
+    }
+
+    if(event->key == InputKeyRight &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, MorseFlipperCustomHelpNext);
+        return true;
+    }
+
+    if((event->key == InputKeyUp || event->key == InputKeyDown) &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        canvas = gui_direct_draw_acquire(app->gui);
+        max_scroll = morse_flipper_help_max_scroll(canvas, app);
+        gui_direct_draw_release(app->gui);
+        cwmd_scroll_line(
+            &app->help_md, event->key == InputKeyDown ? 1 : -1, max_scroll, 8U);
+        morse_flipper_view_dirty(app);
+        return true;
+    }
+
+    return true;
+}
+
 static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* event) {
     Canvas* canvas;
-    uint8_t max_scroll;
+    int16_t max_scroll;
     uint32_t now_ms;
 
     if(app->screen != MorseFlipperScreenAbout) return false;
@@ -19,7 +57,8 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
     if(app->about_mode == MorseFlipperAboutModeLanding && event->type == InputTypeShort) {
         if(app->about_show_next) {
             app->about_mode = MorseFlipperAboutModeText;
-            app->about_scroll = 0U;
+            app->about_md.scroll_px = 0;
+            app->about_md.target_scroll_px = 0;
             app->about_ok_count = 0U;
             app->about_last_ok_ms = 0U;
             morse_flipper_view_dirty(app);
@@ -48,7 +87,7 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
         canvas = gui_direct_draw_acquire(app->gui);
         max_scroll = morse_flipper_about_max_scroll(canvas);
         gui_direct_draw_release(app->gui);
-        if(app->about_scroll < max_scroll) app->about_scroll++;
+        cwmd_scroll_line(&app->about_md, 1, max_scroll, 8U);
         morse_flipper_view_dirty(app);
         return true;
     }
@@ -60,7 +99,7 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
         canvas = gui_direct_draw_acquire(app->gui);
         max_scroll = morse_flipper_about_max_scroll(canvas);
         gui_direct_draw_release(app->gui);
-        if(app->about_scroll < max_scroll) app->about_scroll++;
+        cwmd_scroll_line(&app->about_md, 1, max_scroll, 8U);
         morse_flipper_view_dirty(app);
         return true;
     }
@@ -69,7 +108,7 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
        (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
         app->about_ok_count = 0U;
         app->about_last_ok_ms = 0U;
-        if(app->about_scroll > 0U) app->about_scroll--;
+        cwmd_scroll_line(&app->about_md, -1, 0, 8U);
         morse_flipper_view_dirty(app);
         return true;
     }
@@ -77,7 +116,8 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
     if(event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
         app->about_mode = MorseFlipperAboutModeLanding;
-        app->about_scroll = 0U;
+        app->about_md.scroll_px = 0;
+        app->about_md.target_scroll_px = 0;
         app->about_ok_count = 0U;
         app->about_last_ok_ms = 0U;
         morse_flipper_scene_back(app);
@@ -217,6 +257,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
 }
 
 bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event) {
+    if(morse_flipper_help_input(app, event)) return true;
     if(morse_flipper_about_input(app, event)) return true;
     if(morse_flipper_startup_probe_input(app, event)) return true;
     if(morse_flipper_ham_shell_input(app, event)) return true;

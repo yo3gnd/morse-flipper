@@ -77,12 +77,13 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .trainer_mark_idx = 0U,
         .session_wait_draw_s = 0xFFU,
         .about_mode = 0U,
-        .about_scroll = 0U,
         .about_ok_count = 0U,
         .about_social_idx = 0U,
         .about_footer_seq_i = 0U,
         .about_last_ok_ms = 0U,
         .about_social_next_ms = 0U,
+        .help_md = {0},
+        .about_md = {0},
         .ham =
             {
                 .selected_message = 0U,

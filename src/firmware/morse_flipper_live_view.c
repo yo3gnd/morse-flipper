@@ -32,6 +32,11 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
+    if(app->screen == MorseFlipperScreenHelp) {
+        morse_flipper_draw_help(canvas, app);
+        return;
+    }
+
     if(app->screen == MorseFlipperScreenStartupProbe) {
         morse_flipper_draw_startup_gpio_probe(canvas, app);
         return;

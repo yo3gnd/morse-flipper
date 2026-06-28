@@ -1,7 +1,7 @@
 /*
  * Purpose: Populate and navigate the in-app help pages.
- * Owns: help text arrays, selected chapter/page state, and widget refresh.
- * Depends on: morse_flipper_app_i.h and Flipper Widget APIs.
+ * Owns: help text arrays, selected chapter/page state, and canvas refresh.
+ * Depends on: morse_flipper_app_i.h and cw markdown rendering.
  * Tests: firmware build; UI text flow is hardware-only.
  */
 
@@ -224,106 +224,69 @@ static const char* morse_flipper_help_card(uint8_t t, uint8_t i) {
     }
 }
 
-static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void* context) {
-    MorseFlipperApp* app = context;
-    uint32_t ev = 0U;
-
-    if(type != InputTypeShort) return;
-    if(result == GuiButtonTypeLeft)
-        ev = MorseFlipperCustomHelpPrev;
-    else if(result == GuiButtonTypeRight)
-        ev = MorseFlipperCustomHelpNext;
-    else
-        return;
-
-    view_dispatcher_send_custom_event(app->view_dispatcher, ev);
-}
-
-static void morse_flipper_help_add_page_label(MorseFlipperApp* app, uint8_t total_pages) {
-    const uint8_t button_height = 12U;
-    const uint8_t button_width = 36U;
-    const uint8_t x = (uint8_t)((128U - button_width) / 2U);
-    const uint8_t y = 64U;
-    const uint8_t top = (uint8_t)(y - button_height);
-    const uint8_t text_height = 13U;
-    char label[12];
-    char inverse[16];
-
-    snprintf(
-        label, sizeof(label), "%u/%u", (unsigned)(app->help_page + 1U), (unsigned)total_pages);
-    snprintf(inverse, sizeof(inverse), "\e!%s\e!", label);
-
-    widget_add_rect_element(app->widget, x, top, button_width, button_height, 0U, true);
-    widget_add_line_element(app->widget, (uint8_t)(x - 1U), y, (uint8_t)(x - 1U), top);
-    widget_add_line_element(
-        app->widget, (uint8_t)(x - 2U), y, (uint8_t)(x - 2U), (uint8_t)(top + 1U));
-    widget_add_line_element(
-        app->widget, (uint8_t)(x - 3U), y, (uint8_t)(x - 3U), (uint8_t)(top + 2U));
-    widget_add_line_element(
-        app->widget, (uint8_t)(x + button_width), y, (uint8_t)(x + button_width), top);
-    widget_add_line_element(
-        app->widget,
-        (uint8_t)(x + button_width + 1U),
-        y,
-        (uint8_t)(x + button_width + 1U),
-        (uint8_t)(top + 1U));
-    widget_add_line_element(
-        app->widget,
-        (uint8_t)(x + button_width + 2U),
-        y,
-        (uint8_t)(x + button_width + 2U),
-        (uint8_t)(top + 2U));
-    widget_add_text_box_element(
-        app->widget,
-        x,
-        (uint8_t)(top + 2U),
-        button_width,
-        text_height,
-        AlignCenter,
-        AlignCenter,
-        inverse,
-        false);
-}
-
-static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
+void morse_flipper_help_open(MorseFlipperApp* app) {
     uint8_t n;
-    char b[16];
-    const char* txt;
 
-    widget_reset(app->widget);
+    if(app == NULL) return;
     n = morse_flipper_help_card_count(app->help_topic);
     if(n == 0U) n = 1U;
     if(app->help_page >= n) app->help_page = 0U;
-
-    txt = morse_flipper_help_card(app->help_topic, app->help_page);
-    furi_string_set(app->help_text, txt);
-    furi_string_cat(app->help_text, "\n");
-    widget_add_text_scroll_element(
-        app->widget, 0, 0, 128, 52, furi_string_get_cstr(app->help_text));
-
-    morse_flipper_help_add_page_label(app, n);
-
-    if(app->help_page > 0U) {
-        snprintf(b, sizeof(b), "%u", (unsigned)app->help_page);
-        widget_add_button_element(
-            app->widget, GuiButtonTypeLeft, b, morse_flipper_help_btn_cb, app);
-    }
-
-    if(app->help_page + 1U < n) {
-        if(app->help_page == 0U)
-            snprintf(b, sizeof(b), "Next");
-        else
-            snprintf(b, sizeof(b), "%u", (unsigned)(app->help_page + 2U));
-        widget_add_button_element(
-            app->widget, GuiButtonTypeRight, b, morse_flipper_help_btn_cb, app);
-    }
-}
-
-void morse_flipper_help_open(MorseFlipperApp* app) {
-    morse_flipper_help_rebuild_widget(app);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewWidget);
+    view_dispatcher_switch_to_view(app->view_dispatcher, MorseFlipperViewLive);
+    morse_flipper_view_dirty(app);
 }
 
 void morse_flipper_about_open(MorseFlipperApp* app) {
     UNUSED(app);
+}
+
+static void morse_flipper_help_cfg(
+    const MorseFlipperApp* app,
+    CwmdConfig* cfg,
+    char* page,
+    size_t page_sz) {
+    uint8_t n = morse_flipper_help_card_count(app->help_topic);
+
+    if(n == 0U) n = 1U;
+    cwmd_config_default(cfg, true);
+    cfg->height = 50U;
+    cfg->scrollbar = true;
+    cfg->chrome = CwmdChromeCenter;
+    snprintf(page, page_sz, "%u/%u", (unsigned)(app->help_page + 1U), (unsigned)n);
+    cfg->center_label = page;
+
+    if(app->help_page > 0U) {
+        static char left[8];
+        snprintf(left, sizeof(left), "%u", (unsigned)app->help_page);
+        cfg->left_label = left;
+        cfg->chrome |= CwmdChromeLeft;
+    }
+
+    if(app->help_page + 1U < n) {
+        static char right[8];
+        if(app->help_page == 0U) {
+            cfg->right_label = "Next";
+        } else {
+            snprintf(right, sizeof(right), "%u", (unsigned)(app->help_page + 2U));
+            cfg->right_label = right;
+        }
+        cfg->chrome |= CwmdChromeRight;
+    }
+}
+
+void morse_flipper_draw_help(Canvas* canvas, const MorseFlipperApp* app) {
+    CwmdConfig cfg;
+    char page[12];
+
+    if(canvas == NULL || app == NULL) return;
+    morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
+    cwmd_draw(canvas, &cfg, &app->help_md, morse_flipper_help_card(app->help_topic, app->help_page));
+}
+
+int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app) {
+    CwmdConfig cfg;
+    char page[12];
+
+    if(canvas == NULL || app == NULL) return 0;
+    morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
+    return cwmd_max_scroll_px(canvas, &cfg, morse_flipper_help_card(app->help_topic, app->help_page));
 }
