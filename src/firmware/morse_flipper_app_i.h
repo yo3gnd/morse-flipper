@@ -121,7 +121,6 @@ typedef enum {
 typedef enum {
     MorseFlipperAboutModeLanding = 0,
     MorseFlipperAboutModeText,
-    MorseFlipperAboutModeEaster,
 } MorseFlipperAboutMode;
 
 typedef enum {

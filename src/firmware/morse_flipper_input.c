@@ -16,15 +16,6 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
 
     if(app->screen != MorseFlipperScreenAbout) return false;
 
-    if(app->about_mode == MorseFlipperAboutModeText && event->key == InputKeyRight &&
-       event->type == InputTypeShort) {
-        app->about_mode = MorseFlipperAboutModeEaster;
-        app->about_ok_count = 0U;
-        app->about_last_ok_ms = 0U;
-        morse_flipper_view_dirty(app);
-        return true;
-    }
-
     if(app->about_mode == MorseFlipperAboutModeLanding && event->type == InputTypeShort) {
         if(app->about_show_next) {
             app->about_mode = MorseFlipperAboutModeText;
@@ -85,11 +76,6 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
 
     if(event->key == InputKeyBack &&
        (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        if(app->about_mode == MorseFlipperAboutModeEaster) {
-            app->about_mode = MorseFlipperAboutModeText;
-            morse_flipper_view_dirty(app);
-            return true;
-        }
         app->about_mode = MorseFlipperAboutModeLanding;
         app->about_scroll = 0U;
         app->about_ok_count = 0U;

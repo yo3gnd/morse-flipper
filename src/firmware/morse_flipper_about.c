@@ -1,6 +1,6 @@
 /*
  * Purpose: Draw and drive the public About flow.
- * Owns: about logo/splash, text-scroll view, and hidden debug/easter inputs.
+ * Owns: about logo/splash, text-scroll view, and hidden debug input.
  * Depends on: morse_flipper_app_i.h and Flipper canvas/elements primitives.
  * Tests: firmware build; layout is hardware-only.
  */
@@ -410,25 +410,11 @@ static void morse_flipper_draw_about_text_view(Canvas* canvas, const MorseFlippe
     elements_button_left(canvas, "Back");
 }
 
-static void morse_flipper_draw_about_easter(Canvas* canvas) {
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignCenter, "Richard,");
-    canvas_draw_str_aligned(canvas, 64, 33, AlignCenter, AlignCenter, "this nonsense");
-    canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignCenter, "again.");
-    elements_button_left(canvas, "Back");
-}
-
 void morse_flipper_draw_about(Canvas* canvas, const MorseFlipperApp* app) {
     if(canvas == NULL || app == NULL) return;
 
     if(app->about_mode == MorseFlipperAboutModeText) {
         morse_flipper_draw_about_text_view(canvas, app);
-        return;
-    }
-
-    if(app->about_mode == MorseFlipperAboutModeEaster) {
-        morse_flipper_draw_about_easter(canvas);
         return;
     }
 

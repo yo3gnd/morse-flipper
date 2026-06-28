@@ -72,7 +72,7 @@ static const char* const morse_help_practice[] = {
 
 static const char* const morse_help_prepping[] = {
     "In prepper and survivalist circles, CW has a certain reputation: harder than voice, but one of the most self-sufficient modes left when things go wrong.",
-    "This app can serve as an emergency CW transmitter, but let us be sensible: it would not be my first choice. Nor my second.\nThe transmitter chip in Flipper also drifts when keying below 20 wpm.",
+    "This app can serve as an emergency CW transmitter, but let us be sensible: it would not be my first choice. Nor my second.\nThe transmitter chip in Flipper also drifts when keying below 25 wpm.",
     "That drift is a hardware problem, so you do not really fix it in software.\nA human can tolerate it; cheap decoders will have a fit.\nIt drifts back after pauses, which makes it sound worse still.",
     "Voice is hungrier. Digital is fussier. CW can get by with a simple transmitter, a key, and a very small pile of kit.",
     "The Titanic's operators kept transmitting long after everything else failed. Morse was one of the last things still working, and the disaster proved ships needed proper battery-backed emergency radio.",
@@ -151,19 +151,19 @@ static const char* const morse_help_moving_forward[] = {
 };
 
 static const char* const morse_help_ham_usage[] = {
-    "Ham usage\n\nHam Keyer is a field keyer and logger in one slightly opinionated box. It can send fixed lines like RR UR 5NN BK or POTA RO-0038 K, while also keying and logging whatever you send on the paddles.\n\nBREAK-IN off logs only. BREAK-IN on transmits and logs. Handy for POTA/SOTA, where the operator already has enough plates wobbling. Logs are dated on the SD card, and each change is timestamped.",
-    "Rig keying uses P15 for key and P16 for PTT. Do not wire a radio on optimism.\n\nCheck the rig input, polarity, and ground arrangement. Use a transistor or optocoupler where the radio deserves it.",
-    "Back toggles BREAK-IN. Long-press Left exits.\n\nWith BREAK-IN off, paddle input is logged but not sent to the rig. With BREAK-IN on, the rig is keyed and PTT is held briefly after the last element.",
+    "Ham Keyer is a field keyer and logger in one slightly opinionated box. It can send fixed lines like RR UR 5NN BK or POTA RO-0038 K, while also keying and logging whatever you send on the paddles.\n\nBKIN off logs only. BKIN enabled transmits and logs. Handy for POTA/SOTA, where the operator already has enough plates wobbling. Logs are dated on the SD card, and each change is timestamped.",
+    "Rig keying uses P15 for key and P16 for PTT. Do not wire a radio on optimism.\n\nCheck the rig input, polarity, and ground arrangement. Use a transistor or optocoupler if the noise or RFI makes Flipper misbehave.",
+    "Back toggles BKIN. Long press Left exits.\n\nWith BKIN off, paddle input is logged but not sent to the rig.",
     "Assign short messages to Up, Down, Left, and Right. Use them for field exchanges, not essays.\n\nIf logging is enabled, entries go to /ext/ham/morse-flipper-ham-keyer-YYYY-MM-DD.txt.",
 };
 
 static const char* const morse_help_troubleshooting[] = {
-    "Troubleshooting\n\nStart simple: joystick OK is a straight key. Then try OK + Back as button paddles. Then plug in a real key.\n\nSettings -> Keying is always source plus mode: where the signal comes from, and how the app turns it into Morse.",
-    "A straight key uses dit/SK. A paddle needs dit, dah, and ground.\n\nDefault jack wiring is P3 ground, P7 dit/SK, and P5 dah. Check that before inventing new physics.",
-    "Some people swap hands, paddles, or both. Use Swap paddles.\n\nWhen Back is not exiting, it is being used as a paddle. The arrow is the app waving you toward long-press Left.",
-    "A GPIO short warning means the jack wiring looks wrong for the chosen input. Unplug the key and check it.\n\nA mono straight key in the paddle jack will be treated as a straight key. That bit is deliberate.",
-    "For USB output, choose Keyboard, Mouse, or MIDI, then let the host reconnect.\n\nCustom character sets and Ham logs live on the SD card under /ext/ham. No card, no files.",
-    "P2 HD audio only runs on supported live screens and needs external wiring.\n\nUse Buzzer for the Flipper speaker. Wire P2 if you want the high quality sidetone path.",
+    "If keying doesn't work, start simple: joystick OK is a straight key. Then try OK + Back as button paddles. Then plug in a real key.\n\nSettings -> Keying is always source plus mode: where the signal comes from, and how the app turns it into Morse.",
+    "A straight key uses dit/SK. A paddle needs dit, dah, and ground.\n\nDefault jack wiring is P3 ground, P7 dit/SK, and P5 dah.",
+    "The paddles can be swapped from settings, if needed.\n\nWhen Back is not exiting, it is being used as a paddle. The arrow is the app waving you toward long-press Left.",
+    "A GPIO short warning means the jack wiring looks wrong for the chosen input. Unplug the key and check it.\n\nA mono straight key in the paddle jack will be treated as a straight key.",
+    "For USB output, choose Keyboard, Mouse, or MIDI, then wait a bit for the computer to reconnect with the new settings.\n\nCustom character sets and ham logs live on the SD card under /ext/ham.",
+    "High quality audio is output only on P2. Connect it to an audio jack. It will sound better if you can add a small filtering capacitor, 1-50uF, between P2 and ground.\n\nYou don't have to use the P2 output; you can always fall back to the internal buzzer for the sidetone.",
 };
 
 uint8_t morse_flipper_help_card_count(uint8_t t) {
@@ -239,9 +239,9 @@ static void morse_flipper_help_btn_cb(GuiButtonType result, InputType type, void
     view_dispatcher_send_custom_event(app->view_dispatcher, ev);
 }
 
-static void morse_flipper_help_add_page_label(MorseFlipperApp* app) {
+static void morse_flipper_help_add_page_label(MorseFlipperApp* app, uint8_t total_pages) {
     const uint8_t button_height = 12U;
-    const uint8_t button_width = 40U;
+    const uint8_t button_width = 36U;
     const uint8_t x = (uint8_t)((128U - button_width) / 2U);
     const uint8_t y = 64U;
     const uint8_t top = (uint8_t)(y - button_height);
@@ -249,7 +249,8 @@ static void morse_flipper_help_add_page_label(MorseFlipperApp* app) {
     char label[12];
     char inverse[16];
 
-    snprintf(label, sizeof(label), "Page %u", (unsigned)(app->help_page + 1U));
+    snprintf(
+        label, sizeof(label), "%u/%u", (unsigned)(app->help_page + 1U), (unsigned)total_pages);
     snprintf(inverse, sizeof(inverse), "\e!%s\e!", label);
 
     widget_add_rect_element(app->widget, x, top, button_width, button_height, 0U, true);
@@ -300,7 +301,7 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
     widget_add_text_scroll_element(
         app->widget, 0, 0, 128, 52, furi_string_get_cstr(app->help_text));
 
-    morse_flipper_help_add_page_label(app);
+    morse_flipper_help_add_page_label(app, n);
 
     if(app->help_page > 0U) {
         snprintf(b, sizeof(b), "%u", (unsigned)app->help_page);
@@ -312,7 +313,7 @@ static void morse_flipper_help_rebuild_widget(MorseFlipperApp* app) {
         if(app->help_page == 0U)
             snprintf(b, sizeof(b), "Next");
         else
-            snprintf(b, sizeof(b), "%u/%u", (unsigned)(app->help_page + 2U), (unsigned)n);
+            snprintf(b, sizeof(b), "%u", (unsigned)(app->help_page + 2U));
         widget_add_button_element(
             app->widget, GuiButtonTypeRight, b, morse_flipper_help_btn_cb, app);
     }

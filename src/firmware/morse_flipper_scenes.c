@@ -228,12 +228,6 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
         app);
     submenu_add_item(
         app->submenu,
-        "Moving forward",
-        MorseFlipperHelpMovingForward,
-        morse_flipper_scene_menu_pick,
-        app);
-    submenu_add_item(
-        app->submenu,
         "Ham usage",
         MorseFlipperHelpHamUsage,
         morse_flipper_scene_menu_pick,
@@ -242,6 +236,12 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
         app->submenu,
         "Troubleshooting",
         MorseFlipperHelpTroubleshooting,
+        morse_flipper_scene_menu_pick,
+        app);
+    submenu_add_item(
+        app->submenu,
+        "Moving forward",
+        MorseFlipperHelpMovingForward,
         morse_flipper_scene_menu_pick,
         app);
     if(sel >= MorseFlipperHelpCount) sel = MorseFlipperHelpFirstSteps;
