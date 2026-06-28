@@ -39,6 +39,7 @@ App(
         "src/firmware/morse_flipper_screen.c",
         "src/firmware/morse_flipper_status.c",
         "src/firmware/morse_flipper_audio_route.c",
+        "src/firmware/cw_markdown_widget.c",
         "src/firmware/morse_flipper_help.c",
         "src/firmware/morse_flipper_app.c",
         "src/firmware/morse_flipper_flow.c",

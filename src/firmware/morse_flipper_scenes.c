@@ -259,6 +259,8 @@ static bool morse_flipper_scene_menu_help_on_event(void* context, SceneManagerEv
     if(event.type == SceneManagerEventTypeCustom) {
         app->help_topic = event.event;
         app->help_page = 0U;
+        app->help_md.scroll_px = 0;
+        app->help_md.target_scroll_px = 0;
         scene_manager_set_scene_state(app->scene_manager, MorseFlipperSceneMenuHelp, event.event);
         scene_manager_next_scene(app->scene_manager, MorseFlipperSceneHelp);
         return true;
@@ -692,6 +694,8 @@ static bool morse_flipper_scene_help_on_event(void* context, SceneManagerEvent e
     if(event.event == MorseFlipperCustomHelpPrev) {
         if(app->help_page > 0U) {
             app->help_page--;
+            app->help_md.scroll_px = 0;
+            app->help_md.target_scroll_px = 0;
             morse_flipper_help_open(app);
         }
         return true;
@@ -700,6 +704,8 @@ static bool morse_flipper_scene_help_on_event(void* context, SceneManagerEvent e
     if(event.event == MorseFlipperCustomHelpNext) {
         if(app->help_page + 1U < n) {
             app->help_page++;
+            app->help_md.scroll_px = 0;
+            app->help_md.target_scroll_px = 0;
             morse_flipper_help_open(app);
         }
         return true;

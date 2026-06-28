@@ -264,7 +264,8 @@ void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms) {
 
     furi_hal_rtc_get_datetime(&dt);
     app->about_mode = MorseFlipperAboutModeLanding;
-    app->about_scroll = 0U;
+    app->about_md.scroll_px = 0;
+    app->about_md.target_scroll_px = 0;
     app->about_ok_count = 0U;
     app->about_last_ok_ms = 0U;
     app->about_footer_seq_i = morse_flipper_about_request_start(dt.day);
@@ -291,108 +292,21 @@ void morse_flipper_tick_about(MorseFlipperApp* app, uint32_t now_ms) {
     morse_flipper_view_dirty(app);
 }
 
-static uint16_t morse_flipper_about_word_width(Canvas* canvas, const char* start, size_t len) {
-    char word[24];
-    size_t n = len < sizeof(word) - 1U ? len : sizeof(word) - 1U;
-
-    memcpy(word, start, n);
-    word[n] = '\0';
-
-    return canvas_string_width(canvas, word);
+static void morse_flipper_about_text_cfg(CwmdConfig* cfg) {
+    cwmd_config_default(cfg, true);
+    cfg->height = 50U;
+    cfg->scrollbar = true;
+    cfg->chrome = CwmdChromeLeft;
+    cfg->left_label = "Back";
+    cfg->center_label = NULL;
+    cfg->right_label = NULL;
 }
 
-static size_t morse_flipper_about_next_line(
-    Canvas* canvas,
-    const char* text,
-    size_t pos,
-    char* out,
-    size_t out_sz) {
-    size_t out_len = 0U;
-    uint16_t width = 0U;
+int16_t morse_flipper_about_max_scroll(Canvas* canvas) {
+    CwmdConfig cfg;
 
-    while(text[pos] == ' ') pos++;
-
-    while(text[pos] != '\0') {
-        size_t word_len = 0U;
-        uint16_t word_width;
-        uint16_t sep_width = out_len > 0U ? canvas_string_width(canvas, " ") : 0U;
-
-        if(text[pos] == '\n') {
-            pos++;
-            break;
-        }
-
-        while(text[pos + word_len] != '\0' && text[pos + word_len] != ' ' &&
-              text[pos + word_len] != '\n') {
-            word_len++;
-        }
-
-        word_width = morse_flipper_about_word_width(canvas, &text[pos], word_len);
-        if(out_len > 0U && (uint16_t)(width + sep_width + word_width) > 120U) break;
-
-        if(out_len > 0U && out_len + 1U < out_sz) {
-            out[out_len++] = ' ';
-            width += sep_width;
-        }
-
-        if(out_len + word_len < out_sz) {
-            memcpy(&out[out_len], &text[pos], word_len);
-            out_len += word_len;
-        }
-        width += word_width;
-        pos += word_len;
-
-        while(text[pos] == ' ') pos++;
-        if(text[pos] == '\n') {
-            pos++;
-            break;
-        }
-    }
-
-    out[out_len < out_sz ? out_len : out_sz - 1U] = '\0';
-    return pos;
-}
-
-static uint8_t morse_flipper_about_line_count(Canvas* canvas) {
-    size_t pos = 0U;
-    uint8_t lines = 0U;
-    char wrapped[32];
-
-    if(canvas == NULL) return 0U;
-    canvas_set_font(canvas, FontSecondary);
-    while(morse_flipper_about_body[pos] != '\0') {
-        pos = morse_flipper_about_next_line(
-            canvas, morse_flipper_about_body, pos, wrapped, sizeof(wrapped));
-        lines++;
-    }
-
-    return lines;
-}
-
-uint8_t morse_flipper_about_max_scroll(Canvas* canvas) {
-    uint8_t lines = morse_flipper_about_line_count(canvas);
-
-    return lines > 6U ? (uint8_t)(lines - 6U) : 0U;
-}
-
-static void morse_flipper_about_draw_text(Canvas* canvas, uint8_t scroll) {
-    size_t pos = 0U;
-    uint8_t line = 0U;
-    uint8_t skipped = 0U;
-    char wrapped[32];
-
-    canvas_set_font(canvas, FontSecondary);
-    while(morse_flipper_about_body[pos] != '\0' && line < 6U) {
-        pos = morse_flipper_about_next_line(
-            canvas, morse_flipper_about_body, pos, wrapped, sizeof(wrapped));
-        if(skipped < scroll) {
-            skipped++;
-            continue;
-        }
-
-        canvas_draw_str(canvas, 3, (int32_t)(9U + (line * 8U)), wrapped);
-        line++;
-    }
+    morse_flipper_about_text_cfg(&cfg);
+    return cwmd_max_scroll_px(canvas, &cfg, morse_flipper_about_body);
 }
 
 static void morse_flipper_draw_about_landing(Canvas* canvas, const MorseFlipperApp* app) {
@@ -405,9 +319,11 @@ static void morse_flipper_draw_about_landing(Canvas* canvas, const MorseFlipperA
 }
 
 static void morse_flipper_draw_about_text_view(Canvas* canvas, const MorseFlipperApp* app) {
+    CwmdConfig cfg;
+
     canvas_clear(canvas);
-    morse_flipper_about_draw_text(canvas, app->about_scroll);
-    elements_button_left(canvas, "Back");
+    morse_flipper_about_text_cfg(&cfg);
+    cwmd_draw(canvas, &cfg, &app->about_md, morse_flipper_about_body);
 }
 
 void morse_flipper_draw_about(Canvas* canvas, const MorseFlipperApp* app) {
