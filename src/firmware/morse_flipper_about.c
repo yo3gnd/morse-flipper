@@ -14,6 +14,10 @@
 #define MORSE_FLIPPER_ABOUT_ALLOW_MS   1000U
 #define MORSE_FLIPPER_ABOUT_CYCLE_MS   1500U
 
+#ifndef FAP_VERSION
+#define FAP_VERSION "unknown"
+#endif
+
 typedef struct {
     const uint8_t* data;
     uint8_t w;
@@ -230,6 +234,7 @@ static const uint8_t morse_flipper_about_request_seq[] = {
 };
 
 static const char morse_flipper_about_body[] =
+    "Version: " FAP_VERSION "\n"
     "Built: " APP_BUILD_TIME "\n"
     "Commit: " APP_BUILD_COMMIT "\n"
     "Host: " APP_BUILD_HOST "\n\n"
