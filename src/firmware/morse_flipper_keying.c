@@ -75,6 +75,7 @@ static bool morse_flipper_training_input_muted(const MorseFlipperApp* app) {
 static bool morse_flipper_signal_led_level(const MorseFlipperApp* app, bool want_tx_tone) {
     if(app == NULL) return false;
 
+    /* Result tone is red; playback marks are orange. Both deliberately bypass TX state. */
     if(app->session_result_tone) return true;
     if(app->trainer_playback_mark || app->straight_playback_mark) return true;
 
@@ -140,6 +141,10 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
     bool want_speaker;
     bool want_vibro;
 
+    /*
+     * One gate fans out to speaker, PWM, vibro, PTT, and signal LED.
+     * Aux tones may sound without keying RF; ham break-in is the awkward exception.
+     */
     if(morse_flipper_ham_silent_audio(app)) {
         if(app->audio_pwm.running) morse_flipper_audio_pwm_stop(&app->audio_pwm);
         furi_hal_vibro_on(false);
@@ -226,6 +231,7 @@ void morse_flipper_set_note_source(
     uint32_t before = app->note_sources[note];
     uint32_t after = active ? (before | source_mask) : (before & ~source_mask);
 
+    /* Source masks let GPIO, buttons, macros, and keyer events share one note cleanly. */
     if(before == after) return;
 
     app->note_sources[note] = after;

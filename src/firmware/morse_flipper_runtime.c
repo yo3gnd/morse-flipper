@@ -275,6 +275,7 @@ static void morse_flipper_feed_tx_edge(MorseFlipperApp* app, bool level, uint32_
     if(app->screen == MorseFlipperScreenTxGroups && app->txg_wait_answer)
         app->txg_last_input_at = now_ms;
 
+    /* TX edges feed three consumers: decoder text, TX-group raw timings, and RF trace. */
     if(app->rf_tx_edge_at != 0U) {
         dt = now_ms - app->rf_tx_edge_at;
         if(dt != 0U && morse_flipper_tx_decoder_allowed(app)) {
@@ -375,6 +376,7 @@ static void morse_flipper_sync_gpio_inputs(MorseFlipperApp* app, uint32_t now_ms
     bool dit_active = false;
     bool dah_active = false;
 
+    /* Probe and training modes can temporarily veto physical GPIO, even if a pin is down. */
     if(app->input_source == MorseFlipperInputSourceStraight) {
         straight_active =
             morse_flipper_live_straight_active(app, morse_flipper_straight_down(), now_ms);
@@ -514,6 +516,7 @@ static void morse_flipper_tick_ham_wpm_hold(MorseFlipperApp* app, uint32_t now_m
     if(app->ham.wpm_hold_key != InputKeyUp && app->ham.wpm_hold_key != InputKeyDown) return;
     if(app->ham.wpm_hold_next_at == 0U || now_ms < app->ham.wpm_hold_next_at) return;
 
+    /* Catch up if the scheduler was late; one missed tick should not slow the ramp. */
     do {
         if(app->ham.wpm_hold_key == InputKeyUp) {
             morse_flipper_set_run_wpm(app, (uint8_t)(morse_flipper_current_wpm(app) + 1U));
@@ -593,6 +596,11 @@ void morse_flipper_poll(MorseFlipperApp* app) {
     bool raw_straight;
     bool tx_now;
 
+    /*
+     * Main tick order is deliberate:
+     * mode timers first, then input sampling/keyer events, then edge decoders,
+     * then physical outputs. Moving it tends to produce charmingly wrong Morse.
+     */
     if(app->pc_mode == MorseFlipperPcModeMidi && app->midi_rx_pending) {
         app->midi_rx_pending = false;
         morse_flipper_handle_midi_rx(app);

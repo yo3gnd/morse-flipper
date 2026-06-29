@@ -257,7 +257,7 @@ static const char* const morse_help_moving_forward[] = {
     "Find the Twente WebSDR. Tune around 14.000-14.070 MHz and 7.000-7.050 MHz. On a weekend or during a contest, you will hear plenty of live CW.",
     "Try CW Academy if you want something more organised than poking at apps and websites on your own. This app can help, but the course is not casual. They expect a real key, regular practice, and a fair bit of homework.",
     "The CWA course material is free, and you can also work through it yourself at your own pace.",
-    "If you do get licensed, send me a note at yo3gnd.dev.fzcw@yo3gnd.ro. I would be glad to hear how it went.\n\n\n\nIf you read this far, there is a QSL waiting for you. Send in the secret code 821073",
+    "If you do get licensed, send me a note at yo3gnd.dev.fzcw@yo3gnd.ro. I would be glad to hear how it went.\n\n\n\nIf you read this far, there is a QSL waiting for you. Send in the secret code 821073 and your new callsign.",
 };
 
 static const char* const morse_help_ham_usage[] = {

@@ -1,3 +1,10 @@
+/*
+ * Purpose: Render tiny markdown-ish help text on the Flipper canvas.
+ * Owns: inline parsing, wrapping, justification, icons, chrome, and scrolling.
+ * Depends on: cw_markdown_widget.h and Canvas text metrics.
+ * Tests: tests/test_cw_markdown_widget.c.
+ */
+
 #include "cw_markdown_widget.h"
 
 #include <stddef.h>
@@ -63,6 +70,11 @@ typedef struct {
 #endif
 } CwmdParser;
 
+/*
+ * The parser emits small atoms first; wrapping and drawing happen later.
+ * No heap, no browser, no grand civilised Markdown parser. Just enough markup
+ * for help cards on a 128x64 screen.
+ */
 static bool cwmd_ascii_digit(char ch) {
     return ch >= '0' && ch <= '9';
 }
@@ -201,6 +213,7 @@ static bool cwmd_parse_line_escape(CwmdParser* parser, const CwmdConfig* cfg, Cw
     }
 }
 
+/* Line escapes only count at logical-line start; inline escapes may appear mid-word. */
 static void cwmd_prepare_logical(CwmdParser* parser, const CwmdConfig* cfg) {
     (void)cfg;
 
@@ -352,6 +365,7 @@ static bool cwmd_build_line(
     CwmdItem item;
     bool have_item = false;
 
+    /* Snapshot before each atom so overflow can hand the word to the next line intact. */
     memset(line, 0, sizeof(*line));
     cwmd_prepare_logical(parser, cfg);
     line->bullet = parser->bullet;
@@ -415,6 +429,7 @@ static bool cwmd_line_should_justify(const CwmdLine* line, uint16_t avail_width,
     uint16_t gap_width;
     uint16_t rem_add;
 
+    /* Justify only dense prose lines; short lines stretched wide look like broken teeth. */
     *extra = 0U;
     if(line->align != CwmdAlignJustify) return false;
     if(line->ended_logical) return false;
@@ -517,6 +532,7 @@ static uint16_t cwmd_process(
     uint16_t line_no = 0U;
     int16_t scroll_px = state ? state->scroll_px : 0;
 
+    /* Shared pass for measuring and drawing. Same layout, one less place to drift. */
     if(canvas == NULL || cfg == NULL || text == NULL || cfg->line_height == 0U) return 0U;
     if(scroll_px < 0) scroll_px = 0;
     avail_width = cwmd_effective_width(cfg);

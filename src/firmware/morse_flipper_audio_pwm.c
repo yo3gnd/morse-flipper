@@ -76,6 +76,7 @@ static uint16_t morse_flipper_audio_pwm_current_env_q15(const MorseFlipperAudioP
 static void morse_flipper_audio_pwm_apply_gate(MorseFlipperAudioPwm* audio) {
     if(audio == NULL || audio->gate_applied == audio->gate_requested) return;
 
+    /* Restart fades from the current envelope value, avoiding clicks when keying fast. */
     if(audio->gate_requested) {
         if(audio->env_state == MorseFlipperAudioPwmEnvIdle) {
             audio->phase_q32 = 0U;
@@ -110,6 +111,7 @@ static uint16_t morse_flipper_audio_pwm_next_sample(MorseFlipperAudioPwm* audio)
 
     if(audio == NULL || !audio->prepared) return 0U;
 
+    /* Q15 envelope over a Q32 phase accumulator: fixed point, because this is not a DAW. */
     morse_flipper_audio_pwm_apply_gate(audio);
     env_q15 = morse_flipper_audio_pwm_current_env_q15(audio);
 
@@ -314,6 +316,10 @@ bool morse_flipper_audio_pwm_start(MorseFlipperAudioPwm* audio) {
     if(audio == NULL || !audio->prepared) return false;
     if(audio->running) return true;
 
+    /*
+     * TIM1 supplies the PWM carrier; DMA feeds CCR1 at the audio sample rate.
+     * Bring buses and midpoint ramp up before the circular DMA starts scribbling.
+     */
     audio->own_bus_tim1 = false;
     audio->own_bus_dma1 = false;
     audio->own_bus_dmamux1 = false;
@@ -410,6 +416,7 @@ void morse_flipper_audio_pwm_stop(MorseFlipperAudioPwm* audio) {
         return;
     }
 
+    /* Stop interrupts and DMA first, then walk the PWM pin back to silence. */
     furi_hal_interrupt_set_isr(MORSE_FLIPPER_AUDIO_PWM_DMA_IRQ, NULL, NULL);
     LL_DMA_DisableIT_HT(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);
     LL_DMA_DisableIT_TC(MORSE_FLIPPER_AUDIO_PWM_DMA_DEF);

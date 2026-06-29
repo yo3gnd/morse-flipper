@@ -94,6 +94,7 @@ bool morse_flipper_session_wait_key_down(const MorseFlipperApp* app) {
 static void morse_flipper_queue_session_feedback(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL || !app->session_round_pending) return;
 
+    /* Result hold is both UI pause and error tone window; next prompt waits behind it. */
     app->session_round_pending = false;
     app->session_result_hold = true;
     app->session_result_good = !morse_trainer_last_failed(&app->trainer);
@@ -123,6 +124,7 @@ void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
+    /* Playback owns the keying path while it runs; live input comes back afterwards. */
     morse_flipper_drop_live_keying_for_playback(app, now_ms);
     app->trainer_playback_active = true;
     app->trainer_playback_mark = false;
@@ -171,6 +173,10 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
 
     if(app == NULL || app->screen != MorseFlipperScreenSession || !app->session_started) return;
 
+    /*
+     * Session flow, in order: expire error tone, count down to the next group,
+     * launch/listen/playback, delay final screen, then settle and score the answer.
+     */
     if(app->session_result_tone && now_ms >= app->session_result_until) {
         app->session_result_tone = false;
         morse_flipper_update_sidetone(app);

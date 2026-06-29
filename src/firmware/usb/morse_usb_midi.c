@@ -138,6 +138,10 @@ struct morse_usb_midi_config_descriptor {
     struct usb_midi_endpoint_descriptor midi_bulk_in;
 } __attribute__((packed));
 
+/*
+ * USB MIDI is an Audio device with a control interface plus a MIDIStreaming
+ * interface. The embedded/external jack pairs make host routing behave.
+ */
 static struct usb_device_descriptor morse_usb_midi_device_descriptor = {
     .bLength = sizeof(struct usb_device_descriptor),
     .bDescriptorType = USB_DTYPE_DEVICE,
@@ -386,6 +390,7 @@ size_t morse_usb_midi_tx(const uint8_t* buffer, size_t size) {
         return 0U;
     }
 
+    /* Only one IN packet at a time; endpoint-complete releases the semaphore. */
     if(furi_semaphore_acquire(morse_usb_midi_state.tx_sem, 50U) != FuriStatusOk) {
         return 0U;
     }
@@ -456,6 +461,7 @@ static void morse_usb_midi_suspend(usbd_device* dev) {
 }
 
 static usbd_respond morse_usb_midi_ep_config(usbd_device* dev, uint8_t cfg) {
+    /* Configure/deconfigure is the host's truth; connected follows that, not hope. */
     switch(cfg) {
     case MORSE_USB_CFG_DECONFIGURE:
         morse_usb_midi_state.connected = false;
@@ -504,6 +510,7 @@ static void morse_usb_midi_reset_tx_sem(void) {
         return;
     }
 
+    /* Wake a blocked sender after suspend, reset, or unplug. Stale waits are expensive. */
     if(furi_semaphore_get_count(morse_usb_midi_state.tx_sem) == 0U) {
         furi_check(furi_semaphore_release(morse_usb_midi_state.tx_sem) == FuriStatusOk);
     }
