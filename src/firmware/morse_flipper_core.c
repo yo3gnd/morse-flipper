@@ -15,65 +15,6 @@ const char* const morse_flipper_usb_mode_names[] = {
     "MIDI",
 };
 
-const NotificationSequence morse_flipper_led_good_twice = {
-    &message_green_255,
-    &message_delay_50,
-    &message_green_0,
-    &message_delay_50,
-    &message_green_255,
-    &message_delay_50,
-    &message_green_0,
-    NULL,
-};
-
-const NotificationSequence morse_flipper_led_bad_twice = {
-    &message_red_255,
-    &message_delay_50,
-    &message_red_0,
-    &message_delay_50,
-    &message_red_255,
-    &message_delay_50,
-    &message_red_0,
-    NULL,
-};
-
-static const NotificationMessage morse_flipper_msg_green_96 = {
-    .type = NotificationMessageTypeLedGreen,
-    .data.led.value = 96U,
-};
-
-const NotificationSequence morse_flipper_led_miss_twice = {
-    &message_red_255,
-    &morse_flipper_msg_green_96,
-    &message_blue_0,
-    &message_delay_50,
-    &message_red_0,
-    &message_green_0,
-    &message_delay_50,
-    &message_red_255,
-    &morse_flipper_msg_green_96,
-    &message_blue_0,
-    &message_delay_50,
-    &message_red_0,
-    &message_green_0,
-    NULL,
-};
-
-const NotificationSequence morse_flipper_led_timeout_twice = {
-    &message_red_255,
-    &morse_flipper_msg_green_96,
-    &message_delay_50,
-    &message_red_0,
-    &message_green_0,
-    &message_delay_50,
-    &message_red_255,
-    &morse_flipper_msg_green_96,
-    &message_delay_50,
-    &message_red_0,
-    &message_green_0,
-    NULL,
-};
-
 const uint8_t morse_flipper_input_values[] = {
     MorseFlipperInputSourceButtons,
     MorseFlipperInputSourceStraight,
@@ -150,9 +91,22 @@ void morse_flipper_sync_backlight(MorseFlipperApp* app, uint32_t now_ms) {
     }
 }
 
-static void morse_flipper_feedback_do(MorseFlipperApp* app, const NotificationSequence* seq) {
+void morse_flipper_sync_signal_led(MorseFlipperApp* app, bool on) {
     if(app == NULL) return;
-    if(app->notifications && seq) notification_message(app->notifications, seq);
+    if(app->signal_led_on == on) return;
+
+    app->signal_led_on = on;
+    if(on) {
+        furi_hal_light_set(LightBlue, 0U);
+        furi_hal_light_set(LightGreen, 96U);
+        furi_hal_light_set(LightRed, 255U);
+    } else {
+        furi_hal_light_set(LightRed | LightGreen | LightBlue, 0U);
+    }
+}
+
+static void morse_flipper_feedback_do(MorseFlipperApp* app) {
+    if(app == NULL) return;
     app->session_result_tone = true;
     app->session_result_until = furi_get_tick() + MORSE_FLIPPER_SESSION_RESULT_MS;
     morse_flipper_update_sidetone(app);
@@ -160,18 +114,17 @@ static void morse_flipper_feedback_do(MorseFlipperApp* app, const NotificationSe
 
 void morse_flipper_feedback_pass(MorseFlipperApp* app) {
     if(app == NULL) return;
-    if(app->notifications) notification_message(app->notifications, &morse_flipper_led_good_twice);
     app->session_result_tone = false;
     app->session_result_until = 0U;
     morse_flipper_update_sidetone(app);
 }
 
 void morse_flipper_feedback_fail(MorseFlipperApp* app) {
-    morse_flipper_feedback_do(app, &morse_flipper_led_bad_twice);
+    morse_flipper_feedback_do(app);
 }
 
 void morse_flipper_feedback_timeout(MorseFlipperApp* app) {
-    morse_flipper_feedback_do(app, &morse_flipper_led_timeout_twice);
+    morse_flipper_feedback_do(app);
 }
 
 uint8_t morse_flipper_input_value_index(uint8_t source) {

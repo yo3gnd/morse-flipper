@@ -33,6 +33,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
                 .product = "Morse Flipper Kbd",
             },
         .tone_on = false,
+        .signal_led_on = false,
         .speaker_owned = false,
         .speaker_busy = false,
         .transport_connected = false,
@@ -311,12 +312,14 @@ void morse_flipper_shutdown(MorseFlipperApp* app) {
     morse_flipper_release_all_notes(app);
     morse_flipper_audio_pwm_stop(&app->audio_pwm);
     morse_flipper_tone_stop(app);
+    morse_flipper_sync_signal_led(app, false);
     furi_hal_vibro_on(false);
     if(app->backlight_mode != MorseFlipperBacklightAuto && app->notifications)
         notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
     if(app->notifications) {
         notification_message(app->notifications, &sequence_reset_green);
         notification_message(app->notifications, &sequence_reset_red);
+        notification_message(app->notifications, &sequence_reset_blue);
     }
     morse_flipper_save_config(app);
 

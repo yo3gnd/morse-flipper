@@ -19,7 +19,7 @@ void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint) {
     if(canvas == NULL) return;
 
     if(!left_hint) {
-        canvas_draw_line(canvas, 0, 34, 119, 34);
+        canvas_draw_line(canvas, 0, 34, 127, 34);
         return;
     }
 

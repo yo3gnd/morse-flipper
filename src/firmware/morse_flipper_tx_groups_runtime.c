@@ -70,6 +70,7 @@ void morse_flipper_reset_tx_groups_state(MorseFlipperApp* app, uint32_t now_ms) 
     app->txg_sum_dgap = 0U;
     app->txg_sum_variance = 0U;
     morse_flipper_tx_group_init(&app->tx_group);
+    morse_flipper_tx_group_set_seed(&app->tx_group, furi_hal_random_get());
     morse_flipper_cw_decoder_init(&app->tx_decoder, morse_flipper_current_dit_ms(app));
     morse_flipper_clear_button_keying(app, furi_get_tick());
 }

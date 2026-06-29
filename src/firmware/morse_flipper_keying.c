@@ -72,6 +72,20 @@ static bool morse_flipper_training_input_muted(const MorseFlipperApp* app) {
     return app != NULL && app->screen == MorseFlipperScreenSession && app->trainer_playback_active;
 }
 
+static bool morse_flipper_signal_led_level(const MorseFlipperApp* app, bool want_tx_tone) {
+    if(app == NULL) return false;
+
+    if(app->screen == MorseFlipperScreenRf && app->rf_live_active) {
+        return app->radio.tx_level;
+    }
+
+    if(app->screen == MorseFlipperScreenHamRun && app->ham_keyer.break_in_enabled) {
+        return app->ham.key_level;
+    }
+
+    return want_tx_tone;
+}
+
 void morse_flipper_tone_stop(MorseFlipperApp* app) {
     if(furi_hal_speaker_is_mine()) {
         furi_hal_speaker_stop();
@@ -119,6 +133,7 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
     bool want_tx_tone = morse_flipper_any_active_notes(app) || (app->preview_ticks > 0U);
     bool want_aux_tone = app->trainer_playback_mark || app->straight_playback_mark ||
                          app->session_result_tone || app->rf_monitor_tone;
+    bool want_signal = want_tx_tone || want_aux_tone;
     bool want_speaker;
     bool want_vibro;
 
@@ -129,6 +144,7 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
         app->tone_on = false;
         app->speaker_busy = false;
         morse_flipper_sync_ptt(app, furi_get_tick());
+        morse_flipper_sync_signal_led(app, morse_flipper_signal_led_level(app, want_tx_tone));
         return;
     }
 
@@ -137,7 +153,7 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
     want_speaker = !use_pwm &&
                    (want_aux_tone ||
                     (want_tx_tone && (force_buzzer || morse_flipper_local_buzzer_enabled(app))));
-    want_vibro = use_vibro && (want_tx_tone || want_aux_tone);
+    want_vibro = use_vibro && want_signal;
 
     if(force_buzzer && app->audio_pwm.running) {
         morse_flipper_audio_pwm_stop(&app->audio_pwm);
@@ -149,11 +165,11 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
             morse_flipper_tone_stop(app);
         }
 
-        morse_flipper_audio_pwm_set_gate(&app->audio_pwm, want_tx_tone || want_aux_tone);
-        app->tone_on = want_tx_tone || want_aux_tone ||
-                       morse_flipper_audio_pwm_sound_active(&app->audio_pwm);
+        morse_flipper_audio_pwm_set_gate(&app->audio_pwm, want_signal);
+        app->tone_on = want_signal || morse_flipper_audio_pwm_sound_active(&app->audio_pwm);
         app->speaker_busy = false;
         morse_flipper_sync_ptt(app, furi_get_tick());
+        morse_flipper_sync_signal_led(app, morse_flipper_signal_led_level(app, want_tx_tone));
         return;
     }
 
@@ -163,6 +179,7 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
         app->tone_on = want_vibro;
         app->speaker_busy = false;
         morse_flipper_sync_ptt(app, furi_get_tick());
+        morse_flipper_sync_signal_led(app, morse_flipper_signal_led_level(app, want_tx_tone));
         return;
     }
 
@@ -182,6 +199,7 @@ void morse_flipper_update_sidetone(MorseFlipperApp* app) {
     }
 
     morse_flipper_sync_ptt(app, furi_get_tick());
+    morse_flipper_sync_signal_led(app, morse_flipper_signal_led_level(app, want_tx_tone));
 }
 
 uint32_t morse_flipper_note_source_for_paddle(uint8_t paddle) {
@@ -208,7 +226,6 @@ void morse_flipper_set_note_source(
     if(before == after) return;
 
     app->note_sources[note] = after;
-    morse_flipper_update_sidetone(app);
     if(app->screen == MorseFlipperScreenRf && app->rf_live_active) {
         now_ms = furi_get_tick();
         app->rf_tx_tail_until =
@@ -224,6 +241,7 @@ void morse_flipper_set_note_source(
         }
         morse_flipper_radio_set_tx_level(&app->radio, morse_flipper_any_active_notes(app));
     }
+    morse_flipper_update_sidetone(app);
 
     if(before == 0U && after != 0U) {
         morse_flipper_send_transport_note(app, note, true);
@@ -240,8 +258,6 @@ void morse_flipper_release_all_notes(MorseFlipperApp* app) {
         app->note_sources[note] = 0U;
     }
 
-    morse_flipper_update_sidetone(app);
-
     for(size_t note = 0; note < COUNT_OF(app->note_sources); note++) {
         if(note_sources[note] != 0U) morse_flipper_send_transport_note(app, (uint8_t)note, false);
     }
@@ -252,6 +268,7 @@ void morse_flipper_release_all_notes(MorseFlipperApp* app) {
             now_ms + ((uint32_t)morse_flipper_current_dit_ms(app) * MORSE_FLIPPER_RF_TX_TAIL_DITS);
         morse_flipper_radio_set_tx_level(&app->radio, false);
     }
+    morse_flipper_update_sidetone(app);
 }
 
 void morse_flipper_drain_keyer_events(MorseFlipperApp* app) {

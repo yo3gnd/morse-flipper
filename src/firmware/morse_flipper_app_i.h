@@ -331,6 +331,7 @@ typedef struct MorseFlipperApp {
     FuriHalUsbInterface* previous_usb_config;
     FuriHalUsbHidConfig hid_cfg;
     bool tone_on;
+    bool signal_led_on;
     bool speaker_owned;
     bool speaker_busy;
     float speaker_hz;
@@ -548,10 +549,6 @@ extern const uint8_t morse_flipper_input_values[3];
 extern const uint8_t morse_flipper_keyer_values[7];
 extern const MorseFlipperTone morse_flipper_tones[31];
 extern const SceneManagerHandlers morse_flipper_scene_handlers;
-extern const NotificationSequence morse_flipper_led_good_twice;
-extern const NotificationSequence morse_flipper_led_bad_twice;
-extern const NotificationSequence morse_flipper_led_miss_twice;
-extern const NotificationSequence morse_flipper_led_timeout_twice;
 
 void morse_flipper_set_paddle_source(
     MorseFlipperApp* app,
@@ -584,6 +581,7 @@ void morse_flipper_clamp_trainer_settings(MorseFlipperApp* app);
 void morse_flipper_clamp_straight_settings(MorseFlipperApp* app);
 void morse_flipper_set_pc_mode(MorseFlipperApp* app, uint8_t mode);
 void morse_flipper_handle_midi_rx(MorseFlipperApp* app);
+void morse_flipper_sync_signal_led(MorseFlipperApp* app, bool on);
 void morse_flipper_update_sidetone(MorseFlipperApp* app);
 void morse_flipper_midi_rx_ready(void* context);
 void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputEvent* event);

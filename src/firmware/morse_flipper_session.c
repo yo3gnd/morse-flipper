@@ -92,29 +92,17 @@ bool morse_flipper_session_wait_key_down(const MorseFlipperApp* app) {
 }
 
 static void morse_flipper_queue_session_feedback(MorseFlipperApp* app, uint32_t now_ms) {
-    bool missed;
-    const NotificationSequence* seq;
-
     if(app == NULL || !app->session_round_pending) return;
 
     app->session_round_pending = false;
     app->session_result_hold = true;
     app->session_result_good = !morse_trainer_last_failed(&app->trainer);
-    missed = morse_trainer_last_missed(&app->trainer);
     app->session_result_tone = !app->session_result_good;
     app->session_result_until = now_ms + MORSE_FLIPPER_SESSION_RESULT_MS;
     app->session_next_group_at = morse_trainer_session_has_next(&app->trainer) ?
                                      (now_ms + ((uint32_t)app->trainer_group_pause_s * 1000U)) :
                                      0U;
     app->session_wait_draw_s = 0xFFU;
-    seq = &morse_flipper_led_good_twice;
-    if(!app->session_result_good) {
-        if(missed)
-            seq = &morse_flipper_led_miss_twice;
-        else
-            seq = &morse_flipper_led_bad_twice;
-    }
-    if(app->notifications) notification_message(app->notifications, seq);
     morse_flipper_update_sidetone(app);
     morse_flipper_view_dirty(app);
 }
