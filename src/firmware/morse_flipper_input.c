@@ -188,6 +188,10 @@ static void morse_flipper_ham_bump_run_wpm(MorseFlipperApp* app, InputKey key) {
     }
 }
 
+/*
+ * Ham run mode borrows the same five buttons for macros, WPM, break-in, and exit.
+ * Consume those modal meanings here before the general live-keying path sees them.
+ */
 static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent* event) {
     uint8_t dir;
 
@@ -790,6 +794,7 @@ static bool morse_flipper_run_trace_home_input(MorseFlipperApp* app, InputEvent*
     return false;
 }
 
+/* Active screens get first refusal for navigation; live keying is the fallback. */
 bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
     if(app == NULL || event == NULL) return false;
 
@@ -825,6 +830,10 @@ bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, ui
     return false;
 }
 
+/*
+ * Button input can be straight key, paddle, or plain navigation depending on mode.
+ * The gate tells us which meaning is live, so Back does not become a dah by accident.
+ */
 bool morse_flipper_input_chunk_b(MorseFlipperApp* app, InputEvent* event, uint32_t now_ms) {
     return morse_flipper_active_mode_input(app, event, now_ms);
 }
@@ -868,6 +877,7 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
     bool btn_str = g.btn_str;
     bool btn_pad = g.btn_pad;
 
+    /* Left is a key while held, but a short tap clears run text. Awkward, documented. */
     if((app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf) &&
        event->key == InputKeyLeft && event->type == InputTypeShort) {
         morse_flipper_reset_run_state(app);

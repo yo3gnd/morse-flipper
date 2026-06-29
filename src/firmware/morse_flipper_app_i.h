@@ -321,6 +321,7 @@ typedef struct {
 } MorseFlipperHamRuntimeState;
 
 typedef struct MorseFlipperApp {
+    /* Flipper objects owned by the app shell; allocation and teardown live in app.c. */
     FuriMessageQueue* q;
     ViewPort* view_port;
     ViewDispatcher* view_dispatcher;
@@ -338,6 +339,11 @@ typedef struct MorseFlipperApp {
     NotificationApp* notifications;
     FuriString* help_text;
     volatile bool exit_requested;
+
+    /*
+     * Hardware and transport mirrors. These track what we last asked the outside
+     * world to do, so the poll loop can avoid noisy repeat writes.
+     */
     FuriHalUsbInterface* previous_usb_config;
     FuriHalUsbHidConfig hid_cfg;
     bool tone_on;
@@ -348,9 +354,13 @@ typedef struct MorseFlipperApp {
     float speaker_hz;
     bool transport_connected;
     bool mouse_invert;
+
+    /* Button latch state for modes where Flipper buttons become a straight key or paddle. */
     bool left_down;
     bool ok_down;
     bool back_down;
+
+    /* LCWO playback/session flags. Runtime transitions live in morse_flipper_session.c. */
     bool trainer_playback_active;
     bool trainer_playback_mark;
     bool session_started;
@@ -358,9 +368,13 @@ typedef struct MorseFlipperApp {
     bool session_result_hold;
     bool session_result_tone;
     bool session_result_good;
+
+    /* Help/About UI state; the hidden trace entry uses the OK tap counter. */
     bool about_show_next;
     volatile bool midi_rx_pending;
     uint8_t screen;
+
+    /* Persistent user choices, normalised on load before hardware is touched. */
     uint8_t pc_mode;
     uint8_t pc_mode_pref;
     uint8_t pc_paddle_preset;
@@ -387,6 +401,8 @@ typedef struct MorseFlipperApp {
     CwmdState help_md;
     CwmdState about_md;
     MorseFlipperHamRuntimeState ham;
+
+    /* Feature-local settings and cursors. Small integers are deliberate; this is a FAP. */
     uint8_t rf_freq_focus;
     uint8_t trainer_farnsworth_wpm;
     uint8_t trainer_answer_timeout_s;
@@ -413,6 +429,8 @@ typedef struct MorseFlipperApp {
     uint8_t p2_volume_pct;
     uint8_t preview_ticks;
     uint8_t input_mask;
+
+    /* Millisecond deadlines. Zero means idle unless the owning module says otherwise. */
     uint32_t trainer_next_at;
     uint32_t straight_next_at;
     uint32_t straight_wait_started_at;
@@ -455,9 +473,13 @@ typedef struct MorseFlipperApp {
     int32_t rf_rssi_sum_dbm;
     uint32_t paddle_sources[MorseKeyerPaddleCount];
     uint32_t note_sources[3];
+
+    /* Host-testable models: keep policy here, hardware glue around the edges. */
     MorseTrainer trainer;
     MorseFlipperHamKeyer ham_keyer;
     MorseTrainerCustomSets custom_sets;
+
+    /* Live feature flags; each block is owned by its matching runtime module. */
     bool straight_playback_active;
     bool straight_playback_mark;
     bool straight_started;
@@ -502,6 +524,8 @@ typedef struct MorseFlipperApp {
     char rf_rx_text[64];
     char rf_tx_text[64];
     char gpio_text[64];
+
+    /* Larger submodules held by value to keep lifetime boring and failure modes fewer. */
     MorseFlipperRunHistory run_history;
     MorseFlipperAudioPwm audio_pwm;
     MorseFlipperStraightFilter straight_filter;

@@ -54,6 +54,7 @@ static bool morse_flipper_rf_rx_rssi_monitor(const MorseFlipperApp* app, int8_t 
 
     if(app == NULL) return false;
 
+    /* Hysteresis keeps weak OOK from chattering at the threshold. */
     open_dbm = morse_flipper_rf_clamp_dbm(app->rf_monitor_threshold_dbm);
     close_dbm = morse_flipper_rf_clamp_dbm((int8_t)(open_dbm - MORSE_FLIPPER_RF_RX_HYSTERESIS_DB));
 
@@ -103,6 +104,7 @@ static bool morse_flipper_rf_rx_feed_carrier(MorseFlipperApp* app, bool level, u
     if(app == NULL) return false;
     if(level == app->rf_rx_level) return false;
 
+    /* Convert carrier edges into decoder timing; tiny high pulses are shown, not decoded. */
     if(app->rf_rx_edge_at != 0U) {
         duration_ms = now_ms - app->rf_rx_edge_at;
         if(duration_ms != 0U) {
@@ -173,6 +175,7 @@ static bool morse_flipper_rf_rx_sample_monitor(MorseFlipperApp* app, bool level,
 
     if(app == NULL) return false;
 
+    /* Candidate state must survive several samples before becoming a carrier edge. */
     if(app->rf_rx_candidate_samples == 0U) {
         app->rf_rx_candidate_level = level;
         app->rf_rx_candidate_samples = 1U;
@@ -209,6 +212,7 @@ static bool morse_flipper_rf_rx_flush_idle_gap(MorseFlipperApp* app, uint32_t no
     if(app == NULL || app->rf_rx_level || app->rf_rx_gap_flushed || app->rf_rx_edge_at == 0U)
         return false;
 
+    /* A long quiet gap may be the only signal that the last symbol is complete. */
     gap_ms = now_ms - app->rf_rx_edge_at;
     if(gap_ms < (morse_flipper_cw_decoder_dit_ms(&app->rf_decoder) * 5U) / 2U) return false;
 

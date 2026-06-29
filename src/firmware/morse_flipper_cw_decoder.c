@@ -30,6 +30,7 @@ static void decoder_push_dit_sample(MorseFlipperCwDecoder* decoder, uint16_t ms)
 
     if(!decoder || !ms) return;
 
+    /* Rolling dit estimate: small, cheap, and good enough for a human fist. */
     if(decoder->dit_sample_count <
        sizeof(decoder->dit_samples) / sizeof(decoder->dit_samples[0])) {
         decoder->dit_samples[decoder->dit_sample_count++] = ms;
@@ -132,6 +133,10 @@ static bool decoder_guess_timing(MorseFlipperCwDecoder* decoder) {
     uint16_t largest_gap;
     uint32_t lower_total;
 
+    /*
+     * Before timing is known, pending samples store marks as positive and spaces
+     * as negative. Marks should form two rough clusters; the lower cluster is dit.
+     */
     if(!decoder) return false;
 
     mark_count = 0;
@@ -182,6 +187,7 @@ static void decoder_process_mark(MorseFlipperCwDecoder* decoder, uint16_t ms) {
 
     if(!decoder || !ms) return;
 
+    /* No dit yet: bank samples until the cluster split is plausible. */
     if(!decoder->dit_ms) {
         if(decoder->pending_count <
            sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
@@ -211,6 +217,7 @@ static void decoder_process_space(MorseFlipperCwDecoder* decoder, uint16_t ms) {
 
     if(!decoder || !ms) return;
 
+    /* Spaces are boundaries: letter, word, or "give up and reset timing". */
     if(!decoder->dit_ms) {
         if(decoder->pending_count <
            sizeof(decoder->pending_samples) / sizeof(decoder->pending_samples[0])) {
@@ -242,6 +249,7 @@ static void decoder_replay_pending(MorseFlipperCwDecoder* decoder) {
     size_t count;
     size_t i;
 
+    /* Once a dit is guessed, replay old edges through the normal path. No special cases. */
     if(!decoder) return;
     count = decoder->pending_count;
     if(count > sizeof(samples) / sizeof(samples[0])) count = sizeof(samples) / sizeof(samples[0]);

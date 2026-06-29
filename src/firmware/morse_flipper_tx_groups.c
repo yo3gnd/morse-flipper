@@ -192,6 +192,10 @@ void morse_flipper_tx_group_feed_text(MorseFlipperTxGroup* g, const char* text) 
 static bool txg_raw_boundaries(const MorseFlipperTxGroup* g, uint16_t dit_ms, bool* boundary) {
     uint8_t usable_spaces;
 
+    /*
+     * Raw answers arrive as mark/space timings. Pick the largest usable spaces as
+     * letter boundaries; the shorter spaces are assumed to be inside letters.
+     */
     if(g == 0 || boundary == 0 || dit_ms == 0U) return false;
     memset(boundary, 0, MORSE_FLIPPER_TX_GROUP_MAX_EDGES * sizeof(boundary[0]));
     if(g->mark_count < MORSE_FLIPPER_TX_GROUP_LEN ||
@@ -245,6 +249,7 @@ bool morse_flipper_tx_group_finalize_answer_from_raw(MorseFlipperTxGroup* g, uin
     uint8_t start = 0U;
     uint8_t n = 0U;
 
+    /* Best-effort rescue path for straight-key input before the text decoder catches up. */
     if(g == 0) return false;
     if(!txg_raw_boundaries(g, dit_ms, boundary)) return false;
 
@@ -285,6 +290,7 @@ void morse_flipper_tx_group_score_common(MorseFlipperTxGroup* g, uint16_t dit_ms
     uint32_t got_lgap = 0U;
     uint8_t lgcnt = 0U;
 
+    /* Common score: right letters, total speed, and letter-gap timing. */
     if(g == 0) return;
     memset(&g->result, 0, sizeof(g->result));
     g->result.timed_out = timed_out;
@@ -335,6 +341,10 @@ static void morse_flipper_tx_group_score_sk(MorseFlipperTxGroup* g, uint16_t dit
     uint32_t avg_dit = 0U;
     uint32_t avg_dah = 0U;
 
+    /*
+     * Straight-key extras judge the fist, not just the text: dah/dit ratio,
+     * average mark accuracy, inner-dit gaps, and consistency.
+     */
     if(g == 0) return;
     txg_expected(g->target, mu, &mc, su, &sc);
 
@@ -394,6 +404,7 @@ static void morse_flipper_tx_group_pick_fault(MorseFlipperTxGroup* g) {
     uint16_t lgap_sev = 150U;
     uint8_t len;
 
+    /* Pick one useful fault, weighted by what the operator should fix first. */
     if(g == 0) return;
     len = morse_flipper_tx_group_answer_len(g);
     if(!g->result.correct_pass && morse_flipper_tx_group_marks_complete(g) &&
