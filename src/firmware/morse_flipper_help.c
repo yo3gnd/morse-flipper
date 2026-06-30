@@ -208,7 +208,7 @@ static const char* const morse_help_contact[] = {
     "\e*\ecDE P5KIM K\n\nThis is P5KIM answering.",
     "\e*\ecRR P5KIM DE YO3GND = GM UR 5NN HW IS KOREA? BK\n\nRoger P5KIM from YO3GND.\nGood morning, your signal is strong. How is Korea? Back to you.",
     "\e*\ecBK GM KOREA FB = NEW ANT NEW ICBM NUKE BK\n\nGood morning.\nKorea is doing well, I have a new antenna and a new nuclear ballistic missile. Back to you.",
-    "\e*\ecRR ENJOY TOYS = TU FER QSO ES 73\n\nRoger. Have fun with the new toys. Thank you for the contact, and goodbye.",
+    "\e*\ecRR NEAT TOYS = TU FER QSO ES 73\n\nRoger. Interesting gear you have there. Thank you for the contact, and goodbye.",
     "\e*\ecRR TU 73 E E\n\nRoger. Thank you and goodbye.",
     "At that point the contact between P5KIM and YO3GND is complete.",
     "Some people are chatty and send full phrases. That will be slow. Do not expect it as the default.",
@@ -391,7 +391,8 @@ void morse_flipper_draw_help(Canvas* canvas, MorseFlipperApp* app) {
 
     if(canvas == NULL || app == NULL) return;
     morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
-    cwmd_draw(canvas, &cfg, &app->help_md, morse_flipper_help_card(app->help_topic, app->help_page));
+    cwmd_draw(
+        canvas, &cfg, &app->help_md, morse_flipper_help_card(app->help_topic, app->help_page));
 }
 
 int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app) {
@@ -400,5 +401,6 @@ int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app
 
     if(canvas == NULL || app == NULL) return 0;
     morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
-    return cwmd_max_scroll_px(canvas, &cfg, morse_flipper_help_card(app->help_topic, app->help_page));
+    return cwmd_max_scroll_px(
+        canvas, &cfg, morse_flipper_help_card(app->help_topic, app->help_page));
 }

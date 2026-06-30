@@ -236,11 +236,12 @@ void morse_flipper_set_note_source(
 
     app->note_sources[note] = after;
     if(app->screen == MorseFlipperScreenRf && app->rf_live_active) {
+        bool can_tx = morse_flipper_rf_tx_allowed_khz(morse_flipper_rf_frequency_khz(&app->rf));
         now_ms = furi_get_tick();
         app->rf_tx_tail_until =
             now_ms + ((uint32_t)morse_flipper_current_dit_ms(app) * MORSE_FLIPPER_RF_TX_TAIL_DITS);
 
-        if(morse_flipper_any_active_notes(app) && !app->radio.tx_on) {
+        if(morse_flipper_any_active_notes(app) && can_tx && !app->radio.tx_on) {
             morse_flipper_radio_sync_live(
                 &app->radio,
                 morse_flipper_rf_frequency_hz(&app->rf),
@@ -248,7 +249,8 @@ void morse_flipper_set_note_source(
                 true,
                 MorseFlipperRadioProfileOokData);
         }
-        morse_flipper_radio_set_tx_level(&app->radio, morse_flipper_any_active_notes(app));
+        morse_flipper_radio_set_tx_level(
+            &app->radio, morse_flipper_any_active_notes(app) && can_tx);
     }
     morse_flipper_update_sidetone(app);
 

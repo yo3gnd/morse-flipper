@@ -227,11 +227,7 @@ static void morse_flipper_scene_menu_help_on_enter(void* context) {
         morse_flipper_scene_menu_pick,
         app);
     submenu_add_item(
-        app->submenu,
-        "Ham usage",
-        MorseFlipperHelpHamUsage,
-        morse_flipper_scene_menu_pick,
-        app);
+        app->submenu, "Ham usage", MorseFlipperHelpHamUsage, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
         app->submenu,
         "Troubleshooting",

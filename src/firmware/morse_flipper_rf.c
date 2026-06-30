@@ -14,6 +14,119 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct {
+    uint32_t min_khz;
+    uint32_t max_khz;
+} MorseFlipperRfBandKHz;
+
+static const MorseFlipperRfBandKHz morse_flipper_rf_vfo_bands[] = {
+    {MORSE_FLIPPER_RF_VFO_LOW_MIN_KHZ, MORSE_FLIPPER_RF_VFO_LOW_MAX_KHZ},
+    {MORSE_FLIPPER_RF_VFO_MID_MIN_KHZ, MORSE_FLIPPER_RF_VFO_MID_MAX_KHZ},
+    {MORSE_FLIPPER_RF_VFO_HIGH_MIN_KHZ, MORSE_FLIPPER_RF_VFO_HIGH_MAX_KHZ},
+};
+
+bool morse_flipper_rf_vfo_frequency_valid_khz(uint32_t khz) {
+    size_t i;
+
+    for(i = 0U; i < sizeof(morse_flipper_rf_vfo_bands) / sizeof(morse_flipper_rf_vfo_bands[0]);
+        i++) {
+        if(khz >= morse_flipper_rf_vfo_bands[i].min_khz &&
+           khz <= morse_flipper_rf_vfo_bands[i].max_khz)
+            return true;
+    }
+
+    return false;
+}
+
+bool morse_flipper_rf_vfo_frequency_valid_hz(uint32_t hz) {
+    size_t i;
+
+    for(i = 0U; i < sizeof(morse_flipper_rf_vfo_bands) / sizeof(morse_flipper_rf_vfo_bands[0]);
+        i++) {
+        if(hz >= morse_flipper_rf_vfo_bands[i].min_khz * 1000U &&
+           hz <= morse_flipper_rf_vfo_bands[i].max_khz * 1000U)
+            return true;
+    }
+
+    return false;
+}
+
+#ifdef MORSE_FLIPPER_FAP
+static bool morse_flipper_rf_candidate_usable_hz(uint32_t hz) {
+    return morse_flipper_rf_vfo_frequency_valid_hz(hz) && furi_hal_subghz_is_frequency_valid(hz) &&
+           furi_hal_region_is_frequency_allowed(hz);
+}
+
+static bool morse_flipper_rf_region_wide_open(void) {
+    const char* name = furi_hal_region_get_name();
+    const FuriHalRegion* region = furi_hal_region_get();
+
+    if(name != NULL && strcmp(name, "00") == 0) return true;
+    if(region != NULL && region->bands_count == 1U && region->bands[0].start == 0U &&
+       region->bands[0].end >= 1000000000U)
+        return true;
+
+    return furi_hal_region_is_frequency_allowed(MORSE_FLIPPER_RF_VFO_LOW_MIN_KHZ * 1000U) &&
+           furi_hal_region_is_frequency_allowed(MORSE_FLIPPER_RF_VFO_MID_MIN_KHZ * 1000U) &&
+           furi_hal_region_is_frequency_allowed(MORSE_FLIPPER_RF_VFO_HIGH_MIN_KHZ * 1000U);
+}
+
+static uint32_t morse_flipper_rf_band_default_hz(void) {
+    const FuriHalRegion* region = furi_hal_region_get();
+    size_t band_i;
+    size_t vfo_i;
+
+    if(region == NULL) return MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ;
+
+    for(band_i = 0U; band_i < region->bands_count; band_i++) {
+        uint32_t band_min_khz = (region->bands[band_i].start + 999U) / 1000U;
+        uint32_t band_max_khz = region->bands[band_i].end / 1000U;
+
+        for(vfo_i = 0U;
+            vfo_i < sizeof(morse_flipper_rf_vfo_bands) / sizeof(morse_flipper_rf_vfo_bands[0]);
+            vfo_i++) {
+            uint32_t min_khz = band_min_khz > morse_flipper_rf_vfo_bands[vfo_i].min_khz ?
+                                   band_min_khz :
+                                   morse_flipper_rf_vfo_bands[vfo_i].min_khz;
+            uint32_t max_khz = band_max_khz < morse_flipper_rf_vfo_bands[vfo_i].max_khz ?
+                                   band_max_khz :
+                                   morse_flipper_rf_vfo_bands[vfo_i].max_khz;
+            uint32_t khz;
+
+            if(min_khz > max_khz) continue;
+
+            khz = min_khz + ((max_khz - min_khz) / 2U);
+            if(morse_flipper_rf_candidate_usable_hz(khz * 1000U)) return khz * 1000U;
+        }
+    }
+
+    return MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ;
+}
+#endif
+
+uint32_t morse_flipper_rf_default_frequency_hz(void) {
+#ifdef MORSE_FLIPPER_FAP
+    static const uint32_t candidates_hz[] = {
+        MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ,
+        315000000U,
+        868350000U,
+        915000000U,
+        920500000U,
+    };
+    size_t i;
+
+    if(morse_flipper_rf_region_wide_open()) return MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ;
+
+    for(i = 0U; i < sizeof(candidates_hz) / sizeof(candidates_hz[0]); i++) {
+        if(morse_flipper_rf_candidate_usable_hz(candidates_hz[i])) return candidates_hz[i];
+    }
+
+    return morse_flipper_rf_band_default_hz();
+#else
+    return MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ;
+#endif
+}
+
 static void rf_push_tx_log(MorseFlipperRf* rf, const char* line) {
     size_t slot;
 
@@ -45,7 +158,7 @@ void morse_flipper_rf_init(MorseFlipperRf* rf) {
     if(!rf) return;
     memset(rf, 0, sizeof(*rf));
     morse_flipper_rf_timing_init(&rf->rx_timing);
-    rf->frequency_hz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ;
+    rf->frequency_hz = morse_flipper_rf_default_frequency_hz();
     rf_refresh_text(rf);
 }
 
@@ -283,8 +396,16 @@ int8_t morse_flipper_rf_clamp_dbm(int8_t dbm) {
     return dbm;
 }
 
+bool morse_flipper_rf_frequency_valid_hz(uint32_t hz) {
+    return morse_flipper_rf_vfo_frequency_valid_hz(hz) && furi_hal_subghz_is_frequency_valid(hz);
+}
+
+bool morse_flipper_rf_frequency_valid_khz(uint32_t khz) {
+    return morse_flipper_rf_frequency_valid_hz(khz * 1000U);
+}
+
 static bool morse_flipper_rf_tx_allowed_hz(uint32_t hz) {
-    return furi_hal_subghz_is_frequency_valid(hz) && furi_hal_region_is_frequency_allowed(hz);
+    return morse_flipper_rf_frequency_valid_hz(hz) && furi_hal_region_is_frequency_allowed(hz);
 }
 
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz) {
@@ -397,7 +518,13 @@ void morse_flipper_rf_commit_edit(MorseFlipperApp* app) {
     if(app == NULL) return;
 
     khz = app->rf_edit_khz % 1000000U;
-    if(!morse_flipper_rf_tx_allowed_khz(khz)) khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
+    if(!morse_flipper_rf_vfo_frequency_valid_khz(khz)) {
+        app->rf_edit_khz = morse_flipper_rf_frequency_khz(&app->rf);
+        return;
+    }
+
+    if(!morse_flipper_rf_frequency_valid_khz(khz))
+        khz = morse_flipper_rf_default_frequency_hz() / 1000U;
     app->rf_edit_khz = khz;
     morse_flipper_rf_set_frequency_hz(&app->rf, khz * 1000U);
     morse_flipper_save_config(app);
@@ -406,7 +533,7 @@ void morse_flipper_rf_commit_edit(MorseFlipperApp* app) {
 const char* morse_flipper_rf_khz_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     unsigned long khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
 
-    if(buf == NULL || buf_sz == 0U) return "433150 khz";
+    if(buf == NULL || buf_sz == 0U) return "433160 khz";
     if(app != NULL) khz = (unsigned long)morse_flipper_rf_frequency_khz(&app->rf);
     snprintf(buf, buf_sz, "%lu khz", khz);
     return buf;
@@ -430,10 +557,7 @@ const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, si
     return buf;
 }
 
-const char* morse_flipper_rf_rx_wpm_line(
-    const MorseFlipperApp* app,
-    char* buf,
-    size_t buf_sz) {
+const char* morse_flipper_rf_rx_wpm_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     uint8_t hint_wpm = MORSE_FLIPPER_RF_RX_DEFAULT_WPM;
     uint16_t tracked_dit_ms = 0U;
     bool tracked = false;

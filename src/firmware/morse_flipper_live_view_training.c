@@ -251,11 +251,8 @@ static uint32_t morse_flipper_straight_strip_total_ms(
     return total;
 }
 
-static uint8_t morse_flipper_straight_segment_px(
-    uint32_t ms,
-    uint32_t ref_ms,
-    uint8_t w,
-    bool visible) {
+static uint8_t
+    morse_flipper_straight_segment_px(uint32_t ms, uint32_t ref_ms, uint8_t w, bool visible) {
     uint32_t px;
 
     if(ref_ms == 0U) ref_ms = 1U;
@@ -326,11 +323,7 @@ static void morse_flipper_draw_straight_strip(
     end_x = (int32_t)x + w;
 
     morse_flipper_draw_straight_low_segment(
-        canvas,
-        &pos,
-        end_x,
-        low_y,
-        morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
+        canvas, &pos, end_x, low_y, morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
 
     for(i = 0U; code[i] != '\0'; i++) {
         uint32_t ms;
@@ -358,11 +351,7 @@ static void morse_flipper_draw_straight_strip(
     }
 
     morse_flipper_draw_straight_low_segment(
-        canvas,
-        &pos,
-        end_x,
-        low_y,
-        morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
+        canvas, &pos, end_x, low_y, morse_flipper_straight_segment_px(dit_ms, ref_ms, w, true));
 }
 
 static void morse_flipper_draw_straight_countdown(Canvas* canvas, const MorseFlipperApp* app) {
@@ -613,7 +602,8 @@ void morse_flipper_draw_tx_groups_screen(Canvas* canvas, MorseFlipperApp* app) {
 
     canvas_set_font(canvas, FontSecondary);
     if(app->screen == MorseFlipperScreenTxGroups && !app->txg_started) {
-        if(morse_flipper_gpio_probe_notice_active(app) || morse_flipper_gpio_probe_blocks_start(app)) {
+        if(morse_flipper_gpio_probe_notice_active(app) ||
+           morse_flipper_gpio_probe_blocks_start(app)) {
             morse_flipper_draw_gpio_probe_overlay(canvas, app);
             return;
         }

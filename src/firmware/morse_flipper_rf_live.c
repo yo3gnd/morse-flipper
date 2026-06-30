@@ -25,8 +25,8 @@ static uint16_t morse_flipper_rf_rx_glitch_limit_ms(const MorseFlipperApp* app) 
 
     dit_ms = morse_flipper_cw_decoder_dit_ms(&app->rf_decoder);
     if(dit_ms == 0U) {
-        uint8_t hint_wpm =
-            app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM : app->rf_rx_wpm_hint;
+        uint8_t hint_wpm = app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM :
+                                                       app->rf_rx_wpm_hint;
         dit_ms = morse_flipper_wpm_to_dit_ms(morse_flipper_rf_clamp_wpm(hint_wpm));
     }
 
@@ -201,8 +201,8 @@ static bool morse_flipper_rf_rx_sample_monitor(MorseFlipperApp* app, bool level,
         return false;
     }
 
-    edge_ms = now_ms -
-              ((uint32_t)(app->rf_rx_candidate_samples - 1U) * MORSE_FLIPPER_RF_RX_SAMPLE_MS);
+    edge_ms =
+        now_ms - ((uint32_t)(app->rf_rx_candidate_samples - 1U) * MORSE_FLIPPER_RF_RX_SAMPLE_MS);
     return morse_flipper_rf_rx_feed_carrier(app, app->rf_rx_candidate_level, edge_ms);
 }
 
@@ -216,7 +216,8 @@ static bool morse_flipper_rf_rx_flush_idle_gap(MorseFlipperApp* app, uint32_t no
     gap_ms = now_ms - app->rf_rx_edge_at;
     if(gap_ms < (morse_flipper_cw_decoder_dit_ms(&app->rf_decoder) * 5U) / 2U) return false;
 
-    morse_flipper_cw_decoder_feed_space(&app->rf_decoder, morse_flipper_rf_rx_duration_u16(gap_ms));
+    morse_flipper_cw_decoder_feed_space(
+        &app->rf_decoder, morse_flipper_rf_rx_duration_u16(gap_ms));
     app->rf_rx_gap_flushed = true;
     return morse_flipper_rf_rx_drain_decoder(app);
 }
@@ -290,7 +291,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
         app->rf_carrier_present = carrier_now;
         app->rf_rssi_sum_dbm += dbm;
         app->rf_rssi_samples++;
-        ticker_scroll = app->rf_rx_level || morse_flipper_rf_ticker_count(&app->rf_rx_ticker) != 0U;
+        ticker_scroll = app->rf_rx_level ||
+                        morse_flipper_rf_ticker_count(&app->rf_rx_ticker) != 0U;
 
         if(app->rf_rssi_next_at == 0U)
             app->rf_rssi_next_at = now_ms + MORSE_FLIPPER_RF_RSSI_WINDOW_MS;
@@ -339,7 +341,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
-    if(!app->radio.tx_on && morse_flipper_any_active_notes(app)) {
+    if(!app->radio.tx_on && morse_flipper_any_active_notes(app) &&
+       morse_flipper_rf_tx_allowed_khz(morse_flipper_rf_frequency_khz(&app->rf))) {
         morse_flipper_radio_sync_live(
             &app->radio,
             morse_flipper_rf_frequency_hz(&app->rf),
