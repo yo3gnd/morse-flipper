@@ -86,9 +86,9 @@ void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* ap
     }
 
     canvas_set_font(canvas, FontSecondary);
-    if(edit_khz < MORSE_FLIPPER_RF_VFO_MIN_KHZ) {
-        canvas_draw_str_aligned(canvas, 64, 47, AlignCenter, AlignCenter, "VFO lock failure");
-        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Out of range");
+    if(!morse_flipper_rf_vfo_frequency_valid_khz(edit_khz)) {
+        canvas_draw_str_aligned(canvas, 64, 47, AlignCenter, AlignCenter, "RX not available");
+        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "PLL lock failed");
         return;
     }
 

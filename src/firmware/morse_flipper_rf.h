@@ -14,9 +14,14 @@
 
 #include "morse_flipper_rf_timing.h"
 
-#define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ  433150000u
-#define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ 433150u
-#define MORSE_FLIPPER_RF_VFO_MIN_KHZ           300000u
+#define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_HZ  433160000u
+#define MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ 433160u
+#define MORSE_FLIPPER_RF_VFO_LOW_MIN_KHZ       300000u
+#define MORSE_FLIPPER_RF_VFO_LOW_MAX_KHZ       348000u
+#define MORSE_FLIPPER_RF_VFO_MID_MIN_KHZ       387000u
+#define MORSE_FLIPPER_RF_VFO_MID_MAX_KHZ       464000u
+#define MORSE_FLIPPER_RF_VFO_HIGH_MIN_KHZ      779000u
+#define MORSE_FLIPPER_RF_VFO_HIGH_MAX_KHZ      928000u
 #define MORSE_FLIPPER_RF_RX_DEFAULT_WPM        10u
 #define MORSE_FLIPPER_RF_RX_WPM_MIN            2u
 #define MORSE_FLIPPER_RF_RX_WPM_MAX            25u
@@ -52,6 +57,8 @@ typedef struct {
 } MorseFlipperRf;
 
 void morse_flipper_rf_init(MorseFlipperRf* rf);
+bool morse_flipper_rf_vfo_frequency_valid_khz(uint32_t khz);
+bool morse_flipper_rf_vfo_frequency_valid_hz(uint32_t hz);
 void morse_flipper_rf_set_frequency_hz(MorseFlipperRf* rf, uint32_t hz);
 void morse_flipper_rf_reset_live(MorseFlipperRf* rf);
 void morse_flipper_rf_handle_tx(MorseFlipperRf* rf, bool active, char symbol);

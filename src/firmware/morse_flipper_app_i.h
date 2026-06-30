@@ -713,6 +713,8 @@ void morse_flipper_ham_log_flush_if_idle(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms);
 int8_t morse_flipper_rf_clamp_dbm(int8_t dbm);
 int8_t morse_flipper_rssi_dbm_round(float rssi);
+uint32_t morse_flipper_rf_default_frequency_hz(void);
+bool morse_flipper_rf_frequency_valid_hz(uint32_t hz);
 bool morse_flipper_rf_frequency_valid_khz(uint32_t khz);
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz);
 void morse_flipper_rf_reset_rx_runtime(MorseFlipperApp* app);

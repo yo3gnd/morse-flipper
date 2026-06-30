@@ -200,8 +200,10 @@ static void morse_flipper_config_apply(MorseFlipperApp* app, const MorseFlipperC
     app->audio_path = morse_flipper_config_load_audio_path(config->audio_path);
     app->p2_volume_pct = morse_flipper_config_load_p2_volume(config->p2_volume_pct);
     app->txg_difficulty = morse_flipper_config_load_txg_difficulty(config->txg_difficulty);
-    if(furi_hal_subghz_is_frequency_valid(config->rf_frequency_hz))
+    if(morse_flipper_rf_frequency_valid_hz(config->rf_frequency_hz))
         morse_flipper_rf_set_frequency_hz(&app->rf, config->rf_frequency_hz);
+    else
+        morse_flipper_rf_set_frequency_hz(&app->rf, morse_flipper_rf_default_frequency_hz());
 
     app->ham_keyer.logging_enabled = config->ham_logging_enabled != 0U;
     app->ham_keyer.message_count = config->ham_message_count;
