@@ -121,6 +121,11 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
     }
 
     if(app->screen == MorseFlipperScreenRf) {
+        if(!morse_flipper_rf_tx_allowed_khz(morse_flipper_rf_frequency_khz(&app->rf))) {
+            morse_flipper_draw_rf_tx_blocked(canvas, app);
+            return;
+        }
+
         morse_flipper_draw_tx_history_screen(
             canvas, app, morse_flipper_rf_khz_line(app, browse_line, sizeof(browse_line)));
         return;
