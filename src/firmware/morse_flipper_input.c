@@ -211,7 +211,9 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
             morse_flipper_ham_keyer_delete_message(&app->ham_keyer, app->ham.selected_message);
             if(app->ham_keyer.message_count == 0U) {
                 scene_manager_set_scene_state(
-                    app->scene_manager, MorseFlipperSceneHamConfigure, MorseFlipperHamConfigureAdd);
+                    app->scene_manager,
+                    MorseFlipperSceneHamConfigure,
+                    MorseFlipperHamConfigureAdd);
             } else {
                 if(next_selection >= app->ham_keyer.message_count)
                     next_selection = (uint8_t)(app->ham_keyer.message_count - 1U);
@@ -294,8 +296,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
         }
 
         if((event->key == InputKeyUp || event->key == InputKeyDown) &&
-           event->type == InputTypeRelease &&
-           app->ham.wpm_hold_key == (uint8_t)event->key) {
+           event->type == InputTypeRelease && app->ham.wpm_hold_key == (uint8_t)event->key) {
             app->ham.wpm_hold_key = MORSE_FLIPPER_HAM_WPM_HOLD_NONE;
             app->ham.wpm_hold_next_at = 0U;
             return true;

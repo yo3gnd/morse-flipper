@@ -25,8 +25,8 @@ static uint16_t morse_flipper_rf_rx_glitch_limit_ms(const MorseFlipperApp* app) 
 
     dit_ms = morse_flipper_cw_decoder_dit_ms(&app->rf_decoder);
     if(dit_ms == 0U) {
-        uint8_t hint_wpm =
-            app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM : app->rf_rx_wpm_hint;
+        uint8_t hint_wpm = app->rf_rx_wpm_hint == 0U ? MORSE_FLIPPER_RF_RX_DEFAULT_WPM :
+                                                       app->rf_rx_wpm_hint;
         dit_ms = morse_flipper_wpm_to_dit_ms(morse_flipper_rf_clamp_wpm(hint_wpm));
     }
 
@@ -201,8 +201,8 @@ static bool morse_flipper_rf_rx_sample_monitor(MorseFlipperApp* app, bool level,
         return false;
     }
 
-    edge_ms = now_ms -
-              ((uint32_t)(app->rf_rx_candidate_samples - 1U) * MORSE_FLIPPER_RF_RX_SAMPLE_MS);
+    edge_ms =
+        now_ms - ((uint32_t)(app->rf_rx_candidate_samples - 1U) * MORSE_FLIPPER_RF_RX_SAMPLE_MS);
     return morse_flipper_rf_rx_feed_carrier(app, app->rf_rx_candidate_level, edge_ms);
 }
 
