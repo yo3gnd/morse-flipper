@@ -734,7 +734,10 @@ void morse_flipper_draw_help(Canvas* canvas, MorseFlipperApp* app);
 int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app);
 void morse_flipper_draw_gpio_probe_overlay(Canvas* canvas, const MorseFlipperApp* app);
 void morse_flipper_draw_startup_gpio_probe(Canvas* canvas, const MorseFlipperApp* app);
-void morse_flipper_draw_tx_history_screen(Canvas* canvas, MorseFlipperApp* app, const char* second_line);
+void morse_flipper_draw_tx_history_screen(
+    Canvas* canvas,
+    MorseFlipperApp* app,
+    const char* second_line);
 void morse_flipper_draw_tx_history_screen_custom(
     Canvas* canvas,
     MorseFlipperApp* app,

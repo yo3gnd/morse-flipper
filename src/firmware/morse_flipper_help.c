@@ -391,7 +391,8 @@ void morse_flipper_draw_help(Canvas* canvas, MorseFlipperApp* app) {
 
     if(canvas == NULL || app == NULL) return;
     morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
-    cwmd_draw(canvas, &cfg, &app->help_md, morse_flipper_help_card(app->help_topic, app->help_page));
+    cwmd_draw(
+        canvas, &cfg, &app->help_md, morse_flipper_help_card(app->help_topic, app->help_page));
 }
 
 int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app) {
@@ -400,5 +401,6 @@ int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app
 
     if(canvas == NULL || app == NULL) return 0;
     morse_flipper_help_cfg(app, &cfg, page, sizeof(page));
-    return cwmd_max_scroll_px(canvas, &cfg, morse_flipper_help_card(app->help_topic, app->help_page));
+    return cwmd_max_scroll_px(
+        canvas, &cfg, morse_flipper_help_card(app->help_topic, app->help_page));
 }

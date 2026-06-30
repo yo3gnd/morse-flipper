@@ -430,10 +430,7 @@ const char* morse_flipper_rf_rssi_line(const MorseFlipperApp* app, char* buf, si
     return buf;
 }
 
-const char* morse_flipper_rf_rx_wpm_line(
-    const MorseFlipperApp* app,
-    char* buf,
-    size_t buf_sz) {
+const char* morse_flipper_rf_rx_wpm_line(const MorseFlipperApp* app, char* buf, size_t buf_sz) {
     uint8_t hint_wpm = MORSE_FLIPPER_RF_RX_DEFAULT_WPM;
     uint16_t tracked_dit_ms = 0U;
     bool tracked = false;

@@ -29,7 +29,13 @@ typedef struct Canvas Canvas;
 void canvas_set_font(Canvas* canvas, Font font);
 uint16_t canvas_string_width(Canvas* canvas, const char* str);
 void canvas_draw_str(Canvas* canvas, int32_t x, int32_t y, const char* str);
-void canvas_draw_str_aligned(Canvas* canvas, int32_t x, int32_t y, Align h, Align v, const char* str);
+void canvas_draw_str_aligned(
+    Canvas* canvas,
+    int32_t x,
+    int32_t y,
+    Align h,
+    Align v,
+    const char* str);
 void canvas_draw_xbm(
     Canvas* canvas,
     int32_t x,

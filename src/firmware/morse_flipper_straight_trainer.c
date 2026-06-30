@@ -33,8 +33,7 @@ static uint16_t straight_code(char ch) {
 }
 
 static uint8_t straight_weight(char ch) {
-    return (ch == 'E' || ch == 'T' || ch == 'I') ? STRAIGHT_WEIGHT_RARE :
-                                                    STRAIGHT_WEIGHT_NORMAL;
+    return (ch == 'E' || ch == 'T' || ch == 'I') ? STRAIGHT_WEIGHT_RARE : STRAIGHT_WEIGHT_NORMAL;
 }
 
 static char straight_pick(MorseFlipperStraightTrainer* trainer, const char* charset) {
@@ -210,9 +209,7 @@ void morse_flipper_straight_trainer_init(MorseFlipperStraightTrainer* trainer) {
     trainer->worst_dah_score = 100U;
 }
 
-void morse_flipper_straight_trainer_set_seed(
-    MorseFlipperStraightTrainer* trainer,
-    uint32_t seed) {
+void morse_flipper_straight_trainer_set_seed(MorseFlipperStraightTrainer* trainer, uint32_t seed) {
     if(!trainer) return;
     trainer->rng_state = seed ? seed : STRAIGHT_TRAINER_DEFAULT_SEED;
 }

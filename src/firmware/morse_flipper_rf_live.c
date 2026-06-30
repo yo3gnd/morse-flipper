@@ -216,7 +216,8 @@ static bool morse_flipper_rf_rx_flush_idle_gap(MorseFlipperApp* app, uint32_t no
     gap_ms = now_ms - app->rf_rx_edge_at;
     if(gap_ms < (morse_flipper_cw_decoder_dit_ms(&app->rf_decoder) * 5U) / 2U) return false;
 
-    morse_flipper_cw_decoder_feed_space(&app->rf_decoder, morse_flipper_rf_rx_duration_u16(gap_ms));
+    morse_flipper_cw_decoder_feed_space(
+        &app->rf_decoder, morse_flipper_rf_rx_duration_u16(gap_ms));
     app->rf_rx_gap_flushed = true;
     return morse_flipper_rf_rx_drain_decoder(app);
 }
@@ -290,7 +291,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
         app->rf_carrier_present = carrier_now;
         app->rf_rssi_sum_dbm += dbm;
         app->rf_rssi_samples++;
-        ticker_scroll = app->rf_rx_level || morse_flipper_rf_ticker_count(&app->rf_rx_ticker) != 0U;
+        ticker_scroll = app->rf_rx_level ||
+                        morse_flipper_rf_ticker_count(&app->rf_rx_ticker) != 0U;
 
         if(app->rf_rssi_next_at == 0U)
             app->rf_rssi_next_at = now_ms + MORSE_FLIPPER_RF_RSSI_WINDOW_MS;
