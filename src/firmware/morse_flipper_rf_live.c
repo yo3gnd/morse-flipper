@@ -341,7 +341,8 @@ void morse_flipper_tick_live_rf(MorseFlipperApp* app, uint32_t now_ms) {
         return;
     }
 
-    if(!app->radio.tx_on && morse_flipper_any_active_notes(app)) {
+    if(!app->radio.tx_on && morse_flipper_any_active_notes(app) &&
+       morse_flipper_rf_tx_allowed_khz(morse_flipper_rf_frequency_khz(&app->rf))) {
         morse_flipper_radio_sync_live(
             &app->radio,
             morse_flipper_rf_frequency_hz(&app->rf),

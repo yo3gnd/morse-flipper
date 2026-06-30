@@ -283,8 +283,16 @@ int8_t morse_flipper_rf_clamp_dbm(int8_t dbm) {
     return dbm;
 }
 
+static bool morse_flipper_rf_frequency_valid_hz(uint32_t hz) {
+    return furi_hal_subghz_is_frequency_valid(hz);
+}
+
+bool morse_flipper_rf_frequency_valid_khz(uint32_t khz) {
+    return morse_flipper_rf_frequency_valid_hz(khz * 1000U);
+}
+
 static bool morse_flipper_rf_tx_allowed_hz(uint32_t hz) {
-    return furi_hal_subghz_is_frequency_valid(hz) && furi_hal_region_is_frequency_allowed(hz);
+    return morse_flipper_rf_frequency_valid_hz(hz) && furi_hal_region_is_frequency_allowed(hz);
 }
 
 bool morse_flipper_rf_tx_allowed_khz(uint32_t khz) {
@@ -397,7 +405,12 @@ void morse_flipper_rf_commit_edit(MorseFlipperApp* app) {
     if(app == NULL) return;
 
     khz = app->rf_edit_khz % 1000000U;
-    if(!morse_flipper_rf_tx_allowed_khz(khz)) khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
+    if(khz < MORSE_FLIPPER_RF_VFO_MIN_KHZ) {
+        app->rf_edit_khz = morse_flipper_rf_frequency_khz(&app->rf);
+        return;
+    }
+
+    if(!morse_flipper_rf_frequency_valid_khz(khz)) khz = MORSE_FLIPPER_RF_DEFAULT_FREQUENCY_KHZ;
     app->rf_edit_khz = khz;
     morse_flipper_rf_set_frequency_hz(&app->rf, khz * 1000U);
     morse_flipper_save_config(app);

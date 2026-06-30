@@ -706,6 +706,14 @@ static bool morse_flipper_rf_freq_input(MorseFlipperApp* app, const InputEvent* 
 
 static bool morse_flipper_rf_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenRf) return false;
+    if(!morse_flipper_rf_tx_allowed_khz(morse_flipper_rf_frequency_khz(&app->rf))) {
+        if(event->key == InputKeyBack &&
+           (event->type == InputTypeShort || event->type == InputTypeLong)) {
+            morse_flipper_scene_back(app);
+        }
+        return true;
+    }
+
     morse_flipper_handle_active_keying_event(app, event);
     return true;
 }

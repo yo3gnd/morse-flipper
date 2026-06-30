@@ -15,6 +15,18 @@ static void morse_flipper_rf_edit_text(char* out, size_t out_sz, uint32_t khz) {
     snprintf(out, out_sz, "%06lu", (unsigned long)(khz % 1000000U));
 }
 
+void morse_flipper_draw_rf_tx_blocked(Canvas* canvas, const MorseFlipperApp* app) {
+    char freq[MORSE_FLIPPER_RF_FREQ_DIGITS + 1U];
+
+    if(canvas == NULL || app == NULL) return;
+
+    morse_flipper_rf_edit_text(freq, sizeof(freq), morse_flipper_rf_frequency_khz(&app->rf));
+    canvas_set_font(canvas, FontBigNumbers);
+    canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignCenter, freq);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignCenter, "TX Blocked");
+}
+
 static void morse_flipper_draw_rf_freq_digit(
     Canvas* canvas,
     int32_t x,
@@ -47,6 +59,8 @@ static void morse_flipper_draw_rf_freq_digit(
 
 void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* app) {
     char digits[MORSE_FLIPPER_RF_FREQ_DIGITS + 1U];
+    const char* tx_line;
+    uint32_t edit_khz;
     const int32_t cell_w = 18;
     const int32_t cell_h = 20;
     const int32_t gap = 1;
@@ -58,7 +72,8 @@ void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* ap
 
     if(canvas == NULL || app == NULL) return;
 
-    morse_flipper_rf_edit_text(digits, sizeof(digits), app->rf_edit_khz);
+    edit_khz = app->rf_edit_khz % 1000000U;
+    morse_flipper_rf_edit_text(digits, sizeof(digits), edit_khz);
     for(i = 0U; i < MORSE_FLIPPER_RF_FREQ_DIGITS; i++) {
         morse_flipper_draw_rf_freq_digit(
             canvas,
@@ -71,13 +86,19 @@ void morse_flipper_draw_rf_freq_picker(Canvas* canvas, const MorseFlipperApp* ap
     }
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(
-        canvas,
-        64,
-        52,
-        AlignCenter,
-        AlignCenter,
-        morse_flipper_rf_tx_allowed_khz(app->rf_edit_khz) ? "TX allowed" : "TX restricted");
+    if(edit_khz < MORSE_FLIPPER_RF_VFO_MIN_KHZ) {
+        canvas_draw_str_aligned(canvas, 64, 47, AlignCenter, AlignCenter, "VFO lock failure");
+        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "Out of range");
+        return;
+    }
+
+    if(!morse_flipper_rf_frequency_valid_khz(edit_khz)) {
+        tx_line = "Invalid freq";
+    } else {
+        tx_line = morse_flipper_rf_tx_allowed_khz(edit_khz) ? "TX allowed" : "RX only";
+    }
+
+    canvas_draw_str_aligned(canvas, 64, 52, AlignCenter, AlignCenter, tx_line);
 }
 
 static uint8_t morse_flipper_rf_rssi_bar_px(int8_t dbm, uint8_t width) {
