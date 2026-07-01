@@ -1,0 +1,32 @@
+In prepper and survivalist circles, CW has a certain reputation: harder than voice, but one of the most self sufficient modes left when things go wrong.
+---
+This app can serve as an emergency CW transmitter, but let us be sensible: it would not be my first choice. Nor my second.
+The transmitter chip in Flipper also drifts when keying below 25 wpm.
+---
+That drift is a hardware problem, so you do not really fix it in software.
+A human can tolerate it; cheap decoders will have a fit.
+It drifts back after pauses, which makes it sound worse still.
+---
+Voice needs a lot of bandwidth. Digital is fussier. CW can get by with a simple transmitter, a key, and a very small pile of kit.
+---
+The Titanic's operators kept transmitting long after everything else failed. Morse was one of the last things still working, and the disaster proved ships needed proper battery backed emergency radio.
+---
+People do in fact build and sell radios for exactly this sort of thing. Small CW QRP rigs, often sold to the prepper crowd, sometimes with decoders built in for when the wetware is having an off day.
+---
+Low power CW on HF with a wire in the trees is hard to locate. A voice call on a known emergency frequency is not.
+---
+Pair CW with NVIS: a wire aimed almost straight up, bouncing signals off the ionosphere. Roughly 500-1500 km, two trees, one wire.
+---
+Sort the plan out now, not during the emergency: frequency, time, fallback. For example: 7.030, daily at 20:00, listen two minutes, then try again tomorrow.
+---
+Your messages will be short.
+*cALL OK
+ is two words.
+*cQTH DAMAGE NEED MED FER 3
+ is six. Plan them like you plan the rest of your kit.
+---
+Use voice for everyday comms. Use CW when power is scarce, conditions are bad, or you want low profile. Digital if you have the gear. Use the simplest thing that works. This is emergency radio, not rocket surgery.
+---
+An agreed code can be better still. If both sides know that "SAQ" means QTH DAMAGE NEED MED FER 3, sending SAQ over and over may get through more easily than a full sentence.
+---
+The realistic takeaway is this: CW is worth having as a backup skill. Not your first tool, not your main plan, but occasionally the only thing still working.
