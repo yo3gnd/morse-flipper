@@ -70,6 +70,21 @@ def iconize(s):
     return r
 
 
+def strip_soft_breaks(s):
+    r = ""
+    i = 0
+    while i < len(s):
+        if s[i] == "~":
+            i += 1
+            if i < len(s) and s[i] == "~":
+                r += "~"
+                i += 1
+            continue
+        r += s[i]
+        i += 1
+    return r
+
+
 def fmt_line(s):
     bold = False
     mono = False
@@ -83,7 +98,7 @@ def fmt_line(s):
         elif c not in "lcr":
             break
         s = s[2:].lstrip()
-    s = iconize(s)
+    s = strip_soft_breaks(iconize(s))
     s = re.sub(r"\s+", " ", s).strip()
     s = s.replace(r"\_", "_").replace(r"\`", "`")
     s = re.sub(r"__(.+?)__", r"**\1**", s)
