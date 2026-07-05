@@ -167,6 +167,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .trainer = {0},
         .ham_keyer = {0},
         .custom_sets = {0},
+        .custom_sets_loaded = false,
         .straight_playback_active = false,
         .straight_playback_mark = false,
         .straight_started = false,
@@ -229,8 +230,6 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_trainer_set_seed(&app->trainer, furi_hal_random_get());
     morse_flipper_straight_trainer_set_seed(&app->straight_trainer, furi_hal_random_get());
     morse_flipper_tx_group_set_seed(&app->tx_group, furi_hal_random_get());
-    morse_trainer_load_custom_sets(&app->custom_sets);
-    morse_flipper_apply_trainer_charset_choice(app);
     morse_flipper_load_config(app);
     morse_flipper_apply_trainer_charset_choice(app);
     morse_flipper_cw_decoder_init(&app->rf_decoder, morse_flipper_current_dit_ms(app));

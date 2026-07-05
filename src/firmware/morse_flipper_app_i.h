@@ -481,6 +481,7 @@ typedef struct MorseFlipperApp {
     MorseTrainer trainer;
     MorseFlipperHamKeyer ham_keyer;
     MorseTrainerCustomSets custom_sets;
+    bool custom_sets_loaded;
 
     /* Live feature flags; each block is owned by its matching runtime module. */
     bool straight_playback_active;
@@ -658,6 +659,7 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_help_open(MorseFlipperApp* app);
 void morse_flipper_about_open(MorseFlipperApp* app);
 void morse_flipper_cycle_trainer_value(MorseFlipperApp* app, int dir);
+void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app);
 void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
 void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms);

@@ -628,6 +628,7 @@ static void morse_flipper_scene_rf_freq_on_enter(void* context) {
 
 static void morse_flipper_scene_session_on_enter(void* context) {
     MorseFlipperApp* app = context;
+    morse_flipper_ensure_custom_sets_loaded(app);
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSession);
 }
 

@@ -262,6 +262,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     uint8_t groups;
     bool dirty = false;
 
+    morse_flipper_ensure_custom_sets_loaded(app);
+
     gs = morse_trainer_group_size(&app->trainer);
     groups = morse_trainer_session_groups(&app->trainer);
     if(gs > 9U) {
