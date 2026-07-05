@@ -238,7 +238,6 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_keyer_init(&app->keyer, app->keyer_mode, morse_flipper_current_dit_ms(app));
     morse_flipper_gpio_init(app);
     app->startup_gpio_probe_state = morse_flipper_gpio_probe_sample_raw(app);
-    morse_flipper_set_pc_mode(app, app->pc_mode_pref);
     app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(

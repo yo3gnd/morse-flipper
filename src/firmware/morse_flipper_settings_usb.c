@@ -15,7 +15,6 @@ void morse_flipper_settings_usb_mode_changed(VariableItem* item) {
 
     variable_item_set_current_value_text(item, morse_flipper_usb_mode_names[idx]);
     app->pc_mode_pref = idx;
-    morse_flipper_set_pc_mode(app, idx);
     morse_flipper_save_config(app);
 }
 

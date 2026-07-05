@@ -609,6 +609,13 @@ static void morse_flipper_scene_live_on_exit(void* context) {
 static void morse_flipper_scene_run_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_enter_now(app, MorseFlipperSceneRun);
+    morse_flipper_set_pc_mode(app, app->pc_mode_pref);
+}
+
+static void morse_flipper_scene_run_on_exit(void* context) {
+    MorseFlipperApp* app = context;
+    morse_flipper_set_pc_mode(app, MorseFlipperPcModeOff);
+    morse_flipper_scene_live_on_exit(context);
 }
 
 static void morse_flipper_scene_rf_on_enter(void* context) {
@@ -830,7 +837,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_menu_main_on_exit,     morse_flipper_scene_menu_training_on_exit,
     morse_flipper_scene_menu_settings_on_exit, morse_flipper_scene_menu_help_on_exit,
     morse_flipper_scene_menu_rf_on_exit,       morse_flipper_scene_menu_ham_on_exit,
-    morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_run_on_exit,           morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_home_on_exit,
