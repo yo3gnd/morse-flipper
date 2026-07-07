@@ -376,6 +376,7 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
         app->trainer_playback_active = false;
         app->trainer_playback_mark = false;
         app->trainer_next_at = 0U;
+        if(app->screen == MorseFlipperScreenSession) app->session_start_holdoff = true;
         morse_flipper_view_dirty(app);
         return;
     }
@@ -406,6 +407,7 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
             app->trainer_next_at = 0U;
             morse_trainer_finish_listen(&app->trainer);
             if(app->screen == MorseFlipperScreenSession) {
+                app->session_start_holdoff = true;
                 app->session_last_input_at = now_ms;
             }
         }
@@ -417,6 +419,7 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
     if(app->trainer_mark_idx >= marks) {
         app->trainer_playback_active = false;
         app->trainer_next_at = 0U;
+        if(app->screen == MorseFlipperScreenSession) app->session_start_holdoff = true;
         morse_flipper_update_sidetone(app);
         return;
     }

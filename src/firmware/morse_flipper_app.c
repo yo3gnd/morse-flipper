@@ -53,6 +53,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .session_result_hold = false,
         .session_result_tone = false,
         .session_result_good = false,
+        .session_start_holdoff = false,
         .about_show_next = false,
         .midi_rx_pending = false,
         .screen = MorseFlipperScreenMenu,

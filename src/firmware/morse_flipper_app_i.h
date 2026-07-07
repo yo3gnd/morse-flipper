@@ -366,6 +366,7 @@ typedef struct MorseFlipperApp {
     bool session_result_hold;
     bool session_result_tone;
     bool session_result_good;
+    bool session_start_holdoff;
 
     /* Help/About UI state; the hidden trace entry uses the OK tap counter. */
     bool about_show_next;
