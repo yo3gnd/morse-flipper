@@ -661,6 +661,7 @@ void morse_flipper_help_enter_chapter(MorseFlipperApp* app);
 void morse_flipper_about_open(MorseFlipperApp* app);
 void morse_flipper_cycle_trainer_value(MorseFlipperApp* app, int dir);
 void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app);
+uint8_t morse_flipper_effective_trainer_custom_set_idx(const MorseFlipperApp* app);
 void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
 void morse_flipper_drop_live_keying_for_playback(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms);
