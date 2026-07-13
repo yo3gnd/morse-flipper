@@ -4,12 +4,12 @@ Morse Flipper is a CW trainer, keyer, hardware adapter, portable ham helper, and
 
 It is built around learning Morse by sound rather than by staring at dots and dashes. You can practise copying, send with buttons or external keys, experiment with keyer timing, and use the Flipper as a small CW hardware adapter.
 
-Morse Flipper also includes a fairly extensive help manual on the Flipper itself, under Help. It covers how to learn and practise Morse Code, how to connect straight keys and paddles, what is worth practising, and which outside resources are worth your time. Please read it; there is more useful Morse guidance in there than fits comfortably in a README. You can find the complete Morse Flipper [user manual on GitHub](https://github.com/yo3gnd/morse-flipper/blob/master/manual/README.md).
+Morse Flipper also includes a fairly extensive help manual on the Flipper itself, under `Help`. It covers how to learn and practise Morse Code, how to connect straight keys and paddles, what is worth practising, and which outside resources are worth your time. Please read it; there is more useful Morse guidance in there than fits comfortably in a README. You can find the complete Morse Flipper [user manual on GitHub](https://github.com/yo3gnd/morse-flipper/blob/master/manual/README.md).
 
 ## Features
 
 - Flipper-to-Flipper Sub-GHz Morse TX/RX, plus receive and decode experiments for compatible OOK Morse signals inside supported Flipper bands.
-- LCWO-style listening practice, straight-key timing practice, and five-character sending drills.
+- Listening practice (LCWO/Koch progressions), straight-key timing practice, and five-character sending drills.
 - Free practice with a straight key, paddle, Flipper buttons, USB, MIDI, mouse, or keyboard input.
 - Iambic, Elekey-A/B, Ultimatic, bug, keyahead, and Vail-compatible keying modes.
 - Built-in help for setup, hardware, practice, portable operating, contests, and CW operating notes.

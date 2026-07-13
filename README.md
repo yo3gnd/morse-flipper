@@ -19,7 +19,7 @@ Some users on both official and custom firmware saw the app get stuck forever on
 ## What it does
 
 - Flipper-to-Flipper Sub-GHz Morse TX/RX, plus receive/decode experiments for compatible OOK Morse signals inside the Flipper's supported bands.
-- LCWO-style listening practice, straight-key timing practice, and five-character sending drills.
+- Listening practice (LCWO/Koch progressions), straight-key timing practice, and five-character sending drills.
 - Free practice with a straight key, paddle, Flipper buttons, USB, MIDI, mouse, or keyboard input.
 - Built-in help for setup, hardware, practice, portable operating, contests, prepper use, and the bits of CW folklore that otherwise become pub arguments.
 - Straight keys and paddles through either the Flipper joystick or a simple 6.5 mm jack adapter.
@@ -39,7 +39,7 @@ It also falls back sensibly when a straight key is plugged into a stereo paddle 
 
 There are already Flipper Morse apps, but many of them teach the most common bad habit first: looking at dots and dashes. That is fine for a code table and rubbish for copying real CW at speed.
 
-Morse Flipper tries to train the useful reflex instead. Keep the character speed high, widen the gaps if needed, and let the sound become the letter. The app has a small LCWO-style trainer because LCWO is still the gold standard for this approach, but the Flipper version is useful when the laptop is not.
+Morse Flipper tries to train the useful reflex instead. Keep the character speed high, widen the gaps if needed, and let the sound become the letter. The app has a small Listening trainer because LCWO is still the gold standard for this approach, but the Flipper version is useful when the laptop is not.
 
 The other half of the project is hardware. A Flipper is already a pocket full of GPIO, USB and RF mischief; this app turns that into a CW adapter, a paddle interface, a portable keyer, and a way to reuse old keys or scrap hardware without building a whole dedicated box first.
 
