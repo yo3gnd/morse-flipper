@@ -43,7 +43,6 @@ static bool morse_trainer_read_custom_text(char* buf, size_t buf_sz) {
 
     storage = furi_record_open(RECORD_STORAGE);
     file = storage_file_alloc(storage);
-    storage_common_mkdir(storage, "/ext/ham");
 
     opened =
         storage_file_open(file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
@@ -79,8 +78,9 @@ static bool morse_trainer_read_custom_text(char* buf, size_t buf_sz) {
 
     f = fopen(morse_trainer_custom_path_value, "rb");
     if(f == NULL) {
-        mkdir("/ext", 0777);
-        mkdir("/ext/ham", 0777);
+        mkdir("ext", 0777);
+        mkdir("ext/apps_data", 0777);
+        mkdir(MORSE_FLIPPER_APP_DATA_DIR, 0777);
         f = fopen(morse_trainer_custom_path_value, "wb");
         if(f != NULL) {
             fwrite(morse_trainer_custom_defaults, 1, strlen(morse_trainer_custom_defaults), f);
