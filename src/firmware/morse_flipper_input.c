@@ -41,10 +41,7 @@ static bool morse_flipper_help_input(MorseFlipperApp* app, const InputEvent* eve
         }
 
         cwmd_scroll_step(
-            &app->help_md,
-            forward ? 1 : -1,
-            max_scroll,
-            MORSE_FLIPPER_MD_SCROLL_STEP_PX);
+            &app->help_md, forward ? 1 : -1, max_scroll, MORSE_FLIPPER_MD_SCROLL_STEP_PX);
         if(app->help_md.target_scroll_px == old_target) {
             if(forward && app->help_md.scroll_px >= max_scroll && old_target >= max_scroll) {
                 view_dispatcher_send_custom_event(

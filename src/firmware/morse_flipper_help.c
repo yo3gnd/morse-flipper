@@ -159,8 +159,7 @@ static const MorseFlipperHelpAsset morse_help_assets[MorseFlipperHelpCount] = {
     [MorseFlipperHelpHamUsage] = {APP_ASSETS_PATH("help/09-ham-usage"), "Ham usage"},
     [MorseFlipperHelpTroubleshooting] =
         {APP_ASSETS_PATH("help/10-troubleshooting"), "Troubleshooting"},
-    [MorseFlipperHelpMovingForward] =
-        {APP_ASSETS_PATH("help/11-moving-forward"), "Moving forward"},
+    [MorseFlipperHelpMovingForward] = {APP_ASSETS_PATH("help/11-moving-forward"), "Moving forward"},
 };
 
 static const MorseFlipperHelpAsset* morse_flipper_help_asset(uint8_t t) {
