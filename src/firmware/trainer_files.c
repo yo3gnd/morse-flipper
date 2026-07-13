@@ -53,8 +53,8 @@ static bool morse_trainer_read_custom_text(char* buf, size_t buf_sz) {
                 file, morse_trainer_custom_defaults, strlen(morse_trainer_custom_defaults));
         }
         storage_file_close(file);
-        opened =
-            storage_file_open(file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
+        opened = storage_file_open(
+            file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
     }
 
     if(opened) {
