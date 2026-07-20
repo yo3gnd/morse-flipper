@@ -14,6 +14,42 @@
 #define MORSE_FLIPPER_MD_SCROLL_STEP_PX \
     ((MORSE_FLIPPER_MD_VISIBLE_LINES - 1U) * MORSE_FLIPPER_MD_LINE_H)
 
+static bool morse_flipper_onboarding_input(MorseFlipperApp* app, const InputEvent* event) {
+    if(app->screen != MorseFlipperScreenOnboarding) return false;
+
+    if((event->key == InputKeyOk || event->key == InputKeyBack) &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        morse_flipper_onboarding_finish(app);
+        return true;
+    }
+
+    if(event->key == InputKeyLeft &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        morse_flipper_onboarding_prev(app);
+        return true;
+    }
+
+    if(event->key == InputKeyRight &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        morse_flipper_onboarding_next(app);
+        return true;
+    }
+
+    if((event->key == InputKeyUp || event->key == InputKeyDown) &&
+       (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
+        int16_t old_target = app->onboarding_md.target_scroll_px;
+        cwmd_scroll_step(
+            &app->onboarding_md,
+            event->key == InputKeyDown ? 1 : -1,
+            app->onboarding_md.max_scroll_px,
+            MORSE_FLIPPER_MD_SCROLL_STEP_PX);
+        if(app->onboarding_md.target_scroll_px != old_target) morse_flipper_view_dirty(app);
+        return true;
+    }
+
+    return true;
+}
+
 static bool morse_flipper_help_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenHelp) return false;
 
@@ -150,7 +186,8 @@ static bool morse_flipper_startup_probe_input(MorseFlipperApp* app, const InputE
         morse_flipper_refresh_keyer(app, furi_get_tick());
         morse_flipper_poll(app);
         scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager, MorseFlipperSceneMenuMain);
+            app->scene_manager,
+            app->onboarding_seen ? MorseFlipperSceneMenuMain : MorseFlipperSceneOnboarding);
         return true;
     }
 
@@ -341,6 +378,7 @@ static bool morse_flipper_ham_shell_input(MorseFlipperApp* app, const InputEvent
 }
 
 bool morse_flipper_input_chunk_a(MorseFlipperApp* app, InputEvent* event) {
+    if(morse_flipper_onboarding_input(app, event)) return true;
     if(morse_flipper_help_input(app, event)) return true;
     if(morse_flipper_about_input(app, event)) return true;
     if(morse_flipper_startup_probe_input(app, event)) return true;

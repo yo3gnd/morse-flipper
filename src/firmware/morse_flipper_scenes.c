@@ -684,6 +684,12 @@ static void morse_flipper_scene_help_on_enter(void* context) {
     morse_flipper_help_open(app);
 }
 
+static void morse_flipper_scene_onboarding_on_enter(void* context) {
+    MorseFlipperApp* app = context;
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneOnboarding);
+    morse_flipper_onboarding_open(app);
+}
+
 static void morse_flipper_scene_about_on_enter(void* context) {
     MorseFlipperApp* app = context;
     morse_flipper_scene_enter_now(app, MorseFlipperSceneAbout);
@@ -779,7 +785,19 @@ static bool morse_flipper_scene_startup_probe_on_event(void* context, SceneManag
     if(event.type == SceneManagerEventTypeBack) {
         app->startup_gpio_probe_state = MorseFlipperGpioProbeOk;
         scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager, MorseFlipperSceneMenuMain);
+            app->scene_manager,
+            app->onboarding_seen ? MorseFlipperSceneMenuMain : MorseFlipperSceneOnboarding);
+        return true;
+    }
+
+    return false;
+}
+
+static bool morse_flipper_scene_onboarding_on_event(void* context, SceneManagerEvent event) {
+    MorseFlipperApp* app = context;
+
+    if(event.type == SceneManagerEventTypeBack) {
+        morse_flipper_onboarding_finish(app);
         return true;
     }
 
@@ -823,6 +841,7 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
     morse_flipper_scene_tx_groups_result_on_enter,
     morse_flipper_scene_tx_groups_final_on_enter,
     morse_flipper_scene_tx_groups_cfg_on_enter,
+    morse_flipper_scene_onboarding_on_enter,
 };
 
 static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[MorseFlipperSceneNum] = {
@@ -844,6 +863,7 @@ static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[Morse
     morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,          morse_flipper_scene_tx_groups_cfg_on_event,
+    morse_flipper_scene_onboarding_on_event,
 };
 
 static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFlipperSceneNum] = {
@@ -865,6 +885,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_tx_groups_cfg_on_exit,
+    morse_flipper_scene_live_on_exit,
 };
 
 const SceneManagerHandlers morse_flipper_scene_handlers = {

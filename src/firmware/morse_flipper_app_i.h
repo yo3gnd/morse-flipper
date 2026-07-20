@@ -150,6 +150,7 @@ typedef enum {
     MorseFlipperScreenTxGroups = 20,
     MorseFlipperScreenTxGroupsResult = 21,
     MorseFlipperScreenTxGroupsFinal = 22,
+    MorseFlipperScreenOnboarding = 23,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -196,6 +197,7 @@ typedef enum {
     MorseFlipperSceneTxGroupsResult,
     MorseFlipperSceneTxGroupsFinal,
     MorseFlipperSceneTxGroupsCfg,
+    MorseFlipperSceneOnboarding,
     MorseFlipperSceneNum,
 } MorseFlipperScene;
 
@@ -368,9 +370,10 @@ typedef struct MorseFlipperApp {
     bool session_result_good;
     bool session_start_holdoff;
 
-    /* Help/About UI state; the hidden trace entry uses the OK tap counter. */
+    /* Onboarding/Help/About UI state; the hidden trace entry uses the OK tap counter. */
     bool about_show_next;
     bool help_chapter_card;
+    bool onboarding_seen;
     volatile bool midi_rx_pending;
     uint8_t screen;
 
@@ -393,12 +396,15 @@ typedef struct MorseFlipperApp {
     uint8_t help_topic;
     uint8_t help_page;
     uint8_t help_card_count;
+    uint8_t onboarding_page;
+    uint8_t onboarding_card_count;
     uint8_t about_mode;
     uint8_t about_ok_count;
     uint8_t about_social_idx;
     uint8_t about_footer_seq_i;
     uint32_t about_last_ok_ms;
     uint32_t about_social_next_ms;
+    CwmdState onboarding_md;
     CwmdState help_md;
     CwmdState about_md;
     MorseFlipperHamRuntimeState ham;
@@ -655,6 +661,11 @@ uint8_t morse_flipper_back_button_paddle(const MorseFlipperApp* app);
 bool morse_flipper_straight_like_mode(const MorseFlipperApp* app);
 void morse_flipper_toggle_handedness(MorseFlipperApp* app);
 void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms);
+bool morse_flipper_onboarding_seen(void);
+void morse_flipper_onboarding_open(MorseFlipperApp* app);
+void morse_flipper_onboarding_prev(MorseFlipperApp* app);
+void morse_flipper_onboarding_next(MorseFlipperApp* app);
+void morse_flipper_onboarding_finish(MorseFlipperApp* app);
 void morse_flipper_help_open(MorseFlipperApp* app);
 bool morse_flipper_help_show_next_chapter(MorseFlipperApp* app);
 void morse_flipper_help_enter_chapter(MorseFlipperApp* app);
@@ -741,6 +752,7 @@ void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_tick_about(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_draw_about(Canvas* canvas, MorseFlipperApp* app);
 int16_t morse_flipper_about_max_scroll(Canvas* canvas);
+void morse_flipper_draw_onboarding(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw_help(Canvas* canvas, MorseFlipperApp* app);
 int16_t morse_flipper_help_max_scroll(Canvas* canvas, const MorseFlipperApp* app);
 void morse_flipper_draw_gpio_probe_overlay(Canvas* canvas, const MorseFlipperApp* app);

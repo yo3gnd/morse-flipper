@@ -81,6 +81,8 @@ static uint8_t morse_flipper_scene_screen(uint32_t scene) {
         return MorseFlipperScreenTxGroupsResult;
     case MorseFlipperSceneTxGroupsFinal:
         return MorseFlipperScreenTxGroupsFinal;
+    case MorseFlipperSceneOnboarding:
+        return MorseFlipperScreenOnboarding;
     default:
         return MorseFlipperScreenMenu;
     }

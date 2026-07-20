@@ -20,6 +20,11 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
+    if(app->screen == MorseFlipperScreenOnboarding) {
+        morse_flipper_draw_onboarding(canvas, app);
+        return;
+    }
+
     if(app->screen == MorseFlipperScreenAbout) {
         morse_flipper_draw_about(canvas, app);
         return;
