@@ -7,12 +7,16 @@
 
 #include "morse_flipper_app_i.h"
 
+#include <string.h>
+
 #define MORSE_FLIPPER_ABOUT_OK_FAST_MS 500U
 #define MORSE_FLIPPER_MD_LINE_H        9U
 #define MORSE_FLIPPER_MD_VIEW_H        48U
 #define MORSE_FLIPPER_MD_VISIBLE_LINES (MORSE_FLIPPER_MD_VIEW_H / MORSE_FLIPPER_MD_LINE_H)
 #define MORSE_FLIPPER_MD_SCROLL_STEP_PX \
     ((MORSE_FLIPPER_MD_VISIBLE_LINES - 1U) * MORSE_FLIPPER_MD_LINE_H)
+#define MORSE_FLIPPER_PROGRESS_SCROLL_MS        125U
+#define MORSE_FLIPPER_PROGRESS_SCROLL_BURST_MAX 4U
 
 static bool morse_flipper_onboarding_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenOnboarding) return false;
@@ -704,6 +708,213 @@ static bool morse_flipper_session_end_input(
     return false;
 }
 
+static bool morse_flipper_progress_today(uint16_t* out_day) {
+    DateTime dt = {0};
+
+    if(out_day == NULL) return false;
+    *out_day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
+    furi_hal_rtc_get_datetime(&dt);
+    return morse_flipper_progress_date_to_day(dt.year, dt.month, dt.day, out_day);
+}
+
+static void morse_flipper_progress_load_recent(MorseFlipperApp* app) {
+    uint16_t day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
+
+    if(app == NULL) return;
+    app->progress_row_count = 0U;
+    app->progress_row_offset = 0U;
+    app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_next_ms = 0U;
+    if(!morse_flipper_progress_today(&day)) {
+        morse_flipper_progress_history_reset(
+            &app->progress_history, MORSE_FLIPPER_PROGRESS_DAY_NONE);
+        return;
+    }
+
+    morse_flipper_progress_history_reset(&app->progress_history, day);
+    app->progress_row_count = morse_flipper_progress_history_load_more(
+        &app->progress_history, app->progress_rows, MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS);
+}
+
+static void morse_flipper_progress_reset_scroll_repeat(MorseFlipperApp* app) {
+    if(app == NULL) return;
+    app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_next_ms = 0U;
+}
+
+static bool morse_flipper_progress_load_older_one(MorseFlipperApp* app) {
+    MorseFlipperProgressHistoryRow row;
+
+    if(app == NULL) return false;
+    if(app->progress_row_count == 0U) {
+        morse_flipper_progress_load_recent(app);
+        return app->progress_row_count != 0U;
+    }
+    if(app->progress_row_offset + MORSE_FLIPPER_PROGRESS_HISTORY_ROWS <
+       app->progress_row_count) {
+        app->progress_row_offset++;
+        return true;
+    }
+    if(app->progress_history.exhausted) return false;
+    if(morse_flipper_progress_history_load_more(&app->progress_history, &row, 1U) == 0U)
+        return false;
+
+    if(app->progress_row_count < MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS) {
+        app->progress_rows[app->progress_row_count++] = row;
+        if(app->progress_row_count > MORSE_FLIPPER_PROGRESS_HISTORY_ROWS)
+            app->progress_row_offset++;
+    } else {
+        memmove(
+            &app->progress_rows[0],
+            &app->progress_rows[1],
+            sizeof(app->progress_rows[0]) *
+                (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
+        app->progress_rows[MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U] = row;
+    }
+
+    return true;
+}
+
+static bool morse_flipper_progress_load_newer_one(MorseFlipperApp* app) {
+    MorseFlipperProgressHistoryRow row;
+    uint16_t today = MORSE_FLIPPER_PROGRESS_DAY_NONE;
+
+    if(app == NULL || app->progress_row_count == 0U) return false;
+    if(app->progress_row_offset != 0U) {
+        app->progress_row_offset--;
+        return true;
+    }
+    if(!morse_flipper_progress_today(&today)) return false;
+    if(!morse_flipper_progress_history_load_newer(&app->progress_rows[0], today, &row))
+        return false;
+
+    if(app->progress_row_count < MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS) {
+        memmove(
+            &app->progress_rows[1],
+            &app->progress_rows[0],
+            sizeof(app->progress_rows[0]) * app->progress_row_count);
+        app->progress_rows[0] = row;
+        app->progress_row_count++;
+    } else {
+        memmove(
+            &app->progress_rows[1],
+            &app->progress_rows[0],
+            sizeof(app->progress_rows[0]) *
+                (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
+        app->progress_rows[0] = row;
+    }
+
+    return true;
+}
+
+static bool morse_flipper_progress_scroll_history(MorseFlipperApp* app, int8_t dir) {
+    return dir > 0 ? morse_flipper_progress_load_older_one(app) :
+                     morse_flipper_progress_load_newer_one(app);
+}
+
+static void morse_flipper_progress_enter_page(
+    MorseFlipperApp* app,
+    MorseFlipperProgressPage page) {
+    if(app == NULL) return;
+
+    app->progress_page = page;
+    morse_flipper_progress_reset_scroll_repeat(app);
+    if(page == MorseFlipperProgressPageHistory) morse_flipper_progress_load_recent(app);
+    morse_flipper_view_dirty(app);
+}
+
+static bool morse_flipper_progress_history_input(
+    MorseFlipperApp* app,
+    const InputEvent* event) {
+    int8_t dir;
+    bool changed = false;
+
+    if(event->key != InputKeyUp && event->key != InputKeyDown) return false;
+
+    dir = event->key == InputKeyDown ? 1 : -1;
+    if(event->type == InputTypeShort) {
+        morse_flipper_progress_reset_scroll_repeat(app);
+        changed = morse_flipper_progress_scroll_history(app, dir);
+    } else if(event->type == InputTypeLong) {
+        uint32_t now_ms = furi_get_tick();
+        app->progress_scroll_key = event->key;
+        app->progress_scroll_next_ms = now_ms + MORSE_FLIPPER_PROGRESS_SCROLL_MS;
+        changed = morse_flipper_progress_scroll_history(app, dir);
+    } else if(event->type == InputTypeRepeat) {
+        uint32_t now_ms = furi_get_tick();
+        uint8_t steps = 0U;
+
+        if(app->progress_scroll_key != event->key || app->progress_scroll_next_ms == 0U) {
+            app->progress_scroll_key = event->key;
+            app->progress_scroll_next_ms = now_ms;
+        }
+
+        while((int32_t)(now_ms - app->progress_scroll_next_ms) >= 0 &&
+              steps < MORSE_FLIPPER_PROGRESS_SCROLL_BURST_MAX) {
+            if(!morse_flipper_progress_scroll_history(app, dir)) break;
+            changed = true;
+            steps++;
+            app->progress_scroll_next_ms += MORSE_FLIPPER_PROGRESS_SCROLL_MS;
+        }
+        if(!changed && steps == 0U) return true;
+        if(!changed) app->progress_scroll_next_ms = now_ms + MORSE_FLIPPER_PROGRESS_SCROLL_MS;
+    } else {
+        morse_flipper_progress_reset_scroll_repeat(app);
+        return true;
+    }
+
+    if(changed) morse_flipper_view_dirty(app);
+    return true;
+}
+
+static bool morse_flipper_progress_input(MorseFlipperApp* app, const InputEvent* event) {
+    if(app->screen != MorseFlipperScreenProgress) return false;
+
+    if(event->key == InputKeyBack &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuTraining);
+        return true;
+    }
+
+    if(event->type == InputTypeRelease) {
+        morse_flipper_progress_reset_scroll_repeat(app);
+        return true;
+    }
+
+    if(event->type != InputTypeShort && event->type != InputTypeLong &&
+       event->type != InputTypeRepeat)
+        return true;
+
+    if(event->type == InputTypeShort) {
+        if(event->key == InputKeyLeft) {
+            if(app->progress_page == MorseFlipperProgressPageStats) {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageHistory);
+            } else if(app->progress_page == MorseFlipperProgressPageTotals) {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageStats);
+            } else {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageTotals);
+            }
+            return true;
+        }
+        if(event->key == InputKeyRight) {
+            if(app->progress_page == MorseFlipperProgressPageStats) {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageTotals);
+            } else if(app->progress_page == MorseFlipperProgressPageTotals) {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageHistory);
+            } else {
+                morse_flipper_progress_enter_page(app, MorseFlipperProgressPageStats);
+            }
+            return true;
+        }
+    }
+
+    if(app->progress_page == MorseFlipperProgressPageHistory)
+        return morse_flipper_progress_history_input(app, event);
+
+    return true;
+}
+
 static bool morse_flipper_rf_freq_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenRfFreq) return false;
 
@@ -861,6 +1072,8 @@ bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, ui
         return morse_flipper_session_input(app, event, now_ms);
     case MorseFlipperScreenSessionEnd:
         return morse_flipper_session_end_input(app, event, now_ms);
+    case MorseFlipperScreenProgress:
+        return morse_flipper_progress_input(app, event);
     case MorseFlipperScreenRfFreq:
         return morse_flipper_rf_freq_input(app, event);
     case MorseFlipperScreenRfRx:

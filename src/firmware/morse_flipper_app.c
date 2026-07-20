@@ -26,6 +26,8 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .dialogs = furi_record_open(RECORD_DIALOGS),
         .notifications = furi_record_open(RECORD_NOTIFICATION),
         .help_text = NULL,
+        .session_progress = NULL,
+        .view_progress = NULL,
         .exit_requested = false,
         .previous_usb_config = NULL,
         .hid_cfg =
@@ -92,11 +94,16 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .about_ok_count = 0U,
         .about_social_idx = 0U,
         .about_footer_seq_i = 0U,
+        .progress_row_count = 0U,
+        .progress_row_offset = 0U,
+        .progress_scroll_key = 0xFFU,
         .about_last_ok_ms = 0U,
         .about_social_next_ms = 0U,
+        .progress_scroll_next_ms = 0U,
         .onboarding_md = {0},
         .help_md = {0},
         .about_md = {0},
+        .progress_page = MorseFlipperProgressPageStats,
         .ham =
             {
                 .selected_message = 0U,
@@ -119,6 +126,8 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .vail_mode_active = false,
         .vail_speed_active = false,
         .vail_tone_active = false,
+        .session_progress_recorded = false,
+        .session_progress_dirty = false,
         .vail_keyer_mode = MorseKeyerModeStraight,
         .vail_dit_ms = MORSE_FLIPPER_DEFAULT_DIT_MS,
         .vail_tone_idx = MORSE_FLIPPER_DEFAULT_TONE_IDX,
@@ -344,6 +353,8 @@ void morse_flipper_shutdown(MorseFlipperApp* app) {
         notification_message(app->notifications, &sequence_reset_blue);
     }
     morse_flipper_save_config(app);
+    morse_flipper_release_session_progress(app, false);
+    morse_flipper_release_view_progress(app);
 
     morse_flipper_gpio_deinit();
     if(app->view_dispatcher) {

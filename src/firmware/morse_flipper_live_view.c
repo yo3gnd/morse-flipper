@@ -93,6 +93,11 @@ void morse_flipper_draw(Canvas* canvas, void* ctx) {
         return;
     }
 
+    if(app->screen == MorseFlipperScreenProgress) {
+        morse_flipper_draw_progress(canvas, app);
+        return;
+    }
+
     if(app->screen == MorseFlipperScreenStraight) {
         morse_flipper_draw_straight_screen(canvas, app);
         return;

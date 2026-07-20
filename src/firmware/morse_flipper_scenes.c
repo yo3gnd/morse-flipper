@@ -75,6 +75,8 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
     morse_flipper_ensure_view(app, MorseFlipperViewMenu);
     submenu_set_header(app->submenu, "Training");
     submenu_add_item(
+        app->submenu, "Progress", MorseFlipperSceneProgress, morse_flipper_scene_menu_pick, app);
+    submenu_add_item(
         app->submenu, "Listening", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
         app->submenu,
@@ -88,9 +90,9 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
         MorseFlipperSceneTxGroups,
         morse_flipper_scene_menu_pick,
         app);
-    if(sel != MorseFlipperSceneSession && sel != MorseFlipperSceneStraight &&
-       sel != MorseFlipperSceneTxGroups)
-        sel = MorseFlipperSceneSession;
+    if(sel != MorseFlipperSceneProgress && sel != MorseFlipperSceneSession &&
+       sel != MorseFlipperSceneStraight && sel != MorseFlipperSceneTxGroups)
+        sel = MorseFlipperSceneProgress;
     submenu_set_selected_item(app->submenu, sel);
     morse_flipper_scene_enter_now(app, MorseFlipperSceneMenuTraining);
 }
@@ -655,7 +657,44 @@ static void morse_flipper_scene_straight_on_enter(void* context) {
 
 static void morse_flipper_scene_session_end_on_enter(void* context) {
     MorseFlipperApp* app = context;
+    morse_flipper_record_session_progress(app);
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSessionEnd);
+}
+
+static void morse_flipper_scene_progress_on_enter(void* context) {
+    MorseFlipperApp* app = context;
+
+    app->progress_page = MorseFlipperProgressPageStats;
+    app->progress_row_count = 0U;
+    app->progress_row_offset = 0U;
+    app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_next_ms = 0U;
+    morse_flipper_progress_history_reset(
+        &app->progress_history, MORSE_FLIPPER_PROGRESS_DAY_NONE);
+    morse_flipper_ensure_view_progress_loaded(app);
+    morse_flipper_scene_enter_now(app, MorseFlipperSceneProgress);
+}
+
+static bool morse_flipper_scene_progress_on_event(void* context, SceneManagerEvent event) {
+    MorseFlipperApp* app = context;
+
+    if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneMenuTraining);
+        return true;
+    }
+
+    return false;
+}
+
+static void morse_flipper_scene_progress_on_exit(void* context) {
+    MorseFlipperApp* app = context;
+
+    morse_flipper_release_view_progress(app);
+    app->progress_row_count = 0U;
+    app->progress_row_offset = 0U;
+    app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_next_ms = 0U;
 }
 
 static void morse_flipper_scene_tx_groups_on_enter(void* context) {
@@ -842,6 +881,7 @@ static const AppSceneOnEnterCallback morse_flipper_scene_on_enter_handlers[Morse
     morse_flipper_scene_tx_groups_final_on_enter,
     morse_flipper_scene_tx_groups_cfg_on_enter,
     morse_flipper_scene_onboarding_on_enter,
+    morse_flipper_scene_progress_on_enter,
 };
 
 static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[MorseFlipperSceneNum] = {
@@ -863,7 +903,7 @@ static const AppSceneOnEventCallback morse_flipper_scene_on_event_handlers[Morse
     morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,          morse_flipper_scene_live_on_event,
     morse_flipper_scene_live_on_event,          morse_flipper_scene_tx_groups_cfg_on_event,
-    morse_flipper_scene_onboarding_on_event,
+    morse_flipper_scene_onboarding_on_event,    morse_flipper_scene_progress_on_event,
 };
 
 static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFlipperSceneNum] = {
@@ -885,7 +925,7 @@ static const AppSceneOnExitCallback morse_flipper_scene_on_exit_handlers[MorseFl
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_live_on_exit,
     morse_flipper_scene_live_on_exit,          morse_flipper_scene_tx_groups_cfg_on_exit,
-    morse_flipper_scene_live_on_exit,
+    morse_flipper_scene_live_on_exit,          morse_flipper_scene_progress_on_exit,
 };
 
 const SceneManagerHandlers morse_flipper_scene_handlers = {
