@@ -61,8 +61,18 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
 
     if(app->screen != MorseFlipperScreenAbout) return false;
 
+    if((event->key == InputKeyBack || event->key == InputKeyLeft) &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        app->about_mode = MorseFlipperAboutModeLanding;
+        app->about_md = (CwmdState){0};
+        app->about_ok_count = 0U;
+        app->about_last_ok_ms = 0U;
+        morse_flipper_scene_back(app);
+        return true;
+    }
+
     if(app->about_mode == MorseFlipperAboutModeLanding && event->type == InputTypeShort) {
-        if(app->about_show_next) {
+        if(app->about_show_next && (event->key == InputKeyOk || event->key == InputKeyRight)) {
             app->about_mode = MorseFlipperAboutModeText;
             app->about_md = (CwmdState){0};
             app->about_ok_count = 0U;
@@ -119,16 +129,6 @@ static bool morse_flipper_about_input(MorseFlipperApp* app, const InputEvent* ev
             &app->about_md, -1, app->about_md.max_scroll_px, MORSE_FLIPPER_MD_SCROLL_STEP_PX);
         if(app->about_md.target_scroll_px == old_target) return true;
         morse_flipper_view_dirty(app);
-        return true;
-    }
-
-    if(event->key == InputKeyBack &&
-       (event->type == InputTypeShort || event->type == InputTypeLong)) {
-        app->about_mode = MorseFlipperAboutModeLanding;
-        app->about_md = (CwmdState){0};
-        app->about_ok_count = 0U;
-        app->about_last_ok_ms = 0U;
-        morse_flipper_scene_back(app);
         return true;
     }
 
