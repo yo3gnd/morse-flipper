@@ -434,6 +434,7 @@ static uint8_t morse_flipper_session_visible_score(
 
 void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
     enum {
+        ScoreCenterBaselineY = 42U,
         ScoreBaselineY = 32U,
         StarY = 43U,
         StarStartX = 42U,
@@ -445,16 +446,20 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
     uint8_t stars;
     uint8_t score = morse_flipper_session_final_percent(app);
     uint8_t shown_score;
+    int16_t score_y = ScoreBaselineY;
+    uint32_t elapsed = 0U;
     uint32_t now_ms = furi_get_tick();
     uint32_t star_started_at;
     uint16_t score_count_ms;
     uint16_t anim_duration;
+    bool stars_visible;
     bool show_message;
     bool blink_stars;
     bool blink_on = true;
 
     if(canvas == NULL || app == NULL) return;
 
+    if(app->star_anim_started_at != 0U) elapsed = now_ms - app->star_anim_started_at;
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
     shown_score = morse_flipper_session_visible_score(app, score, now_ms);
@@ -465,17 +470,33 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
     }
     canvas_set_font(canvas, FontBigNumbers);
     x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
-    canvas_draw_str(canvas, x, ScoreBaselineY, digits);
 
     stars = morse_flipper_progress_stars(score);
     score_count_ms = morse_flipper_session_score_count_ms(score);
     star_started_at = app->star_anim_started_at == 0U ?
                           0U :
-                          app->star_anim_started_at + score_count_ms;
+                          app->star_anim_started_at + score_count_ms +
+                              MORSE_FLIPPER_SCORE_SLIDE_MS;
     anim_duration = morse_flipper_star_anim_duration(stars);
+    if(app->star_anim_started_at != 0U) {
+        if(elapsed < score_count_ms) {
+            score_y = ScoreCenterBaselineY;
+        } else if(elapsed < score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS) {
+            uint32_t slide_elapsed = elapsed - score_count_ms;
+            uint8_t slide_delta = ScoreCenterBaselineY - ScoreBaselineY;
+            score_y =
+                ScoreCenterBaselineY -
+                (int16_t)((slide_elapsed * slide_delta) / MORSE_FLIPPER_SCORE_SLIDE_MS);
+        }
+    }
+    canvas_draw_str(canvas, x, score_y, digits);
+
+    stars_visible = app->star_anim_started_at == 0U ||
+                    elapsed >= score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS;
     show_message = app->star_anim_started_at == 0U ||
-                   now_ms - app->star_anim_started_at >= score_count_ms + anim_duration;
-    blink_stars = score >= 99U && stars != 0U && star_started_at != 0U &&
+                   now_ms - app->star_anim_started_at >=
+                       score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS + anim_duration;
+    blink_stars = stars_visible && score >= 99U && stars != 0U && star_started_at != 0U &&
                   now_ms - star_started_at >= anim_duration;
     if(blink_stars) {
         uint32_t blink_ms = now_ms - star_started_at - anim_duration;
@@ -484,10 +505,13 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
 
     for(i = 0U; i < 3U; i++) {
         uint8_t cols = 0U;
-        if(star_started_at != 0U && now_ms >= star_started_at) {
+        if(!stars_visible) continue;
+        if(star_started_at != 0U) {
             cols = blink_stars && !blink_on ?
                        0U :
                        morse_flipper_star_anim_cols(star_started_at, now_ms, i, stars);
+        } else {
+            cols = morse_flipper_star_anim_cols(star_started_at, now_ms, i, stars);
         }
         morse_flipper_draw_star_glyph_large_cols(
             canvas, (uint8_t)(StarStartX + (i * StarGapX)), StarY, cols);
