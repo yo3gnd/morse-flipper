@@ -153,6 +153,7 @@ typedef enum {
     MorseFlipperScreenTxGroupsFinal = 22,
     MorseFlipperScreenOnboarding = 23,
     MorseFlipperScreenProgress = 24,
+    MorseFlipperScreenStreakIntro = 25,
 } MorseFlipperScreen;
 
 typedef enum {
@@ -201,6 +202,7 @@ typedef enum {
     MorseFlipperSceneTxGroupsCfg,
     MorseFlipperSceneOnboarding,
     MorseFlipperSceneProgress,
+    MorseFlipperSceneStreakIntro,
     MorseFlipperSceneNum,
 } MorseFlipperScene;
 
@@ -237,6 +239,10 @@ typedef enum {
     MorseFlipperCustomHelpPrev = 0x1900,
     MorseFlipperCustomHelpNext,
 } MorseFlipperHelpCustomEvent;
+
+typedef enum {
+    MorseFlipperCustomStreakIntroStart = 0x1B00,
+} MorseFlipperStreakIntroCustomEvent;
 
 typedef enum {
     MorseFlipperHelpFirstSteps = 0,
@@ -413,6 +419,7 @@ typedef struct MorseFlipperApp {
     uint32_t about_last_ok_ms;
     uint32_t about_social_next_ms;
     uint32_t progress_scroll_next_ms;
+    uint32_t streak_intro_until_ms;
     CwmdState onboarding_md;
     CwmdState help_md;
     CwmdState about_md;
@@ -467,6 +474,7 @@ typedef struct MorseFlipperApp {
     uint16_t straight_dit_ms;
     uint16_t straight_session_total;
     uint16_t straight_session_good;
+    uint16_t streak_intro_days;
     uint16_t txg_session_total;
     uint16_t txg_session_good;
     uint16_t txg_session_sk;
@@ -787,6 +795,7 @@ void morse_flipper_draw_tx_history_screen_custom(
     const char* hint_override);
 void morse_flipper_draw_trainer_setup(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw_progress(Canvas* canvas, MorseFlipperApp* app);
+void morse_flipper_draw_streak_intro(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw_straight_screen(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw_tx_groups_screen(Canvas* canvas, MorseFlipperApp* app);
 void morse_flipper_draw_rf_tx_blocked(Canvas* canvas, const MorseFlipperApp* app);

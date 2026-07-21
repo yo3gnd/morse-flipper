@@ -6,7 +6,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
+
+typedef struct {
+    uint16_t magic;
+    uint16_t version;
+    uint16_t total_attempts;
+    uint16_t streak_days;
+    uint16_t daily_record;
+    uint16_t today_attempts;
+    uint16_t last_streak_day;
+    uint16_t last_stats_day;
+    uint8_t lesson_attempts[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t lesson_best[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t lesson_last[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t weak_seen[MORSE_FLIPPER_PROGRESS_ASCII_CAP];
+    uint8_t weak_error[MORSE_FLIPPER_PROGRESS_ASCII_CAP];
+} MorseFlipperProgressV1ForTest;
+
+_Static_assert(
+    sizeof(MorseFlipperProgressV1ForTest) == MORSE_FLIPPER_PROGRESS_V1_SIZE,
+    "test v1 progress shape changed");
 
 static unsigned g_checks;
 
@@ -35,6 +56,13 @@ static void write_bytes(const char* path, const char* data, size_t len) {
     CHECK(fclose(f) == 0);
 }
 
+static long file_size(const char* path) {
+    struct stat st;
+
+    CHECK(stat(path, &st) == 0);
+    return (long)st.st_size;
+}
+
 static void test_attempt_rules(void) {
     MorseFlipperProgress progress;
     uint16_t day1 = checked_day(2026, 7, 20);
@@ -43,6 +71,8 @@ static void test_attempt_rules(void) {
 
     morse_flipper_progress_reset(&progress);
     CHECK(sizeof(progress) == MORSE_FLIPPER_PROGRESS_SIZE);
+    CHECK(progress.version == MORSE_FLIPPER_PROGRESS_VERSION);
+    CHECK(progress.last_streak_prompt_day == MORSE_FLIPPER_PROGRESS_DAY_NONE);
     CHECK(morse_flipper_progress_stars(69U) == 0U);
     CHECK(morse_flipper_progress_stars(70U) == 1U);
     CHECK(morse_flipper_progress_stars(85U) == 2U);
@@ -68,6 +98,8 @@ static void test_attempt_rules(void) {
 
     morse_flipper_progress_note_standard_attempt(&progress, true, day1, 5U, 95U);
     CHECK(progress.total_attempts == 2U);
+    CHECK(progress.streak_days == 1U);
+    CHECK(progress.last_streak_day == day1);
     CHECK(progress.today_attempts == 2U);
     CHECK(progress.daily_record == 2U);
     CHECK(progress.lesson_attempts[5] == 2U);
@@ -98,6 +130,40 @@ static void test_attempt_rules(void) {
     CHECK(progress.lesson_last[6] == 88U);
 }
 
+static void test_streak_intro_helpers(void) {
+    MorseFlipperProgress progress;
+    uint16_t day1 = checked_day(2026, 7, 20);
+    uint16_t day2 = checked_day(2026, 7, 21);
+    uint16_t day4 = checked_day(2026, 7, 23);
+
+    CHECK(morse_flipper_progress_streak_intro_days(NULL, day1) == 1U);
+    CHECK(morse_flipper_progress_streak_intro_days(NULL, MORSE_FLIPPER_PROGRESS_DAY_NONE) == 1U);
+    CHECK(!morse_flipper_progress_streak_intro_due(NULL, day1));
+
+    morse_flipper_progress_reset(&progress);
+    CHECK(morse_flipper_progress_streak_intro_days(&progress, day1) == 1U);
+    CHECK(morse_flipper_progress_streak_intro_due(&progress, day1));
+    morse_flipper_progress_mark_streak_intro_seen(&progress, MORSE_FLIPPER_PROGRESS_DAY_NONE);
+    CHECK(progress.last_streak_prompt_day == MORSE_FLIPPER_PROGRESS_DAY_NONE);
+    morse_flipper_progress_mark_streak_intro_seen(&progress, day1);
+    CHECK(progress.last_streak_prompt_day == day1);
+    CHECK(!morse_flipper_progress_streak_intro_due(&progress, day1));
+    CHECK(morse_flipper_progress_streak_intro_due(&progress, day2));
+
+    progress.last_streak_day = day1;
+    progress.streak_days = 4U;
+    CHECK(morse_flipper_progress_streak_intro_days(&progress, day2) == 5U);
+    CHECK(morse_flipper_progress_streak_intro_days(&progress, day4) == 1U);
+
+    progress.last_streak_day = day2;
+    progress.streak_days = 6U;
+    CHECK(morse_flipper_progress_streak_intro_days(&progress, day2) == 6U);
+
+    progress.last_streak_day = day1;
+    progress.streak_days = UINT16_MAX;
+    CHECK(morse_flipper_progress_streak_intro_days(&progress, day2) == UINT16_MAX);
+}
+
 static void test_weak_letters_are_bounded_and_recent(void) {
     MorseFlipperProgress progress;
     char weak[12];
@@ -123,19 +189,60 @@ static void test_weak_letters_are_bounded_and_recent(void) {
 static void test_persistence_shape_rules(void) {
     MorseFlipperProgress progress;
     MorseFlipperProgress loaded;
+    MorseFlipperProgressV1ForTest old;
+    uint16_t day1 = checked_day(2026, 7, 20);
+    uint16_t day2 = checked_day(2026, 7, 21);
 
     CHECK(morse_flipper_progress_load(&loaded));
     CHECK(morse_flipper_progress_valid(&loaded));
     CHECK(loaded.total_attempts == 0U);
+    CHECK(loaded.last_streak_prompt_day == MORSE_FLIPPER_PROGRESS_DAY_NONE);
 
     morse_flipper_progress_reset(&progress);
+    morse_flipper_progress_mark_streak_intro_seen(&progress, day2);
     morse_flipper_progress_note_standard_attempt(
         &progress, false, MORSE_FLIPPER_PROGRESS_DAY_NONE, 5U, 91U);
     CHECK(morse_flipper_progress_save(&progress));
+    CHECK(file_size(MORSE_FLIPPER_PROGRESS_PATH) == (long)MORSE_FLIPPER_PROGRESS_SIZE);
     memset(&loaded, 0xA5, sizeof(loaded));
     CHECK(morse_flipper_progress_load(&loaded));
     CHECK(loaded.total_attempts == 1U);
     CHECK(loaded.lesson_best[5] == 91U);
+    CHECK(loaded.last_streak_prompt_day == day2);
+
+    memset(&old, 0, sizeof(old));
+    old.magic = MORSE_FLIPPER_PROGRESS_MAGIC;
+    old.version = MORSE_FLIPPER_PROGRESS_V1_VERSION;
+    old.total_attempts = 7U;
+    old.streak_days = 3U;
+    old.daily_record = 4U;
+    old.today_attempts = 2U;
+    old.last_streak_day = day1;
+    old.last_stats_day = day1;
+    old.lesson_attempts[3] = 9U;
+    old.lesson_best[3] = 88U;
+    old.lesson_last[3] = 70U;
+    old.weak_seen[(uint8_t)'K'] = 12U;
+    old.weak_error[(uint8_t)'K'] = 6U;
+    write_bytes(MORSE_FLIPPER_PROGRESS_PATH, (const char*)&old, sizeof(old));
+    CHECK(file_size(MORSE_FLIPPER_PROGRESS_PATH) == (long)MORSE_FLIPPER_PROGRESS_V1_SIZE);
+    memset(&loaded, 0xA5, sizeof(loaded));
+    CHECK(morse_flipper_progress_load(&loaded));
+    CHECK(morse_flipper_progress_valid(&loaded));
+    CHECK(loaded.version == MORSE_FLIPPER_PROGRESS_VERSION);
+    CHECK(loaded.total_attempts == 7U);
+    CHECK(loaded.streak_days == 3U);
+    CHECK(loaded.daily_record == 4U);
+    CHECK(loaded.today_attempts == 2U);
+    CHECK(loaded.last_streak_day == day1);
+    CHECK(loaded.last_stats_day == day1);
+    CHECK(loaded.last_streak_prompt_day == MORSE_FLIPPER_PROGRESS_DAY_NONE);
+    CHECK(loaded.lesson_attempts[3] == 9U);
+    CHECK(loaded.lesson_best[3] == 88U);
+    CHECK(loaded.lesson_last[3] == 70U);
+    CHECK(loaded.weak_seen[(uint8_t)'K'] == 12U);
+    CHECK(loaded.weak_error[(uint8_t)'K'] == 6U);
+    CHECK(file_size(MORSE_FLIPPER_PROGRESS_PATH) == (long)MORSE_FLIPPER_PROGRESS_V1_SIZE);
 
     write_bytes(MORSE_FLIPPER_PROGRESS_PATH, "short", 5U);
     memset(&loaded, 0xA5, sizeof(loaded));
@@ -197,6 +304,7 @@ int main(void) {
     CHECK(chdir(tmp) == 0);
 
     test_attempt_rules();
+    test_streak_intro_helpers();
     test_weak_letters_are_bounded_and_recent();
     test_persistence_shape_rules();
     test_history_format_and_bidirectional_loading();

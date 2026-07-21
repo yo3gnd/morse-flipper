@@ -64,6 +64,7 @@ App(
         "src/firmware/morse_flipper_live_view_run.c",
         "src/firmware/morse_flipper_live_view_training.c",
         "src/firmware/morse_flipper_live_view_progress.c",
+        "src/firmware/morse_flipper_live_view_streak.c",
         "src/firmware/morse_flipper_live_view_rf.c",
         "src/firmware/morse_flipper_live_view_ham.c",
         "src/firmware/morse_flipper_gpio.c",

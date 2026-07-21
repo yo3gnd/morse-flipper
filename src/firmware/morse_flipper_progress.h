@@ -21,8 +21,10 @@
 #define MORSE_FLIPPER_PROGRESS_EPOCH_YEAR       2024U
 #define MORSE_FLIPPER_PROGRESS_MAX_YEAR         2038U
 #define MORSE_FLIPPER_PROGRESS_MAGIC            0x4d50U
-#define MORSE_FLIPPER_PROGRESS_VERSION          1U
-#define MORSE_FLIPPER_PROGRESS_SIZE             464U
+#define MORSE_FLIPPER_PROGRESS_V1_VERSION       1U
+#define MORSE_FLIPPER_PROGRESS_VERSION          2U
+#define MORSE_FLIPPER_PROGRESS_V1_SIZE          464U
+#define MORSE_FLIPPER_PROGRESS_SIZE             466U
 
 typedef enum {
     MorseFlipperProgressPageStats = 0,
@@ -39,6 +41,7 @@ typedef struct {
     uint16_t today_attempts;
     uint16_t last_streak_day;
     uint16_t last_stats_day;
+    uint16_t last_streak_prompt_day;
     uint8_t lesson_attempts[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
     uint8_t lesson_best[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
     uint8_t lesson_last[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
@@ -79,6 +82,15 @@ void morse_flipper_progress_note_standard_attempt(
 void morse_flipper_progress_note_custom_attempt(
     MorseFlipperProgress* progress,
     bool date_valid,
+    uint16_t practice_day);
+uint16_t morse_flipper_progress_streak_intro_days(
+    const MorseFlipperProgress* progress,
+    uint16_t practice_day);
+bool morse_flipper_progress_streak_intro_due(
+    const MorseFlipperProgress* progress,
+    uint16_t practice_day);
+void morse_flipper_progress_mark_streak_intro_seen(
+    MorseFlipperProgress* progress,
     uint16_t practice_day);
 void morse_flipper_progress_note_weak_group(
     MorseFlipperProgress* progress,

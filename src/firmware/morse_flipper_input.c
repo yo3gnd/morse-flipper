@@ -915,6 +915,18 @@ static bool morse_flipper_progress_input(MorseFlipperApp* app, const InputEvent*
     return true;
 }
 
+static bool morse_flipper_streak_intro_input(MorseFlipperApp* app, const InputEvent* event) {
+    if(app->screen != MorseFlipperScreenStreakIntro) return false;
+
+    if((event->key == InputKeyOk || event->key == InputKeyBack) &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, MorseFlipperCustomStreakIntroStart);
+    }
+
+    return true;
+}
+
 static bool morse_flipper_rf_freq_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenRfFreq) return false;
 
@@ -1074,6 +1086,8 @@ bool morse_flipper_active_mode_input(MorseFlipperApp* app, InputEvent* event, ui
         return morse_flipper_session_end_input(app, event, now_ms);
     case MorseFlipperScreenProgress:
         return morse_flipper_progress_input(app, event);
+    case MorseFlipperScreenStreakIntro:
+        return morse_flipper_streak_intro_input(app, event);
     case MorseFlipperScreenRfFreq:
         return morse_flipper_rf_freq_input(app, event);
     case MorseFlipperScreenRfRx:

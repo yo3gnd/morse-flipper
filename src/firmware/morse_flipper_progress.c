@@ -20,6 +20,26 @@
 #include <sys/stat.h>
 #endif
 
+typedef struct {
+    uint16_t magic;
+    uint16_t version;
+    uint16_t total_attempts;
+    uint16_t streak_days;
+    uint16_t daily_record;
+    uint16_t today_attempts;
+    uint16_t last_streak_day;
+    uint16_t last_stats_day;
+    uint8_t lesson_attempts[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t lesson_best[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t lesson_last[MORSE_FLIPPER_PROGRESS_LESSON_CAP];
+    uint8_t weak_seen[MORSE_FLIPPER_PROGRESS_ASCII_CAP];
+    uint8_t weak_error[MORSE_FLIPPER_PROGRESS_ASCII_CAP];
+} MorseFlipperProgressV1;
+
+_Static_assert(
+    sizeof(MorseFlipperProgressV1) == MORSE_FLIPPER_PROGRESS_V1_SIZE,
+    "MorseFlipperProgressV1 size changed");
+
 static bool morse_flipper_progress_leap(uint16_t year) {
     return (year % 4U) == 0U && ((year % 100U) != 0U || (year % 400U) == 0U);
 }
@@ -48,6 +68,31 @@ static char morse_flipper_progress_upper(char ch) {
 
 static bool morse_flipper_progress_digit(char ch) {
     return ch >= '0' && ch <= '9';
+}
+
+static bool morse_flipper_progress_v1_valid(const MorseFlipperProgressV1* progress) {
+    return progress != NULL && progress->magic == MORSE_FLIPPER_PROGRESS_MAGIC &&
+           progress->version == MORSE_FLIPPER_PROGRESS_V1_VERSION;
+}
+
+static void morse_flipper_progress_copy_v1(
+    MorseFlipperProgress* progress,
+    const MorseFlipperProgressV1* old) {
+    if(progress == NULL || old == NULL) return;
+
+    morse_flipper_progress_reset(progress);
+    progress->total_attempts = old->total_attempts;
+    progress->streak_days = old->streak_days;
+    progress->daily_record = old->daily_record;
+    progress->today_attempts = old->today_attempts;
+    progress->last_streak_day = old->last_streak_day;
+    progress->last_stats_day = old->last_stats_day;
+    memcpy(progress->lesson_attempts, old->lesson_attempts, sizeof(progress->lesson_attempts));
+    memcpy(progress->lesson_best, old->lesson_best, sizeof(progress->lesson_best));
+    memcpy(progress->lesson_last, old->lesson_last, sizeof(progress->lesson_last));
+    memcpy(progress->weak_seen, old->weak_seen, sizeof(progress->weak_seen));
+    memcpy(progress->weak_error, old->weak_error, sizeof(progress->weak_error));
+    progress->last_streak_prompt_day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
 }
 
 static bool morse_flipper_progress_char_idx(char ch, uint8_t* out_idx) {
@@ -103,6 +148,7 @@ void morse_flipper_progress_reset(MorseFlipperProgress* progress) {
     progress->version = MORSE_FLIPPER_PROGRESS_VERSION;
     progress->last_streak_day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
     progress->last_stats_day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
+    progress->last_streak_prompt_day = MORSE_FLIPPER_PROGRESS_DAY_NONE;
 }
 
 bool morse_flipper_progress_valid(const MorseFlipperProgress* progress) {
@@ -182,6 +228,35 @@ void morse_flipper_progress_note_custom_attempt(
     if(progress == NULL) return;
     if(date_valid && practice_day != MORSE_FLIPPER_PROGRESS_DAY_NONE)
         morse_flipper_progress_note_streak(progress, practice_day);
+}
+
+uint16_t morse_flipper_progress_streak_intro_days(
+    const MorseFlipperProgress* progress,
+    uint16_t practice_day) {
+    if(progress == NULL || practice_day == MORSE_FLIPPER_PROGRESS_DAY_NONE) return 1U;
+    if(progress->last_streak_day == practice_day)
+        return progress->streak_days == 0U ? 1U : progress->streak_days;
+    if(progress->last_streak_day != MORSE_FLIPPER_PROGRESS_DAY_NONE &&
+       (uint16_t)(progress->last_streak_day + 1U) == practice_day)
+        return morse_flipper_progress_sat_inc16(progress->streak_days);
+    return 1U;
+}
+
+bool morse_flipper_progress_streak_intro_due(
+    const MorseFlipperProgress* progress,
+    uint16_t practice_day) {
+    if(progress == NULL) return false;
+    if(practice_day == MORSE_FLIPPER_PROGRESS_DAY_NONE) return false;
+    if(progress->last_streak_prompt_day == practice_day) return false;
+    return true;
+}
+
+void morse_flipper_progress_mark_streak_intro_seen(
+    MorseFlipperProgress* progress,
+    uint16_t practice_day) {
+    if(progress == NULL) return;
+    if(practice_day == MORSE_FLIPPER_PROGRESS_DAY_NONE) return;
+    progress->last_streak_prompt_day = practice_day;
 }
 
 void morse_flipper_progress_note_weak_group(
@@ -563,14 +638,34 @@ bool morse_flipper_progress_load(MorseFlipperProgress* progress) {
         ok = true;
     } else if(stat_err != FSE_OK) {
         ok = false;
-    } else if(file_info_is_dir(&info) || info.size != MORSE_FLIPPER_PROGRESS_SIZE) {
+    } else if(file_info_is_dir(&info)) {
         morse_flipper_progress_reset(progress);
-    } else if(storage_file_open(file, MORSE_FLIPPER_PROGRESS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        got = storage_file_read(file, progress, sizeof(*progress));
-        if(got != sizeof(*progress)) ok = false;
-        if(ok && !morse_flipper_progress_valid(progress)) morse_flipper_progress_reset(progress);
+    } else if(info.size == MORSE_FLIPPER_PROGRESS_SIZE) {
+        if(storage_file_open(file, MORSE_FLIPPER_PROGRESS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+            got = storage_file_read(file, progress, sizeof(*progress));
+            if(got != sizeof(*progress)) ok = false;
+            if(ok && !morse_flipper_progress_valid(progress))
+                morse_flipper_progress_reset(progress);
+        } else {
+            ok = false;
+        }
+    } else if(info.size == MORSE_FLIPPER_PROGRESS_V1_SIZE) {
+        if(storage_file_open(file, MORSE_FLIPPER_PROGRESS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+            MorseFlipperProgressV1 old;
+
+            got = storage_file_read(file, &old, sizeof(old));
+            if(got != sizeof(old)) ok = false;
+            if(ok) {
+                if(morse_flipper_progress_v1_valid(&old))
+                    morse_flipper_progress_copy_v1(progress, &old);
+                else
+                    morse_flipper_progress_reset(progress);
+            }
+        } else {
+            ok = false;
+        }
     } else {
-        ok = false;
+        morse_flipper_progress_reset(progress);
     }
 
     storage_file_close(file);
@@ -589,19 +684,36 @@ bool morse_flipper_progress_load(MorseFlipperProgress* progress) {
         return false;
     }
     size = ftell(f);
-    if(size != (long)MORSE_FLIPPER_PROGRESS_SIZE) {
+    rewind(f);
+    if(size == (long)MORSE_FLIPPER_PROGRESS_SIZE) {
+        got = fread(progress, 1U, sizeof(*progress), f);
         fclose(f);
-        morse_flipper_progress_reset(progress);
+        if(got != sizeof(*progress)) {
+            morse_flipper_progress_reset(progress);
+            return false;
+        }
+        if(!morse_flipper_progress_valid(progress)) morse_flipper_progress_reset(progress);
         return true;
     }
-    rewind(f);
-    got = fread(progress, 1U, sizeof(*progress), f);
-    fclose(f);
-    if(got != sizeof(*progress)) {
-        morse_flipper_progress_reset(progress);
-        return false;
+
+    if(size == (long)MORSE_FLIPPER_PROGRESS_V1_SIZE) {
+        MorseFlipperProgressV1 old;
+
+        got = fread(&old, 1U, sizeof(old), f);
+        fclose(f);
+        if(got != sizeof(old)) {
+            morse_flipper_progress_reset(progress);
+            return false;
+        }
+        if(morse_flipper_progress_v1_valid(&old))
+            morse_flipper_progress_copy_v1(progress, &old);
+        else
+            morse_flipper_progress_reset(progress);
+        return true;
     }
-    if(!morse_flipper_progress_valid(progress)) morse_flipper_progress_reset(progress);
+
+    fclose(f);
+    morse_flipper_progress_reset(progress);
     return true;
 #endif
 }
