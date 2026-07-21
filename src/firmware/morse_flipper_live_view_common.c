@@ -145,7 +145,7 @@ static void morse_flipper_draw_star_bitmap_mask(
     uint8_t row,
     uint8_t scale) {
     for(uint8_t col = 0U; col < MORSE_FLIPPER_STAR_REVEAL_COLS; col++) {
-        if((mask & (uint16_t)(1U << (8U - col))) != 0U) {
+        if((mask & (uint16_t)(1U << (15U - col))) != 0U) {
             morse_flipper_draw_star_bitmap_pixel(canvas, left, top, row, col, scale);
         }
     }
@@ -157,30 +157,63 @@ void morse_flipper_draw_star_glyph_large_cols(
     uint8_t cy,
     uint8_t cols) {
     enum {
-        Scale = 2U,
-        BitmapPx = 9U,
+        Scale = 1U,
+        BitmapPx = 16U,
     };
-    static const uint16_t outline[BitmapPx] = {
-        0x010,
-        0x010,
-        0x028,
-        0x1EF,
-        0x082,
-        0x044,
-        0x054,
-        0x0EE,
-        0x082,
+    /* Source star is piskel2.png; face pixels are inverted over filled columns. */
+    static const uint16_t source[BitmapPx] = {
+        0x0000,
+        0x0180,
+        0x0240,
+        0x0240,
+        0x0420,
+        0x7C3E,
+        0x4002,
+        0x2244,
+        0x1008,
+        0x0A50,
+        0x1188,
+        0x1008,
+        0x23C4,
+        0x4C32,
+        0x700E,
+        0x0000,
     };
-    static const uint16_t full[BitmapPx] = {
-        0x010,
-        0x010,
-        0x038,
-        0x1FF,
-        0x0FE,
-        0x07C,
-        0x07C,
-        0x0EE,
-        0x082,
+    static const uint16_t body[BitmapPx] = {
+        0x0000,
+        0x0180,
+        0x03C0,
+        0x03C0,
+        0x07E0,
+        0x7FFE,
+        0x7FFE,
+        0x3FFC,
+        0x1FF8,
+        0x0FF0,
+        0x1FF8,
+        0x1FF8,
+        0x3FFC,
+        0x7C3E,
+        0x700E,
+        0x0000,
+    };
+    static const uint16_t face[BitmapPx] = {
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0240,
+        0x0000,
+        0x0240,
+        0x0180,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
+        0x0000,
     };
     int32_t left;
     int32_t top;
@@ -192,18 +225,30 @@ void morse_flipper_draw_star_glyph_large_cols(
     top = (int32_t)cy - ((BitmapPx * Scale) / 2);
 
     for(uint8_t row = 0U; row < BitmapPx; row++) {
-        morse_flipper_draw_star_bitmap_mask(canvas, left, top, outline[row], row, Scale);
+        morse_flipper_draw_star_bitmap_mask(canvas, left, top, source[row], row, Scale);
     }
 
     for(uint8_t col = 0U; col < cols; col++) {
-        uint16_t col_mask = (uint16_t)(1U << (8U - col));
+        uint16_t col_mask = (uint16_t)(1U << (15U - col));
 
         for(uint8_t row = 0U; row < BitmapPx; row++) {
-            if((full[row] & col_mask) != 0U) {
+            if((body[row] & col_mask) != 0U) {
                 morse_flipper_draw_star_bitmap_pixel(canvas, left, top, row, col, Scale);
             }
         }
     }
+
+    canvas_set_color(canvas, ColorWhite);
+    for(uint8_t col = 0U; col < cols; col++) {
+        uint16_t col_mask = (uint16_t)(1U << (15U - col));
+
+        for(uint8_t row = 0U; row < BitmapPx; row++) {
+            if((face[row] & col_mask) != 0U) {
+                morse_flipper_draw_star_bitmap_pixel(canvas, left, top, row, col, Scale);
+            }
+        }
+    }
+    canvas_set_color(canvas, ColorBlack);
 }
 
 void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled) {

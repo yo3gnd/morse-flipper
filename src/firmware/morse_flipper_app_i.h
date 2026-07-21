@@ -56,7 +56,7 @@
 #define MORSE_FLIPPER_SESSION_RESULT_MS             160U
 #define MORSE_FLIPPER_STAR_FILL_MS                  300U
 #define MORSE_FLIPPER_STAR_GAP_MS                   100U
-#define MORSE_FLIPPER_STAR_REVEAL_COLS              9U
+#define MORSE_FLIPPER_STAR_REVEAL_COLS              16U
 #define MORSE_FLIPPER_STAR_REDRAW_MS                33U
 #define MORSE_FLIPPER_STAR_BLINK_HALF_MS            250U
 #define MORSE_FLIPPER_TXG_RESULT_DELAY_MS           500U
