@@ -96,6 +96,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .about_footer_seq_i = 0U,
         .progress_row_count = 0U,
         .progress_row_offset = 0U,
+        .progress_row_cursor = 0U,
         .progress_scroll_key = 0xFFU,
         .progress_debug_prev_lesson = 1U,
         .about_last_ok_ms = 0U,

@@ -247,6 +247,7 @@ void morse_flipper_trainer_chars_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
+    if(idx > app->custom_sets.count) idx = 0U;
     app->trainer.custom_set_idx = idx;
     morse_flipper_apply_trainer_charset_choice(app);
     variable_item_set_current_value_text(
@@ -260,9 +261,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     uint32_t sel = scene_manager_get_scene_state(app->scene_manager, MorseFlipperSceneTrainer);
     uint8_t gs;
     uint8_t groups;
+    uint8_t custom_count;
     bool dirty = false;
-
-    morse_flipper_ensure_custom_sets_loaded(app);
 
     gs = morse_trainer_group_size(&app->trainer);
     groups = morse_trainer_session_groups(&app->trainer);
@@ -280,6 +280,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     if(dirty) morse_flipper_save_config(app);
 
     morse_flipper_ensure_view(app, MorseFlipperViewSettings);
+    if(app->settings_list == NULL) return;
+    custom_count = app->custom_sets_loaded ? app->custom_sets.count : 0U;
     variable_item_list_reset(app->settings_list);
     memset(app->trainer_items, 0, sizeof(app->trainer_items));
     variable_item_list_set_enter_callback(
@@ -333,7 +335,7 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
     item = variable_item_list_add(
         app->settings_list,
         "Chars",
-        (uint8_t)(app->custom_sets.count + 1U),
+        (uint8_t)(custom_count + 1U),
         morse_flipper_trainer_chars_changed,
         app);
     app->trainer_items[MorseFlipperTrainerSettingChars] = item;

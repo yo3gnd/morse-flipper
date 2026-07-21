@@ -7,45 +7,30 @@
 
 #include "morse_flipper_app_i.h"
 
-static const char* const morse_flipper_progress_months[12] = {
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-};
-
 static void morse_flipper_draw_progress_bar(Canvas* canvas, uint8_t done, uint8_t total) {
-    uint8_t x = 42U;
-    uint8_t y = 54U;
-    uint8_t w = 44U;
+    uint8_t x = 3U;
+    uint8_t y = 44U;
+    uint8_t w = 122U;
+    uint8_t h = 7U;
+    uint8_t fill_w = 120U;
     uint8_t fill;
-    char label[12];
 
     if(total == 0U) total = 1U;
     if(done > total) done = total;
-    fill = (uint8_t)(((uint16_t)done * (w - 2U)) / total);
+    fill = (uint8_t)(((uint16_t)done * fill_w) / total);
 
-    canvas_draw_rframe(canvas, x, y, w, 8, 2);
-    if(fill != 0U) canvas_draw_rbox(canvas, x + 1U, y + 1U, fill, 6, 1);
-    snprintf(label, sizeof(label), "%u/%u", (unsigned)done, (unsigned)total);
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 51, AlignCenter, AlignCenter, label);
+    canvas_draw_rframe(canvas, x, y, w, h, 2);
+    if(fill != 0U) canvas_draw_box(canvas, x + 1U, y + 1U, fill, (uint8_t)(h - 2U));
 }
 
 static void morse_flipper_draw_progress_stats(Canvas* canvas, MorseFlipperApp* app) {
     MorseFlipperProgress* progress = app->view_progress;
     char line[40];
     char lesson_label[16];
+    char attempt_label[8];
     char weak[12];
-    uint8_t lesson = morse_trainer_lesson(&app->trainer);
+    uint8_t mastered;
+    uint8_t total_lessons;
 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 4, 10, "Listening stats");
@@ -53,26 +38,28 @@ static void morse_flipper_draw_progress_stats(Canvas* canvas, MorseFlipperApp* a
     snprintf(line, sizeof(line), "Streak: %u days", (unsigned)progress->streak_days);
     canvas_draw_str(canvas, 4, 21, line);
 
-    if(morse_flipper_effective_trainer_custom_set_idx(app) != 0U) {
-        canvas_draw_str(canvas, 4, 33, "Custom chars");
-        canvas_draw_str(canvas, 4, 45, "Stats: lesson mode only");
-        elements_button_left(canvas, "Lessons");
-        elements_button_right(canvas, "More");
-        return;
-    }
-
-    morse_trainer_lesson_label(lesson, lesson_label, sizeof(lesson_label));
-    {
-        char lesson_line[64];
-        snprintf(lesson_line, sizeof(lesson_line), "Lesson: %s", lesson_label);
+    mastered = morse_flipper_progress_mastered_lesson(progress);
+    total_lessons = (uint8_t)morse_trainer_lesson_count();
+    if(total_lessons >= MORSE_FLIPPER_PROGRESS_LESSON_CAP)
+        total_lessons = MORSE_FLIPPER_PROGRESS_LESSON_CAP - 1U;
+    if(mastered == 0U) {
+        canvas_draw_str(canvas, 4, 32, "Progress: none");
+    } else {
+        char lesson_line[32];
+        morse_trainer_lesson_label(mastered, lesson_label, sizeof(lesson_label));
+        snprintf(lesson_line, sizeof(lesson_line), "Progress: %s", lesson_label);
         canvas_draw_str(canvas, 4, 32, lesson_line);
     }
+    snprintf(
+        attempt_label, sizeof(attempt_label), "%u/%u", (unsigned)mastered, (unsigned)total_lessons);
+    canvas_draw_str_aligned(canvas, 124, 32, AlignRight, AlignBottom, attempt_label);
+
     morse_flipper_progress_top_weak(
         progress, morse_trainer_charset(&app->trainer), weak, sizeof(weak));
     snprintf(line, sizeof(line), "Needs improv: %s", weak);
-    canvas_draw_str(canvas, 4, 43, line);
+    canvas_draw_str(canvas, 4, 41, line);
 
-    morse_flipper_draw_progress_bar(canvas, progress->lesson_attempts[lesson], 40U);
+    morse_flipper_draw_progress_bar(canvas, mastered, total_lessons);
     elements_button_left(canvas, "Lessons");
     elements_button_right(canvas, "More");
 }
@@ -98,57 +85,77 @@ static void morse_flipper_draw_progress_totals(Canvas* canvas, MorseFlipperApp* 
     elements_button_right(canvas, "Lessons");
 }
 
-static void morse_flipper_progress_stars_text(uint8_t percent, char* out, size_t out_sz) {
-    uint8_t stars = morse_flipper_progress_stars(percent);
-    uint8_t i;
+static void morse_flipper_progress_history_reference_date(
+    const MorseFlipperApp* app,
+    uint16_t* out_year,
+    uint8_t* out_month) {
+    DateTime dt = {0};
+    uint16_t today = MORSE_FLIPPER_PROGRESS_DAY_NONE;
+    uint8_t ignored_day;
 
-    if(out == NULL || out_sz == 0U) return;
-    out[0] = '\0';
-    for(i = 0U; i < stars && i + 1U < out_sz; i++) {
-        out[i] = '*';
-        out[i + 1U] = '\0';
+    if(out_year == NULL || out_month == NULL) return;
+    *out_year = 0U;
+    *out_month = 0U;
+
+    furi_hal_rtc_get_datetime(&dt);
+    if(morse_flipper_progress_date_to_day(dt.year, dt.month, dt.day, &today)) {
+        *out_year = dt.year;
+        *out_month = dt.month;
+        return;
     }
+
+    if(app == NULL || app->view_progress == NULL) return;
+    morse_flipper_progress_day_to_date(
+        app->view_progress->last_stats_day, out_year, out_month, &ignored_day);
 }
 
 static void morse_flipper_draw_progress_history_row(
     Canvas* canvas,
     uint8_t y,
     const MorseFlipperProgressHistoryRow* row,
-    bool selected) {
-    uint16_t year;
-    uint8_t month;
-    uint8_t day;
-    char date[12];
+    bool selected,
+    uint16_t reference_year,
+    uint8_t reference_month) {
+    enum {
+        CursorX = 0U,
+        CursorW = 2U,
+        CursorH = 8U,
+        LessonX = 4U,
+        DateX = 13U,
+        TimeX = 47U,
+        ScoreX = 75U,
+        StarCx = 103U,
+        StarGap = 10U,
+    };
+    char date[8];
     char time[8];
     char score[8];
-    char stars[4];
     char lesson[2] = {row->lesson, '\0'};
+    uint8_t stars;
+    uint8_t i;
 
-    if(!morse_flipper_progress_history_row_date(row, &year, &month, &day)) return;
-    if(month < 1U || month > 12U) return;
-
-    snprintf(
-        date,
-        sizeof(date),
-        "%02u %s %02u",
-        (unsigned)day,
-        morse_flipper_progress_months[month - 1U],
-        (unsigned)(year % 100U));
+    morse_flipper_progress_history_date_label(row, reference_year, reference_month, date, sizeof(date));
+    if(date[0] == '\0') return;
     snprintf(time, sizeof(time), "%02u:%02u", (unsigned)row->hour, (unsigned)row->minute);
     snprintf(score, sizeof(score), "%u%%", (unsigned)row->percent);
-    morse_flipper_progress_stars_text(row->percent, stars, sizeof(stars));
+    stars = morse_flipper_progress_stars(row->percent);
 
-    if(selected) canvas_draw_str(canvas, 0, y, ">");
-    canvas_draw_str(canvas, 8, y, lesson);
-    canvas_draw_str(canvas, 18, y, date);
-    canvas_draw_str(canvas, 68, y, time);
-    canvas_draw_str(canvas, 96, y, score);
-    canvas_draw_str(canvas, 116, y, stars);
+    if(selected) canvas_draw_box(canvas, CursorX, (uint8_t)(y - 7U), CursorW, CursorH);
+    canvas_draw_str(canvas, LessonX, y, lesson);
+    canvas_draw_str(canvas, DateX, y, date);
+    canvas_draw_str(canvas, TimeX, y, time);
+    canvas_draw_str(canvas, ScoreX, y, score);
+    for(i = 0U; i < 3U; i++) {
+        morse_flipper_draw_star_glyph(
+            canvas, (uint8_t)(StarCx + (i * StarGap)), (uint8_t)(y - 4U), i < stars);
+    }
 }
 
 static void morse_flipper_draw_progress_history(Canvas* canvas, MorseFlipperApp* app) {
     uint8_t i;
     uint8_t visible = 0U;
+    uint16_t reference_year = 0U;
+    uint8_t reference_month = 0U;
 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 4, 10, "Recent lessons");
@@ -162,12 +169,15 @@ static void morse_flipper_draw_progress_history(Canvas* canvas, MorseFlipperApp*
     if(visible == 0U) {
         canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "No lesson history yet");
     } else {
+        morse_flipper_progress_history_reference_date(app, &reference_year, &reference_month);
         for(i = 0U; i < visible; i++) {
             morse_flipper_draw_progress_history_row(
                 canvas,
-                (uint8_t)(18U + (i * 8U)),
+                (uint8_t)(21U + (i * 9U)),
                 &app->progress_rows[app->progress_row_offset + i],
-                i == 0U);
+                i == app->progress_row_cursor,
+                reference_year,
+                reference_month);
         }
     }
 

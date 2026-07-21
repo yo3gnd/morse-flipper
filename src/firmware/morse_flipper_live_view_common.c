@@ -30,6 +30,41 @@ void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint) {
     canvas_draw_box(canvas, 127, 31, 1, 7);
 }
 
+void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled) {
+    static const int8_t points[10][2] = {
+        {0, -4},
+        {1, -1},
+        {4, -1},
+        {2, 1},
+        {3, 4},
+        {0, 2},
+        {-3, 4},
+        {-2, 1},
+        {-4, -1},
+        {-1, -1},
+    };
+
+    if(canvas == NULL) return;
+    for(uint8_t i = 0U; i < 10U; i++) {
+        uint8_t next = (uint8_t)((i + 1U) % 10U);
+        canvas_draw_line(
+            canvas,
+            (int32_t)cx + points[i][0],
+            (int32_t)cy + points[i][1],
+            (int32_t)cx + points[next][0],
+            (int32_t)cy + points[next][1]);
+    }
+
+    if(!filled) return;
+    canvas_draw_line(canvas, cx - 1U, cy - 2U, cx + 1U, cy - 2U);
+    canvas_draw_line(canvas, cx - 2U, cy - 1U, cx + 2U, cy - 1U);
+    canvas_draw_line(canvas, cx - 2U, cy, cx + 2U, cy);
+    canvas_draw_line(canvas, cx - 1U, cy + 1U, cx + 1U, cy + 1U);
+    canvas_draw_line(canvas, cx - 2U, cy + 2U, cx + 2U, cy + 2U);
+    canvas_draw_line(canvas, cx - 3U, cy + 4U, cx - 2U, cy + 4U);
+    canvas_draw_line(canvas, cx + 2U, cy + 4U, cx + 3U, cy + 4U);
+}
+
 uint8_t morse_flipper_live_upper_char(uint8_t ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
     return ch;

@@ -47,12 +47,13 @@ static bool morse_trainer_read_custom_text(char* buf, size_t buf_sz) {
     opened =
         storage_file_open(file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
     if(!opened) {
+        storage_common_mkdir(storage, MORSE_FLIPPER_APP_DATA_DIR);
         if(storage_file_open(
                file, morse_trainer_custom_path_value, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
             storage_file_write(
                 file, morse_trainer_custom_defaults, strlen(morse_trainer_custom_defaults));
+            storage_file_close(file);
         }
-        storage_file_close(file);
         opened = storage_file_open(
             file, morse_trainer_custom_path_value, FSAM_READ, FSOM_OPEN_EXISTING);
     }

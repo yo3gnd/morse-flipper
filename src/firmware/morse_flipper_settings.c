@@ -30,12 +30,12 @@ void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state)
     View* view;
     uint8_t pos;
     uint8_t row;
+    uint8_t win = 0U;
 
     if(list == NULL) return;
 
     pos = (uint8_t)(state & 0xffU);
     row = (uint8_t)((state >> 8) & 0xffU);
-    variable_item_list_set_selected_item(list, pos);
 
     view = variable_item_list_get_view(list);
     with_view_model(
@@ -43,11 +43,11 @@ void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state)
         MorseFlipperVilModel * model,
         {
             uint8_t count = MorseFlipperVilArray_size(model->items);
-            uint8_t win = 0U;
 
             if(count == 0U) {
-                model->position = 0U;
-                model->window_position = 0U;
+                pos = 0U;
+                row = 0U;
+                win = 0U;
             } else {
                 if(pos >= count) pos = 0U;
                 if(row > 3U) row = 1U;
@@ -57,11 +57,12 @@ void morse_flipper_settings_list_restore(VariableItemList* list, uint32_t state)
                     win = (uint8_t)(pos - row);
                     if(win > max_win) win = max_win;
                 }
-                model->position = pos;
-                model->window_position = win;
             }
         },
-        true);
+        false);
+
+    variable_item_list_set_selected_item(list, pos);
+    with_view_model(view, MorseFlipperVilModel * model, { model->window_position = win; }, true);
 }
 
 void morse_flipper_settings_enter_callback(void* context, uint32_t index) {

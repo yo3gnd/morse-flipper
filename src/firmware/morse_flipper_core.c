@@ -480,13 +480,16 @@ void morse_flipper_leave_live_screen(MorseFlipperApp* app, uint32_t now_ms) {
 
 void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app) {
     uint8_t selected;
+    bool loaded;
 
     if(app == NULL || app->custom_sets_loaded) {
         return;
     }
 
     selected = app->trainer.custom_set_idx;
-    app->custom_sets_loaded = morse_trainer_load_custom_sets(&app->custom_sets);
+    loaded = morse_trainer_load_custom_sets(&app->custom_sets);
+    if(!loaded) memset(&app->custom_sets, 0, sizeof(app->custom_sets));
+    app->custom_sets_loaded = true;
     app->trainer.custom_set_idx = selected;
     morse_flipper_apply_trainer_charset_choice(app);
 }

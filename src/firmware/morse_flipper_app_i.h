@@ -415,6 +415,7 @@ typedef struct MorseFlipperApp {
     uint8_t about_footer_seq_i;
     uint8_t progress_row_count;
     uint8_t progress_row_offset;
+    uint8_t progress_row_cursor;
     uint8_t progress_scroll_key;
     uint8_t progress_debug_prev_lesson;
     uint32_t about_last_ok_ms;
@@ -776,6 +777,7 @@ void morse_flipper_rf_rx_edge(void* ctx, bool level, uint16_t duration_ms);
 uint8_t morse_flipper_live_upper_char(uint8_t ch);
 void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
+void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled);
 void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text);
 void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch);
 void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms);
