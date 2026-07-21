@@ -43,16 +43,16 @@ static void morse_flipper_draw_progress_stats(Canvas* canvas, MorseFlipperApp* a
     if(total_lessons >= MORSE_FLIPPER_PROGRESS_LESSON_CAP)
         total_lessons = MORSE_FLIPPER_PROGRESS_LESSON_CAP - 1U;
     if(mastered == 0U) {
-        canvas_draw_str(canvas, 4, 32, "Progress: none");
+        canvas_draw_str(canvas, 4, 31, "Progress: none");
     } else {
         char lesson_line[32];
         morse_trainer_lesson_label(mastered, lesson_label, sizeof(lesson_label));
         snprintf(lesson_line, sizeof(lesson_line), "Progress: %s", lesson_label);
-        canvas_draw_str(canvas, 4, 32, lesson_line);
+        canvas_draw_str(canvas, 4, 31, lesson_line);
     }
     snprintf(
         attempt_label, sizeof(attempt_label), "%u/%u", (unsigned)mastered, (unsigned)total_lessons);
-    canvas_draw_str_aligned(canvas, 124, 32, AlignRight, AlignBottom, attempt_label);
+    canvas_draw_str_aligned(canvas, 124, 31, AlignRight, AlignBottom, attempt_label);
 
     morse_flipper_progress_top_weak(
         progress, morse_trainer_charset(&app->trainer), weak, sizeof(weak));
@@ -72,15 +72,15 @@ static void morse_flipper_draw_progress_totals(Canvas* canvas, MorseFlipperApp* 
     canvas_draw_str(canvas, 4, 10, "Listening totals");
     canvas_set_font(canvas, FontSecondary);
     snprintf(line, sizeof(line), "Total attempts: %u", (unsigned)progress->total_attempts);
-    canvas_draw_str(canvas, 4, 24, line);
+    canvas_draw_str(canvas, 4, 21, line);
     snprintf(line, sizeof(line), "Daily record: %u", (unsigned)progress->daily_record);
-    canvas_draw_str(canvas, 4, 36, line);
+    canvas_draw_str(canvas, 4, 31, line);
     snprintf(
         line,
         sizeof(line),
         "Best score: %u%%",
         (unsigned)morse_flipper_progress_best_score(progress));
-    canvas_draw_str(canvas, 4, 48, line);
+    canvas_draw_str(canvas, 4, 41, line);
     elements_button_left(canvas, "Stats");
     elements_button_right(canvas, "Lessons");
 }
