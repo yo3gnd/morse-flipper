@@ -39,7 +39,7 @@ External straight-key input uses the `dit/SK` GPIO pin and ground. With the defa
 
 You can also use one of the Flipper's normal ground pins instead of the virtual gnd. In that case set virtual gnd to `None`, or leave it unused and make sure your wiring really does have ground. A key with one wire is a brick, not an input device. You do not need to wire any pull-up or pull-down resistors; Flipper does it internally. Idle is Hi-Z; active is short to ground.
 
-Straight keying is used by Free Practice, Straight trainer, groups-of-five sending drills, USB adapters, and transmit screens.
+Straight keying is used by Free Practice, Straight key trainer, groups-of-five sending drills, USB adapters, and transmit screens.
 
 ## Paddle
 

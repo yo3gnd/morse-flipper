@@ -138,7 +138,7 @@ static void morse_flipper_scene_menu_training_on_enter(void* context) {
         app->submenu, "Listening", MorseFlipperSceneSession, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
         app->submenu,
-        "Straight trainer",
+        "Straight key trainer",
         MorseFlipperSceneStraight,
         morse_flipper_scene_menu_pick,
         app);
@@ -201,7 +201,7 @@ static void morse_flipper_scene_menu_settings_on_enter(void* context) {
         app->submenu, "Listening", MorseFlipperSceneTrainer, morse_flipper_scene_menu_pick, app);
     submenu_add_item(
         app->submenu,
-        "Straight trainer",
+        "Straight key trainer",
         MorseFlipperSceneStraightCfg,
         morse_flipper_scene_menu_pick,
         app);
