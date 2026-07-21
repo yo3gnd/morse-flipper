@@ -605,9 +605,16 @@ static bool morse_flipper_star_animation_active(const MorseFlipperApp* app, uint
     if(app->screen == MorseFlipperScreenSessionEnd) {
         uint8_t score = morse_trainer_session_letter_percent(&app->trainer);
         uint8_t stars = morse_flipper_progress_stars(score);
-        uint16_t score_count_ms = score >= 100U ? 0U : MORSE_FLIPPER_SCORE_COUNT_MS;
+        uint16_t score_wheel_ms =
+            score >= 100U ?
+                0U :
+                (MORSE_FLIPPER_SCORE_WHEEL_RANDOM_MS +
+                 MORSE_FLIPPER_SCORE_WHEEL_RANDOM_JITTER_MS +
+                 MORSE_FLIPPER_SCORE_WHEEL_SETTLE_MS +
+                 MORSE_FLIPPER_SCORE_WHEEL_SETTLE_JITTER_MS);
         uint16_t duration = (uint16_t)(
-            score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS +
+            score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
+            MORSE_FLIPPER_SCORE_SLIDE_MS +
             morse_flipper_star_anim_duration(stars));
 
         if(elapsed < duration + MORSE_FLIPPER_STAR_REDRAW_MS) return true;

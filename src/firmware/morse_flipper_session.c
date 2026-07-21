@@ -412,24 +412,204 @@ static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
     return "Keep practicing";
 }
 
-static uint16_t morse_flipper_session_score_count_ms(uint8_t score) {
-    return score >= 100U ? 0U : MORSE_FLIPPER_SCORE_COUNT_MS;
-}
-
-static uint8_t morse_flipper_session_visible_score(
+static uint8_t morse_flipper_score_wheel_seed(
     const MorseFlipperApp* app,
     uint8_t score,
-    uint32_t now_ms) {
-    uint32_t elapsed;
-    uint16_t count_ms;
+    uint8_t digit_idx) {
+    uint32_t seed;
 
-    if(app == NULL || app->star_anim_started_at == 0U || score >= 100U) return score;
+    seed = app == NULL ? 0U : app->star_anim_started_at;
+    seed ^= (uint32_t)score * 37U;
+    seed ^= (uint32_t)(digit_idx + 1U) * 173U;
+    seed ^= seed >> 11;
+    seed ^= seed << 7;
+    seed ^= seed >> 13;
+    return (uint8_t)seed;
+}
 
-    count_ms = morse_flipper_session_score_count_ms(score);
-    elapsed = now_ms - app->star_anim_started_at;
-    if(elapsed >= count_ms) return score;
+static bool morse_flipper_score_digit_settles_first(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx) {
+    bool left_first = (morse_flipper_score_wheel_seed(app, score, 2U) & 1U) == 0U;
+    return digit_idx == 0U ? left_first : !left_first;
+}
 
-    return (uint8_t)((elapsed * score) / count_ms);
+static uint16_t morse_flipper_score_wheel_random_ms(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx) {
+    if(morse_flipper_score_digit_settles_first(app, score, digit_idx)) {
+        return MORSE_FLIPPER_SCORE_WHEEL_RANDOM_MS -
+               MORSE_FLIPPER_SCORE_WHEEL_RANDOM_JITTER_MS;
+    }
+
+    return MORSE_FLIPPER_SCORE_WHEEL_RANDOM_MS +
+           MORSE_FLIPPER_SCORE_WHEEL_RANDOM_JITTER_MS;
+}
+
+static uint16_t morse_flipper_score_wheel_settle_ms(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx) {
+    if(morse_flipper_score_digit_settles_first(app, score, digit_idx)) {
+        return MORSE_FLIPPER_SCORE_WHEEL_SETTLE_MS -
+               MORSE_FLIPPER_SCORE_WHEEL_SETTLE_JITTER_MS;
+    }
+
+    return MORSE_FLIPPER_SCORE_WHEEL_SETTLE_MS +
+           MORSE_FLIPPER_SCORE_WHEEL_SETTLE_JITTER_MS;
+}
+
+static uint16_t morse_flipper_score_digit_wheel_ms(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx) {
+    return (uint16_t)(morse_flipper_score_wheel_random_ms(app, score, digit_idx) +
+                      morse_flipper_score_wheel_settle_ms(app, score, digit_idx));
+}
+
+static uint16_t morse_flipper_session_score_wheel_ms(
+    const MorseFlipperApp* app,
+    uint8_t score) {
+    uint16_t left_ms;
+    uint16_t right_ms;
+
+    if(score >= 100U) return 0U;
+
+    left_ms = morse_flipper_score_digit_wheel_ms(app, score, 0U);
+    right_ms = morse_flipper_score_digit_wheel_ms(app, score, 1U);
+    return left_ms > right_ms ? left_ms : right_ms;
+}
+
+static int8_t morse_flipper_score_wheel_dir(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx) {
+    int8_t left_dir = (morse_flipper_score_wheel_seed(app, score, 0U) & 1U) != 0U ? 1 : -1;
+    return digit_idx == 0U ? left_dir : (int8_t)-left_dir;
+}
+
+static int32_t morse_flipper_lerp_i32(int32_t from, int32_t to, uint32_t elapsed, uint16_t ms) {
+    if(ms == 0U || elapsed >= ms) return to;
+    return from + (((to - from) * (int32_t)elapsed) / (int32_t)ms);
+}
+
+static int32_t morse_flipper_floor_div_256(int32_t v) {
+    if(v >= 0) return v / 256;
+    return -(((-v) + 255) / 256);
+}
+
+static int32_t morse_flipper_ceil_div_256(int32_t v) {
+    if(v >= 0) return (v + 255) / 256;
+    return -((-v) / 256);
+}
+
+static uint8_t morse_flipper_mod10_i32(int32_t v) {
+    int32_t r = v % 10;
+    if(r < 0) r += 10;
+    return (uint8_t)r;
+}
+
+static int32_t morse_flipper_score_wheel_pos_x256(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx,
+    uint8_t target_digit,
+    uint32_t elapsed) {
+    int8_t dir = morse_flipper_score_wheel_dir(app, score, digit_idx);
+    uint16_t random_ms = morse_flipper_score_wheel_random_ms(app, score, digit_idx);
+    uint16_t settle_ms = morse_flipper_score_wheel_settle_ms(app, score, digit_idx);
+    uint8_t seed = morse_flipper_score_wheel_seed(app, score, digit_idx);
+    uint8_t random_steps = digit_idx == 0U ?
+                               (uint8_t)(2U + ((seed >> 1) & 1U)) :
+                               (uint8_t)(4U + ((seed >> 1) & 1U));
+    uint8_t settle_steps = 1U;
+    int32_t target = (int32_t)target_digit * 256;
+    int32_t settle_from = target - ((int32_t)dir * (int32_t)settle_steps * 256);
+    int32_t random_from =
+        target - ((int32_t)dir * (int32_t)(random_steps + settle_steps) * 256);
+
+    if(elapsed < random_ms) {
+        return morse_flipper_lerp_i32(random_from, settle_from, elapsed, random_ms);
+    }
+
+    return morse_flipper_lerp_i32(
+        settle_from,
+        target,
+        elapsed - random_ms,
+        settle_ms);
+}
+
+static uint8_t morse_flipper_score_digit_slot_w(Canvas* canvas) {
+    uint8_t max_w = 0U;
+
+    for(uint8_t i = 0U; i < 10U; i++) {
+        char s[2] = {(char)('0' + i), '\0'};
+        uint8_t w = (uint8_t)canvas_string_width(canvas, s);
+        if(w > max_w) max_w = w;
+    }
+
+    return (uint8_t)(max_w + 1U);
+}
+
+static void morse_flipper_draw_score_digit_at(
+    Canvas* canvas,
+    int16_t slot_cx,
+    int16_t baseline_y,
+    uint8_t digit) {
+    char s[2] = {(char)('0' + digit), '\0'};
+    int16_t x = slot_cx - (int16_t)(canvas_string_width(canvas, s) / 2U);
+
+    canvas_draw_str(canvas, x, baseline_y, s);
+}
+
+static void morse_flipper_draw_score_wheel_digit(
+    Canvas* canvas,
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint8_t digit_idx,
+    uint8_t target_digit,
+    int16_t slot_cx,
+    int16_t baseline_y,
+    uint8_t pitch,
+    uint32_t elapsed) {
+    int32_t pos = morse_flipper_score_wheel_pos_x256(app, score, digit_idx, target_digit, elapsed);
+    int8_t dir = morse_flipper_score_wheel_dir(app, score, digit_idx);
+
+    if(dir > 0) {
+        int32_t whole = morse_flipper_floor_div_256(pos);
+        int32_t frac = pos - (whole * 256);
+        int16_t off = (int16_t)-((frac * pitch) / 256);
+
+        morse_flipper_draw_score_digit_at(canvas, slot_cx, baseline_y + off, morse_flipper_mod10_i32(whole));
+        morse_flipper_draw_score_digit_at(
+            canvas, slot_cx, baseline_y + off + pitch, morse_flipper_mod10_i32(whole + 1));
+    } else {
+        int32_t whole = morse_flipper_ceil_div_256(pos);
+        int32_t frac = (whole * 256) - pos;
+        int16_t off = (int16_t)((frac * pitch) / 256);
+
+        morse_flipper_draw_score_digit_at(canvas, slot_cx, baseline_y + off, morse_flipper_mod10_i32(whole));
+        morse_flipper_draw_score_digit_at(
+            canvas, slot_cx, baseline_y + off - pitch, morse_flipper_mod10_i32(whole - 1));
+    }
+}
+
+static void morse_flipper_mask_score_window(
+    Canvas* canvas,
+    int16_t x,
+    int16_t y,
+    uint8_t w,
+    uint8_t h) {
+    uint8_t canvas_h = (uint8_t)canvas_height(canvas);
+
+    canvas_set_color(canvas, ColorWhite);
+    if(y > 0) canvas_draw_box(canvas, x, 0, w, (uint8_t)y);
+    if((int16_t)(y + h) < canvas_h) {
+        canvas_draw_box(canvas, x, y + h, w, (uint8_t)(canvas_h - (y + h)));
+    }
+    canvas_set_color(canvas, ColorBlack);
 }
 
 void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
@@ -439,63 +619,121 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
         StarY = 43U,
         StarStartX = 42U,
         StarGapX = 22U,
+        ScoreDigitGapX = 0U,
     };
     char digits[4];
     uint8_t x;
     uint8_t i;
+    uint8_t slot_w;
+    uint8_t score_w;
+    uint8_t font_h;
+    uint8_t font_desc;
+    int16_t window_top;
+    int16_t score_x;
     uint8_t stars;
     uint8_t score = morse_flipper_session_final_percent(app);
-    uint8_t shown_score;
     int16_t score_y = ScoreBaselineY;
     uint32_t elapsed = 0U;
     uint32_t now_ms = furi_get_tick();
     uint32_t star_started_at;
-    uint16_t score_count_ms;
+    uint16_t score_wheel_ms;
     uint16_t anim_duration;
     bool stars_visible;
     bool show_message;
     bool blink_stars;
     bool blink_on = true;
+    const CanvasFontParameters* font_params;
 
     if(canvas == NULL || app == NULL) return;
 
     if(app->star_anim_started_at != 0U) elapsed = now_ms - app->star_anim_started_at;
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
-    shown_score = morse_flipper_session_visible_score(app, score, now_ms);
-    if(score >= 100U) {
-        snprintf(digits, sizeof(digits), "%u", (unsigned)shown_score);
-    } else {
-        snprintf(digits, sizeof(digits), "%02u", (unsigned)shown_score);
-    }
+
     canvas_set_font(canvas, FontBigNumbers);
-    x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
+    font_params = canvas_get_font_params(canvas, FontBigNumbers);
+    font_h = font_params == NULL ? 18U : font_params->height;
+    font_desc = font_params == NULL ? 0U : font_params->descender;
 
     stars = morse_flipper_progress_stars(score);
-    score_count_ms = morse_flipper_session_score_count_ms(score);
+    score_wheel_ms = morse_flipper_session_score_wheel_ms(app, score);
     star_started_at = app->star_anim_started_at == 0U ?
                           0U :
-                          app->star_anim_started_at + score_count_ms +
+                          app->star_anim_started_at + score_wheel_ms +
+                              MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
                               MORSE_FLIPPER_SCORE_SLIDE_MS;
     anim_duration = morse_flipper_star_anim_duration(stars);
     if(app->star_anim_started_at != 0U) {
-        if(elapsed < score_count_ms) {
+        if(elapsed < score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS) {
             score_y = ScoreCenterBaselineY;
-        } else if(elapsed < score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS) {
-            uint32_t slide_elapsed = elapsed - score_count_ms;
+        } else if(
+            elapsed <
+            score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
+                MORSE_FLIPPER_SCORE_SLIDE_MS) {
+            uint32_t slide_elapsed =
+                elapsed - score_wheel_ms - MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS;
             uint8_t slide_delta = ScoreCenterBaselineY - ScoreBaselineY;
             score_y =
                 ScoreCenterBaselineY -
                 (int16_t)((slide_elapsed * slide_delta) / MORSE_FLIPPER_SCORE_SLIDE_MS);
         }
     }
-    canvas_draw_str(canvas, x, score_y, digits);
+
+    if(score >= 100U) {
+        snprintf(digits, sizeof(digits), "%u", (unsigned)score);
+        x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
+        canvas_draw_str(canvas, x, score_y, digits);
+    } else {
+        slot_w = morse_flipper_score_digit_slot_w(canvas);
+        score_w = (uint8_t)((slot_w * 2U) + ScoreDigitGapX);
+        score_x = (int16_t)(64U - (score_w / 2U));
+        window_top = score_y - (int16_t)(font_h - font_desc);
+
+        if(app->star_anim_started_at != 0U && elapsed < score_wheel_ms) {
+            morse_flipper_draw_score_wheel_digit(
+                canvas,
+                app,
+                score,
+                0U,
+                (uint8_t)(score / 10U),
+                (int16_t)(score_x + (slot_w / 2U)),
+                score_y,
+                (uint8_t)(font_h + 2U),
+                elapsed);
+            morse_flipper_draw_score_wheel_digit(
+                canvas,
+                app,
+                score,
+                1U,
+                (uint8_t)(score % 10U),
+                (int16_t)(score_x + slot_w + ScoreDigitGapX + (slot_w / 2U)),
+                score_y,
+                (uint8_t)(font_h + 2U),
+                elapsed);
+        } else {
+            morse_flipper_draw_score_digit_at(
+                canvas,
+                (int16_t)(score_x + (slot_w / 2U)),
+                score_y,
+                (uint8_t)(score / 10U));
+            morse_flipper_draw_score_digit_at(
+                canvas,
+                (int16_t)(score_x + slot_w + ScoreDigitGapX + (slot_w / 2U)),
+                score_y,
+                (uint8_t)(score % 10U));
+        }
+        morse_flipper_mask_score_window(canvas, score_x, window_top, score_w, (uint8_t)(font_h + 1U));
+    }
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
 
     stars_visible = app->star_anim_started_at == 0U ||
-                    elapsed >= score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS;
+                    elapsed >=
+                        score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
+                            MORSE_FLIPPER_SCORE_SLIDE_MS;
     show_message = app->star_anim_started_at == 0U ||
                    now_ms - app->star_anim_started_at >=
-                       score_count_ms + MORSE_FLIPPER_SCORE_SLIDE_MS + anim_duration;
+                       score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
+                           MORSE_FLIPPER_SCORE_SLIDE_MS + anim_duration;
     blink_stars = stars_visible && score >= 99U && stars != 0U && star_started_at != 0U &&
                   now_ms - star_started_at >= anim_duration;
     if(blink_stars) {
