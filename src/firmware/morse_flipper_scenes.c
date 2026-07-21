@@ -765,6 +765,7 @@ static void morse_flipper_scene_straight_on_enter(void* context) {
 static void morse_flipper_scene_session_end_on_enter(void* context) {
     MorseFlipperApp* app = context;
     if(!app->progress_debug_result) morse_flipper_record_session_progress(app);
+    morse_flipper_start_star_animation(app, furi_get_tick());
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSessionEnd);
 }
 

@@ -60,7 +60,6 @@ void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     app->session_next_group_at = 0U;
     app->session_complete_at = 0U;
     app->session_wait_draw_s = 0xFFU;
-    app->session_end_flash_phase = 0U;
 }
 
 void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now_ms) {
@@ -401,10 +400,6 @@ void morse_flipper_record_session_progress(MorseFlipperApp* app) {
     morse_flipper_release_session_progress(app, false);
 }
 
-bool morse_flipper_session_end_flash(const MorseFlipperApp* app) {
-    return app != NULL && morse_flipper_session_final_percent(app) > 95U;
-}
-
 static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
     if(app == NULL) return "Keep practicing";
     if(morse_trainer_lesson(&app->trainer) >= 40U) return "Congratulations!";
@@ -414,35 +409,42 @@ static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
 
 void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
     char digits[4];
-    bool flash_on = false;
     uint8_t x;
     uint8_t i;
     uint8_t stars;
     uint8_t score = morse_flipper_session_final_percent(app);
+    uint32_t now_ms = furi_get_tick();
+    uint16_t anim_duration;
+    bool blink_stars;
+    bool blink_on = true;
 
     if(canvas == NULL || app == NULL) return;
-
-    if(morse_flipper_session_end_flash(app) && app->session_end_flash_phase != 0U) {
-        canvas_draw_box(canvas, 0, 0, 128, 64);
-        canvas_set_color(canvas, ColorWhite);
-        flash_on = true;
-    }
 
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
     snprintf(digits, sizeof(digits), "%u", (unsigned)score);
     canvas_set_font(canvas, FontBigNumbers);
     x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
-    canvas_draw_str(canvas, x, 39, digits);
+    canvas_draw_str(canvas, x, 36, digits);
     stars = morse_flipper_progress_stars(score);
+    anim_duration = morse_flipper_star_anim_duration(stars);
+    blink_stars = score >= 99U && stars != 0U && app->star_anim_started_at != 0U &&
+                  now_ms - app->star_anim_started_at >= anim_duration;
+    if(blink_stars) {
+        uint32_t blink_ms = now_ms - app->star_anim_started_at - anim_duration;
+        blink_on = ((blink_ms / MORSE_FLIPPER_STAR_BLINK_HALF_MS) & 1U) == 0U;
+    }
+
     for(i = 0U; i < 3U; i++) {
-        morse_flipper_draw_star_glyph(canvas, (uint8_t)(54U + (i * 10U)), 45U, i < stars);
+        uint8_t cols = blink_stars && !blink_on ?
+                           0U :
+                           morse_flipper_star_anim_cols(
+                               app->star_anim_started_at, now_ms, i, stars);
+        morse_flipper_draw_star_glyph_cols(canvas, (uint8_t)(54U + (i * 10U)), 42U, cols);
     }
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(
         canvas, 64, 57, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
-
-    if(flash_on) canvas_set_color(canvas, ColorBlack);
 }
 static char morse_flipper_upper_char(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));

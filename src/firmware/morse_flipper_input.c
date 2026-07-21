@@ -953,7 +953,6 @@ static void morse_flipper_progress_open_history_result(MorseFlipperApp* app) {
     app->session_started = true;
     app->session_progress_recorded = true;
     app->session_complete_at = furi_get_tick();
-    app->session_end_flash_phase = 0U;
     scene_manager_next_scene(app->scene_manager, MorseFlipperSceneSessionEnd);
 }
 
@@ -1015,7 +1014,9 @@ static bool morse_flipper_progress_history_input(
         return true;
     }
 
-    if(changed) morse_flipper_view_dirty(app);
+    if(changed) {
+        morse_flipper_view_dirty(app);
+    }
     return true;
 }
 

@@ -30,7 +30,65 @@ void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint) {
     canvas_draw_box(canvas, 127, 31, 1, 7);
 }
 
-void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled) {
+uint16_t morse_flipper_star_anim_duration(uint8_t target_stars) {
+    if(target_stars == 0U) return 0U;
+    return (uint16_t)(((uint16_t)target_stars * MORSE_FLIPPER_STAR_FILL_MS) +
+                      ((uint16_t)(target_stars - 1U) * MORSE_FLIPPER_STAR_GAP_MS));
+}
+
+void morse_flipper_start_star_animation(MorseFlipperApp* app, uint32_t now_ms) {
+    if(app == NULL) return;
+    app->star_anim_started_at = now_ms == 0U ? 1U : now_ms;
+    app->star_anim_next_redraw_ms = 0U;
+}
+
+uint8_t morse_flipper_star_anim_cols(
+    uint32_t started_at,
+    uint32_t now_ms,
+    uint8_t star_idx,
+    uint8_t target_stars) {
+    uint32_t elapsed;
+    uint32_t star_start;
+    uint32_t star_elapsed;
+    uint8_t cols;
+
+    if(star_idx >= target_stars) return 0U;
+    if(started_at == 0U) return MORSE_FLIPPER_STAR_REVEAL_COLS;
+
+    elapsed = now_ms - started_at;
+    star_start = (uint32_t)star_idx *
+                 (MORSE_FLIPPER_STAR_FILL_MS + MORSE_FLIPPER_STAR_GAP_MS);
+    if(elapsed < star_start) return 0U;
+
+    star_elapsed = elapsed - star_start;
+    if(star_elapsed >= MORSE_FLIPPER_STAR_FILL_MS) return MORSE_FLIPPER_STAR_REVEAL_COLS;
+
+    cols = (uint8_t)((star_elapsed * MORSE_FLIPPER_STAR_REVEAL_COLS) /
+                     MORSE_FLIPPER_STAR_FILL_MS);
+    if(cols > MORSE_FLIPPER_STAR_REVEAL_COLS) cols = MORSE_FLIPPER_STAR_REVEAL_COLS;
+    return cols;
+}
+
+static void morse_flipper_draw_star_glyph_fill_col(
+    Canvas* canvas,
+    uint8_t cx,
+    uint8_t cy,
+    int8_t rel_x) {
+    if(rel_x == -2 || rel_x == 2) {
+        canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy - 1);
+        canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy);
+        canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy + 2);
+        return;
+    }
+
+    canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy - 2);
+    canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy - 1);
+    canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy);
+    canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy + 1);
+    canvas_draw_dot(canvas, (int32_t)cx + rel_x, (int32_t)cy + 2);
+}
+
+void morse_flipper_draw_star_glyph_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols) {
     static const int8_t points[10][2] = {
         {0, -4},
         {1, -1},
@@ -43,8 +101,11 @@ void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool 
         {-4, -1},
         {-1, -1},
     };
+    static const int8_t fill_cols[MORSE_FLIPPER_STAR_REVEAL_COLS] = {-2, -1, 0, 1, 2};
 
     if(canvas == NULL) return;
+    if(cols > MORSE_FLIPPER_STAR_REVEAL_COLS) cols = MORSE_FLIPPER_STAR_REVEAL_COLS;
+
     for(uint8_t i = 0U; i < 10U; i++) {
         uint8_t next = (uint8_t)((i + 1U) % 10U);
         canvas_draw_line(
@@ -55,14 +116,14 @@ void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool 
             (int32_t)cy + points[next][1]);
     }
 
-    if(!filled) return;
-    canvas_draw_line(canvas, cx - 1U, cy - 2U, cx + 1U, cy - 2U);
-    canvas_draw_line(canvas, cx - 2U, cy - 1U, cx + 2U, cy - 1U);
-    canvas_draw_line(canvas, cx - 2U, cy, cx + 2U, cy);
-    canvas_draw_line(canvas, cx - 1U, cy + 1U, cx + 1U, cy + 1U);
-    canvas_draw_line(canvas, cx - 2U, cy + 2U, cx + 2U, cy + 2U);
-    canvas_draw_line(canvas, cx - 3U, cy + 4U, cx - 2U, cy + 4U);
-    canvas_draw_line(canvas, cx + 2U, cy + 4U, cx + 3U, cy + 4U);
+    for(uint8_t i = 0U; i < cols; i++) {
+        morse_flipper_draw_star_glyph_fill_col(canvas, cx, cy, fill_cols[i]);
+    }
+}
+
+void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled) {
+    morse_flipper_draw_star_glyph_cols(
+        canvas, cx, cy, filled ? MORSE_FLIPPER_STAR_REVEAL_COLS : 0U);
 }
 
 uint8_t morse_flipper_live_upper_char(uint8_t ch) {

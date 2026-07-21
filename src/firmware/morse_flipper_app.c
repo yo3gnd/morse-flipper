@@ -102,6 +102,8 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .about_last_ok_ms = 0U,
         .about_social_next_ms = 0U,
         .progress_scroll_next_ms = 0U,
+        .star_anim_started_at = 0U,
+        .star_anim_next_redraw_ms = 0U,
         .streak_intro_until_ms = 0U,
         .onboarding_md = {0},
         .help_md = {0},

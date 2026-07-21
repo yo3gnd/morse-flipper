@@ -54,6 +54,11 @@
 #define MORSE_FLIPPER_DEFAULT_DIT_MS                100U
 #define MORSE_FLIPPER_SESSION_ANSWER_GRACE_MS       250U
 #define MORSE_FLIPPER_SESSION_RESULT_MS             160U
+#define MORSE_FLIPPER_STAR_FILL_MS                  300U
+#define MORSE_FLIPPER_STAR_GAP_MS                   100U
+#define MORSE_FLIPPER_STAR_REVEAL_COLS              5U
+#define MORSE_FLIPPER_STAR_REDRAW_MS                33U
+#define MORSE_FLIPPER_STAR_BLINK_HALF_MS            250U
 #define MORSE_FLIPPER_TXG_RESULT_DELAY_MS           500U
 #define MORSE_FLIPPER_STRAIGHT_SETTLE_MS            700U
 #define MORSE_FLIPPER_STRAIGHT_RELEASE_DEBOUNCE_MS  15U
@@ -421,6 +426,8 @@ typedef struct MorseFlipperApp {
     uint32_t about_last_ok_ms;
     uint32_t about_social_next_ms;
     uint32_t progress_scroll_next_ms;
+    uint32_t star_anim_started_at;
+    uint32_t star_anim_next_redraw_ms;
     uint32_t streak_intro_until_ms;
     CwmdState onboarding_md;
     CwmdState help_md;
@@ -547,7 +554,6 @@ typedef struct MorseFlipperApp {
     uint8_t txg_difficulty;
     uint8_t straight_return_screen;
     uint8_t backlight_mode;
-    uint8_t session_end_flash_phase;
     int8_t rf_rssi_dbm;
     int8_t rf_monitor_threshold_dbm;
     int8_t rf_rssi_peak_dbm;
@@ -717,7 +723,6 @@ void morse_flipper_record_session_progress(MorseFlipperApp* app);
 void morse_flipper_leave_live_screen(MorseFlipperApp* app, uint32_t now_ms);
 bool morse_flipper_session_wait_key_down(const MorseFlipperApp* app);
 bool morse_flipper_session_hurry(MorseFlipperApp* app, uint32_t now_ms);
-bool morse_flipper_session_end_flash(const MorseFlipperApp* app);
 bool morse_flipper_session_running_view(const MorseFlipperApp* app);
 bool morse_flipper_session_left_exit_active(const MorseFlipperApp* app);
 MorseFlipperInputGate morse_flipper_input_gate(const MorseFlipperApp* app);
@@ -778,6 +783,14 @@ uint8_t morse_flipper_live_upper_char(uint8_t ch);
 void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
 void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled);
+void morse_flipper_draw_star_glyph_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols);
+void morse_flipper_start_star_animation(MorseFlipperApp* app, uint32_t now_ms);
+uint8_t morse_flipper_star_anim_cols(
+    uint32_t started_at,
+    uint32_t now_ms,
+    uint8_t star_idx,
+    uint8_t target_stars);
+uint16_t morse_flipper_star_anim_duration(uint8_t target_stars);
 void morse_flipper_draw_run_text(Canvas* canvas, int32_t x, int32_t y, const char* text);
 void morse_flipper_draw_straight_prompt(Canvas* canvas, int32_t cx, int32_t cy, uint8_t ch);
 void morse_flipper_about_reset(MorseFlipperApp* app, uint32_t now_ms);

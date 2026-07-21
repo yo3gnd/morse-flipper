@@ -56,7 +56,7 @@ static void morse_flipper_draw_progress_stats(Canvas* canvas, MorseFlipperApp* a
 
     morse_flipper_progress_top_weak(
         progress, morse_trainer_charset(&app->trainer), weak, sizeof(weak));
-    snprintf(line, sizeof(line), "Needs improv: %s", weak);
+    snprintf(line, sizeof(line), "Errors: %s", weak);
     canvas_draw_str(canvas, 4, 41, line);
 
     morse_flipper_draw_progress_bar(canvas, mastered, total_lessons);
@@ -147,7 +147,10 @@ static void morse_flipper_draw_progress_history_row(
     canvas_draw_str(canvas, ScoreX, y, score);
     for(i = 0U; i < 3U; i++) {
         morse_flipper_draw_star_glyph(
-            canvas, (uint8_t)(StarCx + (i * StarGap)), (uint8_t)(y - 4U), i < stars);
+            canvas,
+            (uint8_t)(StarCx + (i * StarGap)),
+            (uint8_t)(y - 4U),
+            i < stars);
     }
 }
 
