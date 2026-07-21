@@ -113,7 +113,8 @@ static void morse_flipper_progress_stars_text(uint8_t percent, char* out, size_t
 static void morse_flipper_draw_progress_history_row(
     Canvas* canvas,
     uint8_t y,
-    const MorseFlipperProgressHistoryRow* row) {
+    const MorseFlipperProgressHistoryRow* row,
+    bool selected) {
     uint16_t year;
     uint8_t month;
     uint8_t day;
@@ -137,9 +138,10 @@ static void morse_flipper_draw_progress_history_row(
     snprintf(score, sizeof(score), "%u%%", (unsigned)row->percent);
     morse_flipper_progress_stars_text(row->percent, stars, sizeof(stars));
 
-    canvas_draw_str(canvas, 2, y, lesson);
-    canvas_draw_str(canvas, 12, y, date);
-    canvas_draw_str(canvas, 64, y, time);
+    if(selected) canvas_draw_str(canvas, 0, y, ">");
+    canvas_draw_str(canvas, 8, y, lesson);
+    canvas_draw_str(canvas, 18, y, date);
+    canvas_draw_str(canvas, 68, y, time);
     canvas_draw_str(canvas, 96, y, score);
     canvas_draw_str(canvas, 116, y, stars);
 }
@@ -164,11 +166,13 @@ static void morse_flipper_draw_progress_history(Canvas* canvas, MorseFlipperApp*
             morse_flipper_draw_progress_history_row(
                 canvas,
                 (uint8_t)(18U + (i * 8U)),
-                &app->progress_rows[app->progress_row_offset + i]);
+                &app->progress_rows[app->progress_row_offset + i],
+                i == 0U);
         }
     }
 
     elements_button_left(canvas, "More");
+    if(visible != 0U) elements_button_center(canvas, "View");
     elements_button_right(canvas, "Stats");
 }
 

@@ -764,12 +764,18 @@ static void morse_flipper_scene_straight_on_enter(void* context) {
 
 static void morse_flipper_scene_session_end_on_enter(void* context) {
     MorseFlipperApp* app = context;
-    morse_flipper_record_session_progress(app);
+    if(!app->progress_debug_result) morse_flipper_record_session_progress(app);
     morse_flipper_scene_enter_now(app, MorseFlipperSceneSessionEnd);
 }
 
 static void morse_flipper_scene_progress_on_enter(void* context) {
     MorseFlipperApp* app = context;
+
+    if(app->progress_debug_returning) {
+        app->progress_debug_returning = false;
+        morse_flipper_scene_enter_now(app, MorseFlipperSceneProgress);
+        return;
+    }
 
     app->progress_page = MorseFlipperProgressPageStats;
     app->progress_row_count = 0U;
@@ -796,6 +802,8 @@ static bool morse_flipper_scene_progress_on_event(void* context, SceneManagerEve
 
 static void morse_flipper_scene_progress_on_exit(void* context) {
     MorseFlipperApp* app = context;
+
+    if(app->progress_debug_result) return;
 
     morse_flipper_release_view_progress(app);
     app->progress_row_count = 0U;

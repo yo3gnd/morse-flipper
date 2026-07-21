@@ -685,6 +685,22 @@ static bool
 
 static void morse_flipper_leave_session_end(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
+
+    if(app->progress_debug_result) {
+        uint8_t lesson = app->progress_debug_prev_lesson;
+
+        app->progress_debug_result = false;
+        app->progress_debug_returning = true;
+        morse_flipper_reset_session_state(app, now_ms);
+        morse_trainer_set_lesson(&app->trainer, lesson);
+        if(scene_manager_previous_scene(app->scene_manager)) return;
+
+        app->progress_debug_returning = false;
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MorseFlipperSceneProgress);
+        return;
+    }
+
     morse_flipper_reset_session_state(app, now_ms);
     if(scene_manager_search_and_switch_to_previous_scene(
            app->scene_manager, MorseFlipperSceneMenuTraining))
@@ -812,6 +828,47 @@ static bool morse_flipper_progress_scroll_history(MorseFlipperApp* app, int8_t d
                      morse_flipper_progress_load_newer_one(app);
 }
 
+static const MorseFlipperProgressHistoryRow*
+    morse_flipper_progress_focused_history_row(const MorseFlipperApp* app) {
+    if(app == NULL) return NULL;
+    if(app->progress_row_offset >= app->progress_row_count) return NULL;
+    return &app->progress_rows[app->progress_row_offset];
+}
+
+static void morse_flipper_progress_open_history_result(MorseFlipperApp* app) {
+    const MorseFlipperProgressHistoryRow* row =
+        morse_flipper_progress_focused_history_row(app);
+    uint8_t percent;
+
+    if(app == NULL || row == NULL) return;
+
+    percent = row->percent > 100U ? 100U : row->percent;
+    app->progress_debug_result = true;
+    app->progress_debug_returning = false;
+    app->progress_debug_prev_lesson = morse_trainer_lesson(&app->trainer);
+
+    morse_trainer_set_lesson(&app->trainer, row->lesson_idx);
+    morse_trainer_reset_session(&app->trainer);
+    app->trainer.phase = MorseTrainerPhaseDone;
+    app->trainer.session_active = false;
+    app->trainer.session_aborted = false;
+    app->trainer.session_groups = 1U;
+    app->trainer.session_index = 1U;
+    app->trainer.session_scored_groups = 1U;
+    app->trainer.session_letter_hits = percent;
+    app->trainer.session_letter_total = 100U;
+    app->trainer.session_score_sum = percent;
+    app->trainer.last_score = percent;
+    app->trainer.last_failed = percent != 100U;
+    app->trainer.last_missed = false;
+
+    app->session_started = true;
+    app->session_progress_recorded = true;
+    app->session_complete_at = furi_get_tick();
+    app->session_end_flash_phase = 0U;
+    scene_manager_next_scene(app->scene_manager, MorseFlipperSceneSessionEnd);
+}
+
 static void morse_flipper_progress_enter_page(
     MorseFlipperApp* app,
     MorseFlipperProgressPage page) {
@@ -828,6 +885,13 @@ static bool morse_flipper_progress_history_input(
     const InputEvent* event) {
     int8_t dir;
     bool changed = false;
+
+    if(event->key == InputKeyOk &&
+       (event->type == InputTypeShort || event->type == InputTypeLong)) {
+        morse_flipper_progress_reset_scroll_repeat(app);
+        morse_flipper_progress_open_history_result(app);
+        return true;
+    }
 
     if(event->key != InputKeyUp && event->key != InputKeyDown) return false;
 

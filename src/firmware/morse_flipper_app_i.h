@@ -416,6 +416,7 @@ typedef struct MorseFlipperApp {
     uint8_t progress_row_count;
     uint8_t progress_row_offset;
     uint8_t progress_scroll_key;
+    uint8_t progress_debug_prev_lesson;
     uint32_t about_last_ok_ms;
     uint32_t about_social_next_ms;
     uint32_t progress_scroll_next_ms;
@@ -449,6 +450,8 @@ typedef struct MorseFlipperApp {
     bool vail_tone_active;
     bool session_progress_recorded;
     bool session_progress_dirty;
+    bool progress_debug_result;
+    bool progress_debug_returning;
     uint8_t vail_keyer_mode;
     uint16_t vail_dit_ms;
     uint8_t vail_tone_idx;
