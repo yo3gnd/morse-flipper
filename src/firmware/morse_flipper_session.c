@@ -408,6 +408,12 @@ static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
 }
 
 void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
+    enum {
+        ScoreBaselineY = 32U,
+        StarY = 43U,
+        StarStartX = 42U,
+        StarGapX = 22U,
+    };
     char digits[4];
     uint8_t x;
     uint8_t i;
@@ -425,7 +431,7 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
     snprintf(digits, sizeof(digits), "%u", (unsigned)score);
     canvas_set_font(canvas, FontBigNumbers);
     x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
-    canvas_draw_str(canvas, x, 36, digits);
+    canvas_draw_str(canvas, x, ScoreBaselineY, digits);
     stars = morse_flipper_progress_stars(score);
     anim_duration = morse_flipper_star_anim_duration(stars);
     blink_stars = score >= 99U && stars != 0U && app->star_anim_started_at != 0U &&
@@ -440,7 +446,8 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
                            0U :
                            morse_flipper_star_anim_cols(
                                app->star_anim_started_at, now_ms, i, stars);
-        morse_flipper_draw_star_glyph_cols(canvas, (uint8_t)(54U + (i * 10U)), 42U, cols);
+        morse_flipper_draw_star_glyph_large_cols(
+            canvas, (uint8_t)(StarStartX + (i * StarGapX)), StarY, cols);
     }
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(

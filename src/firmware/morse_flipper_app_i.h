@@ -56,7 +56,7 @@
 #define MORSE_FLIPPER_SESSION_RESULT_MS             160U
 #define MORSE_FLIPPER_STAR_FILL_MS                  300U
 #define MORSE_FLIPPER_STAR_GAP_MS                   100U
-#define MORSE_FLIPPER_STAR_REVEAL_COLS              5U
+#define MORSE_FLIPPER_STAR_REVEAL_COLS              9U
 #define MORSE_FLIPPER_STAR_REDRAW_MS                33U
 #define MORSE_FLIPPER_STAR_BLINK_HALF_MS            250U
 #define MORSE_FLIPPER_TXG_RESULT_DELAY_MS           500U
@@ -784,6 +784,11 @@ void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
 void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled);
 void morse_flipper_draw_star_glyph_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols);
+void morse_flipper_draw_star_glyph_large_cols(
+    Canvas* canvas,
+    uint8_t cx,
+    uint8_t cy,
+    uint8_t cols);
 void morse_flipper_start_star_animation(MorseFlipperApp* app, uint32_t now_ms);
 uint8_t morse_flipper_star_anim_cols(
     uint32_t started_at,
