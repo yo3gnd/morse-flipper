@@ -93,7 +93,9 @@ void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
         idx = morse_flipper_effective_trainer_custom_set_idx(app);
         variable_item_set_current_value_index(it, idx);
         variable_item_set_current_value_text(
-            it, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+            it,
+            idx == 0U || app->custom_sets == NULL ? "lesson" :
+                                                     app->custom_sets->sets[idx - 1U].name);
     }
 }
 
@@ -247,11 +249,13 @@ void morse_flipper_trainer_chars_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    if(idx > app->custom_sets.count) idx = 0U;
+    if(app->custom_sets == NULL || idx > app->custom_sets->count) idx = 0U;
     app->trainer.custom_set_idx = idx;
     morse_flipper_apply_trainer_charset_choice(app);
     variable_item_set_current_value_text(
-        item, idx == 0U ? "lesson" : app->custom_sets.sets[idx - 1U].name);
+        item,
+        idx == 0U || app->custom_sets == NULL ? "lesson" :
+                                                app->custom_sets->sets[idx - 1U].name);
     morse_flipper_save_config(app);
 }
 
@@ -281,7 +285,8 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
 
     morse_flipper_ensure_view(app, MorseFlipperViewSettings);
     if(app->settings_list == NULL) return;
-    custom_count = app->custom_sets_loaded ? app->custom_sets.count : 0U;
+    morse_flipper_ensure_custom_sets_loaded(app);
+    custom_count = app->custom_sets_loaded && app->custom_sets != NULL ? app->custom_sets->count : 0U;
     variable_item_list_reset(app->settings_list);
     memset(app->trainer_items, 0, sizeof(app->trainer_items));
     variable_item_list_set_enter_callback(
@@ -353,6 +358,7 @@ void morse_flipper_scene_trainer_on_exit(void* context) {
         MorseFlipperSceneTrainer,
         morse_flipper_settings_list_state(app->settings_list));
     variable_item_list_reset(app->settings_list);
+    morse_flipper_unload_custom_sets(app);
 }
 
 void morse_flipper_scene_straight_cfg_on_enter(void* context) {

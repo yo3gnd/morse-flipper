@@ -423,8 +423,10 @@ typedef struct MorseFlipperApp {
     uint8_t progress_row_cursor;
     uint8_t progress_scroll_key;
     uint8_t progress_debug_prev_lesson;
+    uint8_t progress_debug_prev_groups;
     uint32_t about_last_ok_ms;
     uint32_t about_social_next_ms;
+    uint32_t progress_scroll_started_ms;
     uint32_t progress_scroll_next_ms;
     uint32_t star_anim_started_at;
     uint32_t star_anim_next_redraw_ms;
@@ -518,7 +520,7 @@ typedef struct MorseFlipperApp {
     /* Host-testable models: keep policy here, hardware glue around the edges. */
     MorseTrainer trainer;
     MorseFlipperHamKeyer ham_keyer;
-    MorseTrainerCustomSets custom_sets;
+    MorseTrainerCustomSets* custom_sets;
     bool custom_sets_loaded;
 
     /* Live feature flags; each block is owned by its matching runtime module. */
@@ -644,6 +646,7 @@ void morse_flipper_decoder_drain_into(MorseFlipperCwDecoder* decoder, char* out,
 void morse_flipper_tone_stop(MorseFlipperApp* app);
 void morse_flipper_refresh_keyer(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_poll(MorseFlipperApp* app);
+void morse_flipper_tick_progress_history_scroll(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_release_all_notes(MorseFlipperApp* app);
 void morse_flipper_load_config(MorseFlipperApp* app);
 void morse_flipper_save_config(const MorseFlipperApp* app);
@@ -704,6 +707,7 @@ void morse_flipper_help_enter_chapter(MorseFlipperApp* app);
 void morse_flipper_about_open(MorseFlipperApp* app);
 void morse_flipper_cycle_trainer_value(MorseFlipperApp* app, int dir);
 void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app);
+void morse_flipper_unload_custom_sets(MorseFlipperApp* app);
 uint8_t morse_flipper_effective_trainer_custom_set_idx(const MorseFlipperApp* app);
 void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
 bool morse_flipper_ensure_session_progress_loaded(MorseFlipperApp* app);

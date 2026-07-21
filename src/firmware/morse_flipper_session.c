@@ -200,6 +200,11 @@ void morse_flipper_begin_group_playback(MorseFlipperApp* app, uint32_t now_ms) {
 void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms) {
     if(app == NULL) return;
 
+    if(app->trainer.custom_set_idx != 0U && app->trainer.charset_override[0] == '\0') {
+        morse_flipper_ensure_custom_sets_loaded(app);
+        morse_flipper_unload_custom_sets(app);
+    }
+
     morse_flipper_reset_session_state(app, now_ms);
     app->session_progress_recorded = false;
     app->session_progress_dirty = false;

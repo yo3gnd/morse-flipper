@@ -783,6 +783,7 @@ static void morse_flipper_scene_progress_on_enter(void* context) {
     app->progress_row_offset = 0U;
     app->progress_row_cursor = 0U;
     app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_started_ms = 0U;
     app->progress_scroll_next_ms = 0U;
     morse_flipper_progress_history_reset(
         &app->progress_history, MORSE_FLIPPER_PROGRESS_DAY_NONE);
@@ -812,6 +813,7 @@ static void morse_flipper_scene_progress_on_exit(void* context) {
     app->progress_row_offset = 0U;
     app->progress_row_cursor = 0U;
     app->progress_scroll_key = 0xFFU;
+    app->progress_scroll_started_ms = 0U;
     app->progress_scroll_next_ms = 0U;
 }
 

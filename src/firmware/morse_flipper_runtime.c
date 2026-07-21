@@ -770,6 +770,7 @@ void morse_flipper_tick_callback(void* context) {
     morse_flipper_tick_trainer_playback(app, now_ms);
     morse_flipper_tick_about(app, now_ms);
     morse_flipper_tick_markdown_scroll(app);
+    morse_flipper_tick_progress_history_scroll(app, now_ms);
 
     if(app->preview_ticks > 0U) {
         app->preview_ticks--;

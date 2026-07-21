@@ -99,8 +99,10 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .progress_row_cursor = 0U,
         .progress_scroll_key = 0xFFU,
         .progress_debug_prev_lesson = 1U,
+        .progress_debug_prev_groups = 10U,
         .about_last_ok_ms = 0U,
         .about_social_next_ms = 0U,
+        .progress_scroll_started_ms = 0U,
         .progress_scroll_next_ms = 0U,
         .star_anim_started_at = 0U,
         .star_anim_next_redraw_ms = 0U,
@@ -188,7 +190,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
         .note_sources = {0U, 0U, 0U},
         .trainer = {0},
         .ham_keyer = {0},
-        .custom_sets = {0},
+        .custom_sets = NULL,
         .custom_sets_loaded = false,
         .straight_playback_active = false,
         .straight_playback_mark = false,
@@ -361,6 +363,7 @@ void morse_flipper_shutdown(MorseFlipperApp* app) {
         notification_message(app->notifications, &sequence_reset_blue);
     }
     morse_flipper_save_config(app);
+    morse_flipper_unload_custom_sets(app);
     morse_flipper_release_session_progress(app, false);
     morse_flipper_release_view_progress(app);
 
