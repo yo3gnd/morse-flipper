@@ -412,6 +412,26 @@ static const char* morse_flipper_session_end_blurb(const MorseFlipperApp* app) {
     return "Keep practicing";
 }
 
+static uint16_t morse_flipper_session_score_count_ms(uint8_t score) {
+    return score >= 100U ? 0U : MORSE_FLIPPER_SCORE_COUNT_MS;
+}
+
+static uint8_t morse_flipper_session_visible_score(
+    const MorseFlipperApp* app,
+    uint8_t score,
+    uint32_t now_ms) {
+    uint32_t elapsed;
+    uint16_t count_ms;
+
+    if(app == NULL || app->star_anim_started_at == 0U || score >= 100U) return score;
+
+    count_ms = morse_flipper_session_score_count_ms(score);
+    elapsed = now_ms - app->star_anim_started_at;
+    if(elapsed >= count_ms) return score;
+
+    return (uint8_t)((elapsed * score) / count_ms);
+}
+
 void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) {
     enum {
         ScoreBaselineY = 32U,
@@ -424,8 +444,12 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
     uint8_t i;
     uint8_t stars;
     uint8_t score = morse_flipper_session_final_percent(app);
+    uint8_t shown_score;
     uint32_t now_ms = furi_get_tick();
+    uint32_t star_started_at;
+    uint16_t score_count_ms;
     uint16_t anim_duration;
+    bool show_message;
     bool blink_stars;
     bool blink_on = true;
 
@@ -433,30 +457,47 @@ void morse_flipper_draw_session_end(Canvas* canvas, const MorseFlipperApp* app) 
 
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Final score");
-    snprintf(digits, sizeof(digits), "%u", (unsigned)score);
+    shown_score = morse_flipper_session_visible_score(app, score, now_ms);
+    if(score >= 100U) {
+        snprintf(digits, sizeof(digits), "%u", (unsigned)shown_score);
+    } else {
+        snprintf(digits, sizeof(digits), "%02u", (unsigned)shown_score);
+    }
     canvas_set_font(canvas, FontBigNumbers);
     x = (uint8_t)(64U - (canvas_string_width(canvas, digits) / 2U));
     canvas_draw_str(canvas, x, ScoreBaselineY, digits);
+
     stars = morse_flipper_progress_stars(score);
+    score_count_ms = morse_flipper_session_score_count_ms(score);
+    star_started_at = app->star_anim_started_at == 0U ?
+                          0U :
+                          app->star_anim_started_at + score_count_ms;
     anim_duration = morse_flipper_star_anim_duration(stars);
-    blink_stars = score >= 99U && stars != 0U && app->star_anim_started_at != 0U &&
-                  now_ms - app->star_anim_started_at >= anim_duration;
+    show_message = app->star_anim_started_at == 0U ||
+                   now_ms - app->star_anim_started_at >= score_count_ms + anim_duration;
+    blink_stars = score >= 99U && stars != 0U && star_started_at != 0U &&
+                  now_ms - star_started_at >= anim_duration;
     if(blink_stars) {
-        uint32_t blink_ms = now_ms - app->star_anim_started_at - anim_duration;
+        uint32_t blink_ms = now_ms - star_started_at - anim_duration;
         blink_on = ((blink_ms / MORSE_FLIPPER_STAR_BLINK_HALF_MS) & 1U) == 0U;
     }
 
     for(i = 0U; i < 3U; i++) {
-        uint8_t cols = blink_stars && !blink_on ?
-                           0U :
-                           morse_flipper_star_anim_cols(
-                               app->star_anim_started_at, now_ms, i, stars);
+        uint8_t cols = 0U;
+        if(star_started_at != 0U && now_ms >= star_started_at) {
+            cols = blink_stars && !blink_on ?
+                       0U :
+                       morse_flipper_star_anim_cols(star_started_at, now_ms, i, stars);
+        }
         morse_flipper_draw_star_glyph_large_cols(
             canvas, (uint8_t)(StarStartX + (i * StarGapX)), StarY, cols);
     }
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(
-        canvas, 64, 57, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
+
+    if(show_message) {
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(
+            canvas, 64, 57, AlignCenter, AlignCenter, morse_flipper_session_end_blurb(app));
+    }
 }
 static char morse_flipper_upper_char(char ch) {
     if(ch >= 'a' && ch <= 'z') return (char)(ch - ('a' - 'A'));
