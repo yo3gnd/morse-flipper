@@ -15,9 +15,9 @@
 #define MORSE_FLIPPER_MD_VISIBLE_LINES (MORSE_FLIPPER_MD_VIEW_H / MORSE_FLIPPER_MD_LINE_H)
 #define MORSE_FLIPPER_MD_SCROLL_STEP_PX \
     ((MORSE_FLIPPER_MD_VISIBLE_LINES - 1U) * MORSE_FLIPPER_MD_LINE_H)
-#define MORSE_FLIPPER_PROGRESS_SCROLL_BASE_MS   125U
-#define MORSE_FLIPPER_PROGRESS_SCROLL_FAST_MS   42U
-#define MORSE_FLIPPER_PROGRESS_SCROLL_ACCEL_MS  1000U
+#define MORSE_FLIPPER_PROGRESS_SCROLL_BASE_MS  125U
+#define MORSE_FLIPPER_PROGRESS_SCROLL_FAST_MS  42U
+#define MORSE_FLIPPER_PROGRESS_SCROLL_ACCEL_MS 1000U
 
 static bool morse_flipper_onboarding_input(MorseFlipperApp* app, const InputEvent* event) {
     if(app->screen != MorseFlipperScreenOnboarding) return false;
@@ -798,8 +798,7 @@ static void morse_flipper_progress_clamp_history_cursor(MorseFlipperApp* app) {
         app->progress_row_cursor = 0U;
         return;
     }
-    if(app->progress_row_cursor >= visible)
-        app->progress_row_cursor = (uint8_t)(visible - 1U);
+    if(app->progress_row_cursor >= visible) app->progress_row_cursor = (uint8_t)(visible - 1U);
 }
 
 static bool morse_flipper_progress_cache_older_one(MorseFlipperApp* app, bool* dropped_newest) {
@@ -817,8 +816,7 @@ static bool morse_flipper_progress_cache_older_one(MorseFlipperApp* app, bool* d
         memmove(
             &app->progress_rows[0],
             &app->progress_rows[1],
-            sizeof(app->progress_rows[0]) *
-                (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
+            sizeof(app->progress_rows[0]) * (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
         app->progress_rows[MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U] = row;
         if(dropped_newest != NULL) *dropped_newest = true;
     }
@@ -850,8 +848,7 @@ static bool morse_flipper_progress_cache_newer_one(MorseFlipperApp* app) {
         memmove(
             &app->progress_rows[1],
             &app->progress_rows[0],
-            sizeof(app->progress_rows[0]) *
-                (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
+            sizeof(app->progress_rows[0]) * (MORSE_FLIPPER_PROGRESS_HISTORY_CACHE_ROWS - 1U));
         app->progress_rows[0] = row;
     }
 
@@ -871,16 +868,14 @@ static bool morse_flipper_progress_scroll_history(MorseFlipperApp* app, int8_t d
     if(dir > 0) {
         bool dropped_newest = false;
 
-        if(app->progress_row_cursor < 2U &&
-           app->progress_row_cursor + 1U < visible) {
+        if(app->progress_row_cursor < 2U && app->progress_row_cursor + 1U < visible) {
             app->progress_row_cursor++;
             return true;
         }
 
         focus = (uint8_t)(app->progress_row_offset + app->progress_row_cursor);
         if(app->progress_history.exhausted && focus + 1U < app->progress_row_count &&
-           focus + 1U == app->progress_row_count - 1U &&
-           app->progress_row_cursor + 1U < visible) {
+           focus + 1U == app->progress_row_count - 1U && app->progress_row_cursor + 1U < visible) {
             app->progress_row_cursor++;
             return true;
         }
@@ -939,8 +934,7 @@ static const MorseFlipperProgressHistoryRow*
 }
 
 static void morse_flipper_progress_open_history_result(MorseFlipperApp* app) {
-    const MorseFlipperProgressHistoryRow* row =
-        morse_flipper_progress_focused_history_row(app);
+    const MorseFlipperProgressHistoryRow* row = morse_flipper_progress_focused_history_row(app);
     uint8_t percent;
 
     if(app == NULL || row == NULL) return;
@@ -972,9 +966,8 @@ static void morse_flipper_progress_open_history_result(MorseFlipperApp* app) {
     scene_manager_next_scene(app->scene_manager, MorseFlipperSceneSessionEnd);
 }
 
-static void morse_flipper_progress_enter_page(
-    MorseFlipperApp* app,
-    MorseFlipperProgressPage page) {
+static void
+    morse_flipper_progress_enter_page(MorseFlipperApp* app, MorseFlipperProgressPage page) {
     if(app == NULL) return;
 
     app->progress_page = page;
@@ -983,9 +976,7 @@ static void morse_flipper_progress_enter_page(
     morse_flipper_view_dirty(app);
 }
 
-static bool morse_flipper_progress_history_input(
-    MorseFlipperApp* app,
-    const InputEvent* event) {
+static bool morse_flipper_progress_history_input(MorseFlipperApp* app, const InputEvent* event) {
     int8_t dir;
     bool changed = false;
 
@@ -1045,8 +1036,7 @@ void morse_flipper_tick_progress_history_scroll(MorseFlipperApp* app, uint32_t n
         morse_flipper_progress_reset_scroll_repeat(app);
         return;
     }
-    if(app->progress_scroll_key != InputKeyUp && app->progress_scroll_key != InputKeyDown)
-        return;
+    if(app->progress_scroll_key != InputKeyUp && app->progress_scroll_key != InputKeyDown) return;
     if(app->progress_scroll_next_ms == 0U) return;
     if((int32_t)(now_ms - app->progress_scroll_next_ms) < 0) return;
 

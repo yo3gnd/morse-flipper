@@ -134,7 +134,8 @@ static void morse_flipper_draw_progress_history_row(
     uint8_t stars;
     uint8_t i;
 
-    morse_flipper_progress_history_date_label(row, reference_year, reference_month, date, sizeof(date));
+    morse_flipper_progress_history_date_label(
+        row, reference_year, reference_month, date, sizeof(date));
     if(date[0] == '\0') return;
     snprintf(time, sizeof(time), "%02u:%02u", (unsigned)row->hour, (unsigned)row->minute);
     snprintf(score, sizeof(score), "%u%%", (unsigned)row->percent);
@@ -147,10 +148,7 @@ static void morse_flipper_draw_progress_history_row(
     canvas_draw_str(canvas, ScoreX, y, score);
     for(i = 0U; i < 3U; i++) {
         morse_flipper_draw_star_glyph(
-            canvas,
-            (uint8_t)(StarCx + (i * StarGap)),
-            (uint8_t)(y - 4U),
-            i < stars);
+            canvas, (uint8_t)(StarCx + (i * StarGap)), (uint8_t)(y - 4U), i < stars);
     }
 }
 

@@ -11,13 +11,13 @@
 
 static unsigned g_checks;
 
-#define CHECK(expr)                                                      \
-    do {                                                                 \
-        g_checks++;                                                      \
-        if(!(expr)) {                                                    \
+#define CHECK(expr)                                                         \
+    do {                                                                    \
+        g_checks++;                                                         \
+        if(!(expr)) {                                                       \
             fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #expr); \
-            exit(1);                                                     \
-        }                                                                \
+            exit(1);                                                        \
+        }                                                                   \
     } while(0)
 
 static uint16_t checked_day(uint16_t year, uint8_t month, uint8_t day) {
@@ -246,16 +246,13 @@ static void test_history_start_day_rules(void) {
     uint16_t start;
 
     morse_flipper_progress_reset(&progress);
-    CHECK(
-        morse_flipper_progress_history_start_day(NULL, true, today) == today);
+    CHECK(morse_flipper_progress_history_start_day(NULL, true, today) == today);
     CHECK(
         morse_flipper_progress_history_start_day(&progress, false, today) ==
         MORSE_FLIPPER_PROGRESS_DAY_NONE);
 
     progress.last_stats_day = seeded_day;
-    CHECK(
-        morse_flipper_progress_history_start_day(&progress, true, today) ==
-        seeded_day);
+    CHECK(morse_flipper_progress_history_start_day(&progress, true, today) == seeded_day);
     CHECK(
         morse_flipper_progress_history_start_day(
             &progress, false, MORSE_FLIPPER_PROGRESS_DAY_NONE) == seeded_day);

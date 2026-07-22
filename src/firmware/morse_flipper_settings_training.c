@@ -7,6 +7,28 @@
 
 #include "morse_flipper_app_i.h"
 
+static uint8_t morse_flipper_trainer_menu_custom_count(const MorseFlipperApp* app) {
+    if(app == NULL || !app->custom_sets_loaded || app->custom_sets == NULL) return 0U;
+    return app->custom_sets->count;
+}
+
+static uint8_t morse_flipper_trainer_menu_custom_idx(const MorseFlipperApp* app) {
+    uint8_t count = morse_flipper_trainer_menu_custom_count(app);
+    uint8_t idx;
+
+    if(app == NULL) return 0U;
+    idx = app->trainer.custom_set_idx;
+    if(idx == 0U || idx > count) return 0U;
+    return idx;
+}
+
+static const char*
+    morse_flipper_trainer_menu_custom_label(const MorseFlipperApp* app, uint8_t idx) {
+    if(idx == 0U || app == NULL || app->custom_sets == NULL) return "lesson";
+    if(idx > app->custom_sets->count) return "lesson";
+    return app->custom_sets->sets[idx - 1U].name;
+}
+
 void morse_flipper_trainer_sync_farn_item(MorseFlipperApp* app) {
     VariableItem* it;
     char txt[4];
@@ -90,12 +112,10 @@ void morse_flipper_trainer_menu_refresh(MorseFlipperApp* app) {
 
     it = app->trainer_items[MorseFlipperTrainerSettingChars];
     if(it) {
-        idx = morse_flipper_effective_trainer_custom_set_idx(app);
+        idx = morse_flipper_trainer_menu_custom_idx(app);
         variable_item_set_current_value_index(it, idx);
         variable_item_set_current_value_text(
-            it,
-            idx == 0U || app->custom_sets == NULL ? "lesson" :
-                                                     app->custom_sets->sets[idx - 1U].name);
+            it, morse_flipper_trainer_menu_custom_label(app, idx));
     }
 }
 
@@ -249,13 +269,10 @@ void morse_flipper_trainer_chars_changed(VariableItem* item) {
     MorseFlipperApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
 
-    if(app->custom_sets == NULL || idx > app->custom_sets->count) idx = 0U;
+    if(idx > morse_flipper_trainer_menu_custom_count(app)) idx = 0U;
     app->trainer.custom_set_idx = idx;
     morse_flipper_apply_trainer_charset_choice(app);
-    variable_item_set_current_value_text(
-        item,
-        idx == 0U || app->custom_sets == NULL ? "lesson" :
-                                                app->custom_sets->sets[idx - 1U].name);
+    variable_item_set_current_value_text(item, morse_flipper_trainer_menu_custom_label(app, idx));
     morse_flipper_save_config(app);
 }
 
@@ -285,8 +302,9 @@ void morse_flipper_scene_trainer_on_enter(void* context) {
 
     morse_flipper_ensure_view(app, MorseFlipperViewSettings);
     if(app->settings_list == NULL) return;
-    morse_flipper_ensure_custom_sets_loaded(app);
-    custom_count = app->custom_sets_loaded && app->custom_sets != NULL ? app->custom_sets->count : 0U;
+    morse_flipper_try_custom_sets_loaded(app);
+    custom_count = app->custom_sets_loaded && app->custom_sets != NULL ? app->custom_sets->count :
+                                                                         0U;
     variable_item_list_reset(app->settings_list);
     memset(app->trainer_items, 0, sizeof(app->trainer_items));
     variable_item_list_set_enter_callback(
@@ -358,6 +376,7 @@ void morse_flipper_scene_trainer_on_exit(void* context) {
         MorseFlipperSceneTrainer,
         morse_flipper_settings_list_state(app->settings_list));
     variable_item_list_reset(app->settings_list);
+    memset(app->trainer_items, 0, sizeof(app->trainer_items));
     morse_flipper_unload_custom_sets(app);
 }
 

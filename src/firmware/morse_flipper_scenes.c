@@ -111,8 +111,7 @@ static void morse_flipper_scene_start_listening_or_streak_intro(MorseFlipperApp*
         return;
     }
 
-    app->streak_intro_days =
-        morse_flipper_progress_streak_intro_days(progress, practice_day);
+    app->streak_intro_days = morse_flipper_progress_streak_intro_days(progress, practice_day);
     morse_flipper_progress_mark_streak_intro_seen(progress, practice_day);
     saved = morse_flipper_progress_save(progress);
     free(progress);
@@ -726,9 +725,7 @@ static void morse_flipper_scene_streak_intro_on_enter(void* context) {
     morse_flipper_scene_enter_now(app, MorseFlipperSceneStreakIntro);
 }
 
-static bool morse_flipper_scene_streak_intro_on_event(
-    void* context,
-    SceneManagerEvent event) {
+static bool morse_flipper_scene_streak_intro_on_event(void* context, SceneManagerEvent event) {
     MorseFlipperApp* app = context;
 
     if(event.type == SceneManagerEventTypeCustom &&
@@ -742,8 +739,7 @@ static bool morse_flipper_scene_streak_intro_on_event(
         return true;
     }
 
-    if(event.type == SceneManagerEventTypeTick &&
-       furi_get_tick() >= app->streak_intro_until_ms) {
+    if(event.type == SceneManagerEventTypeTick && furi_get_tick() >= app->streak_intro_until_ms) {
         morse_flipper_scene_streak_intro_start_listening(app);
         return true;
     }
@@ -785,8 +781,7 @@ static void morse_flipper_scene_progress_on_enter(void* context) {
     app->progress_scroll_key = 0xFFU;
     app->progress_scroll_started_ms = 0U;
     app->progress_scroll_next_ms = 0U;
-    morse_flipper_progress_history_reset(
-        &app->progress_history, MORSE_FLIPPER_PROGRESS_DAY_NONE);
+    morse_flipper_progress_history_reset(&app->progress_history, MORSE_FLIPPER_PROGRESS_DAY_NONE);
     morse_flipper_ensure_view_progress_loaded(app);
     morse_flipper_scene_enter_now(app, MorseFlipperSceneProgress);
 }

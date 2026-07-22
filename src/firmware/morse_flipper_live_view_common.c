@@ -56,24 +56,19 @@ uint8_t morse_flipper_star_anim_cols(
     if(started_at == 0U) return MORSE_FLIPPER_STAR_REVEAL_COLS;
 
     elapsed = now_ms - started_at;
-    star_start = (uint32_t)star_idx *
-                 (MORSE_FLIPPER_STAR_FILL_MS + MORSE_FLIPPER_STAR_GAP_MS);
+    star_start = (uint32_t)star_idx * (MORSE_FLIPPER_STAR_FILL_MS + MORSE_FLIPPER_STAR_GAP_MS);
     if(elapsed < star_start) return 0U;
 
     star_elapsed = elapsed - star_start;
     if(star_elapsed >= MORSE_FLIPPER_STAR_FILL_MS) return MORSE_FLIPPER_STAR_REVEAL_COLS;
 
-    cols = (uint8_t)((star_elapsed * MORSE_FLIPPER_STAR_REVEAL_COLS) /
-                     MORSE_FLIPPER_STAR_FILL_MS);
+    cols = (uint8_t)((star_elapsed * MORSE_FLIPPER_STAR_REVEAL_COLS) / MORSE_FLIPPER_STAR_FILL_MS);
     if(cols > MORSE_FLIPPER_STAR_REVEAL_COLS) cols = MORSE_FLIPPER_STAR_REVEAL_COLS;
     return cols;
 }
 
-static void morse_flipper_draw_star_glyph_fill_col(
-    Canvas* canvas,
-    uint8_t cx,
-    uint8_t cy,
-    int8_t rel_x) {
+static void
+    morse_flipper_draw_star_glyph_fill_col(Canvas* canvas, uint8_t cx, uint8_t cy, int8_t rel_x) {
     if(rel_x < -2 || rel_x > 2) return;
 
     if(rel_x == -2 || rel_x == 2) {
@@ -130,11 +125,7 @@ static void morse_flipper_draw_star_bitmap_pixel(
     uint8_t col,
     uint8_t scale) {
     canvas_draw_box(
-        canvas,
-        left + ((int32_t)col * scale),
-        top + ((int32_t)row * scale),
-        scale,
-        scale);
+        canvas, left + ((int32_t)col * scale), top + ((int32_t)row * scale), scale, scale);
 }
 
 static void morse_flipper_draw_star_bitmap_mask(
@@ -151,11 +142,7 @@ static void morse_flipper_draw_star_bitmap_mask(
     }
 }
 
-void morse_flipper_draw_star_glyph_large_cols(
-    Canvas* canvas,
-    uint8_t cx,
-    uint8_t cy,
-    uint8_t cols) {
+void morse_flipper_draw_star_glyph_large_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols) {
     enum {
         Scale = 1U,
         BitmapPx = 16U,

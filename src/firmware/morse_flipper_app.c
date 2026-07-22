@@ -255,6 +255,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_straight_trainer_set_seed(&app->straight_trainer, furi_hal_random_get());
     morse_flipper_tx_group_set_seed(&app->tx_group, furi_hal_random_get());
     morse_flipper_load_config(app);
+    morse_trainer_ensure_custom_chars_file();
     app->onboarding_seen = morse_flipper_onboarding_seen();
     morse_flipper_apply_trainer_charset_choice(app);
     morse_flipper_cw_decoder_init(&app->rf_decoder, morse_flipper_current_dit_ms(app));

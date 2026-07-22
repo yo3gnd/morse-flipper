@@ -608,14 +608,11 @@ static bool morse_flipper_star_animation_active(const MorseFlipperApp* app, uint
         uint16_t score_wheel_ms =
             score >= 100U ?
                 0U :
-                (MORSE_FLIPPER_SCORE_WHEEL_RANDOM_MS +
-                 MORSE_FLIPPER_SCORE_WHEEL_RANDOM_JITTER_MS +
-                 MORSE_FLIPPER_SCORE_WHEEL_SETTLE_MS +
-                 MORSE_FLIPPER_SCORE_WHEEL_SETTLE_JITTER_MS);
-        uint16_t duration = (uint16_t)(
-            score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
-            MORSE_FLIPPER_SCORE_SLIDE_MS +
-            morse_flipper_star_anim_duration(stars));
+                (MORSE_FLIPPER_SCORE_WHEEL_RANDOM_MS + MORSE_FLIPPER_SCORE_WHEEL_RANDOM_JITTER_MS +
+                 MORSE_FLIPPER_SCORE_WHEEL_SETTLE_MS + MORSE_FLIPPER_SCORE_WHEEL_SETTLE_JITTER_MS);
+        uint16_t duration =
+            (uint16_t)(score_wheel_ms + MORSE_FLIPPER_SCORE_SETTLED_PAUSE_MS +
+                       MORSE_FLIPPER_SCORE_SLIDE_MS + morse_flipper_star_anim_duration(stars));
 
         if(elapsed < duration + MORSE_FLIPPER_STAR_REDRAW_MS) return true;
         return score >= 99U;

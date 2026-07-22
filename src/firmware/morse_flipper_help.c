@@ -462,7 +462,8 @@ void morse_flipper_onboarding_finish(MorseFlipperApp* app) {
     if(app == NULL) return;
     morse_flipper_onboarding_mark_seen(app);
     app->onboarding_md = (CwmdState){0};
-    scene_manager_search_and_switch_to_another_scene(app->scene_manager, MorseFlipperSceneMenuMain);
+    scene_manager_search_and_switch_to_another_scene(
+        app->scene_manager, MorseFlipperSceneMenuMain);
 }
 
 void morse_flipper_help_open(MorseFlipperApp* app) {

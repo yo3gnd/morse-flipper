@@ -481,7 +481,7 @@ void morse_flipper_leave_live_screen(MorseFlipperApp* app, uint32_t now_ms) {
     morse_flipper_scene_back(app);
 }
 
-void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app) {
+static void morse_flipper_load_custom_sets(MorseFlipperApp* app, bool create_defaults) {
     uint8_t selected;
     bool loaded;
 
@@ -495,11 +495,20 @@ void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app) {
     }
 
     selected = app->trainer.custom_set_idx;
-    loaded = morse_trainer_load_custom_sets(app->custom_sets);
+    loaded = create_defaults ? morse_trainer_load_custom_sets(app->custom_sets) :
+                               morse_trainer_try_load_custom_sets(app->custom_sets);
     if(!loaded) memset(app->custom_sets, 0, sizeof(*app->custom_sets));
     app->custom_sets_loaded = true;
     app->trainer.custom_set_idx = selected;
     morse_flipper_apply_trainer_charset_choice(app);
+}
+
+void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app) {
+    morse_flipper_load_custom_sets(app, true);
+}
+
+void morse_flipper_try_custom_sets_loaded(MorseFlipperApp* app) {
+    morse_flipper_load_custom_sets(app, false);
 }
 
 void morse_flipper_unload_custom_sets(MorseFlipperApp* app) {

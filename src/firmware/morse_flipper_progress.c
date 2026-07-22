@@ -96,7 +96,8 @@ static char morse_flipper_progress_lesson_letter(uint8_t lesson) {
     dash = strchr(label, '-');
     if(dash == NULL) return '?';
     dash++;
-    while(*dash == ' ') dash++;
+    while(*dash == ' ')
+        dash++;
     return *dash != '\0' ? *dash : '?';
 }
 
@@ -508,12 +509,7 @@ void morse_flipper_progress_history_date_label(
     }
 
     if(recent) {
-        snprintf(
-            out,
-            out_sz,
-            "%02u %s",
-            (unsigned)day,
-            morse_flipper_progress_months[month - 1U]);
+        snprintf(out, out_sz, "%02u %s", (unsigned)day, morse_flipper_progress_months[month - 1U]);
     } else {
         snprintf(
             out,
@@ -559,8 +555,7 @@ static bool morse_flipper_progress_parse_history_line(
     hour = (uint8_t)(((line[0] - '0') * 10) + (line[1] - '0'));
     minute = (uint8_t)(((line[2] - '0') * 10) + (line[3] - '0'));
     lesson = (uint8_t)(((line[5] - '0') * 10) + (line[6] - '0'));
-    percent =
-        (uint8_t)(((line[8] - '0') * 100) + ((line[9] - '0') * 10) + (line[10] - '0'));
+    percent = (uint8_t)(((line[8] - '0') * 100) + ((line[9] - '0') * 10) + (line[10] - '0'));
     max_lesson = (uint8_t)morse_trainer_lesson_count();
     if(hour > 23U || minute > 59U || lesson < 1U || lesson > max_lesson || percent > 100U)
         return false;
@@ -599,8 +594,7 @@ static uint32_t morse_flipper_progress_history_line_count(uint16_t practice_day)
     if(f != NULL) {
         if(fseek(f, 0L, SEEK_END) == 0) {
             long size = ftell(f);
-            if(size > 0L)
-                total_lines = (uint32_t)(size / MORSE_FLIPPER_PROGRESS_HISTORY_LINE_LEN);
+            if(size > 0L) total_lines = (uint32_t)(size / MORSE_FLIPPER_PROGRESS_HISTORY_LINE_LEN);
         }
         fclose(f);
     }
@@ -916,9 +910,8 @@ uint8_t morse_flipper_progress_history_load_more(
             }
 #endif
             cursor->line_from_end++;
-            if(got_line &&
-               morse_flipper_progress_parse_history_line(
-                   line, cursor->practice_day, line_from_end, &rows[count])) {
+            if(got_line && morse_flipper_progress_parse_history_line(
+                               line, cursor->practice_day, line_from_end, &rows[count])) {
                 count++;
             }
         }
@@ -954,7 +947,8 @@ bool morse_flipper_progress_history_load_newer(
     uint8_t probed_days = 0U;
 
     if(from == NULL || out == NULL) return false;
-    if(from->practice_day == MORSE_FLIPPER_PROGRESS_DAY_NONE || newest_day == MORSE_FLIPPER_PROGRESS_DAY_NONE)
+    if(from->practice_day == MORSE_FLIPPER_PROGRESS_DAY_NONE ||
+       newest_day == MORSE_FLIPPER_PROGRESS_DAY_NONE)
         return false;
     if(from->practice_day > newest_day) return false;
 

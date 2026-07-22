@@ -594,23 +594,6 @@ typedef struct {
 } MorseFlipperLiveModel;
 
 typedef struct {
-    const char* label;
-    uint8_t current_value_index;
-    FuriString* current_value_text;
-    uint8_t values_count;
-    VariableItemChangeCallback change_callback;
-    void* context;
-} MorseFlipperVilItem;
-
-ARRAY_DEF(MorseFlipperVilArray, MorseFlipperVilItem, M_POD_OPLIST);
-
-typedef struct {
-    MorseFlipperVilArray_t items;
-    uint8_t position;
-    uint8_t window_position;
-} MorseFlipperVilModel;
-
-typedef struct {
     bool live;
     bool btn;
     bool btn_str;
@@ -713,6 +696,7 @@ void morse_flipper_help_enter_chapter(MorseFlipperApp* app);
 void morse_flipper_about_open(MorseFlipperApp* app);
 void morse_flipper_cycle_trainer_value(MorseFlipperApp* app, int dir);
 void morse_flipper_ensure_custom_sets_loaded(MorseFlipperApp* app);
+void morse_flipper_try_custom_sets_loaded(MorseFlipperApp* app);
 void morse_flipper_unload_custom_sets(MorseFlipperApp* app);
 uint8_t morse_flipper_effective_trainer_custom_set_idx(const MorseFlipperApp* app);
 void morse_flipper_apply_trainer_charset_choice(MorseFlipperApp* app);
@@ -794,11 +778,7 @@ void morse_flipper_draw_left_exit_hint(Canvas* canvas);
 void morse_flipper_draw_tx_history_divider(Canvas* canvas, bool left_hint);
 void morse_flipper_draw_star_glyph(Canvas* canvas, uint8_t cx, uint8_t cy, bool filled);
 void morse_flipper_draw_star_glyph_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols);
-void morse_flipper_draw_star_glyph_large_cols(
-    Canvas* canvas,
-    uint8_t cx,
-    uint8_t cy,
-    uint8_t cols);
+void morse_flipper_draw_star_glyph_large_cols(Canvas* canvas, uint8_t cx, uint8_t cy, uint8_t cols);
 void morse_flipper_start_star_animation(MorseFlipperApp* app, uint32_t now_ms);
 uint8_t morse_flipper_star_anim_cols(
     uint32_t started_at,
