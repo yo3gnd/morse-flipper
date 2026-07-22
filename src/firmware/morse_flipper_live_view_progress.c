@@ -55,7 +55,7 @@ static void morse_flipper_draw_progress_stats(Canvas* canvas, MorseFlipperApp* a
     canvas_draw_str_aligned(canvas, 124, 31, AlignRight, AlignBottom, attempt_label);
 
     morse_flipper_progress_top_weak(
-        progress, morse_trainer_charset(&app->trainer), weak, sizeof(weak));
+        progress, morse_trainer_lesson_charset(&app->trainer), weak, sizeof(weak));
     snprintf(line, sizeof(line), "Errors: %s", weak);
     canvas_draw_str(canvas, 4, 41, line);
 
