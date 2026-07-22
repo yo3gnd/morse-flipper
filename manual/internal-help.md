@@ -165,7 +165,7 @@ This is the same help file that lives on the Flipper under Help: a gentle introd
 
 ## USB & live practice
 
-- There are sites like https://vail.woozle.org, https://morse.halb.it, VBand, or iCW that let you practise with other people using a real paddle.
+- There are websites like iCW, [vail.woozle.net](http://vail.woozle.net/), [morse.halb.it](https://morse.halb.it/), and VBand that let you practise with other people using a real paddle.
 - To do this, you need a computer adapter for your SK or paddle. This app can emulate an adapter for CW practice sites. You can still use the Flipper's buttons if you must.
 - Most simple adapters lie to the computer and pretend to be a keyboard or mouse. That is how they get a key or paddle in. The fancy word for doing this is emulation.
 - The site reads those key presses, generates audio for your speakers, and sends your keypresses, as Morse, to the other participants.
