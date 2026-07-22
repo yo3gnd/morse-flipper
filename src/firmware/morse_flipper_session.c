@@ -359,6 +359,8 @@ void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms) {
     app->session_answer_complete_at = 0U;
     app->session_next_group_at = now_ms + ((uint32_t)app->trainer_group_pause_s * 1000U);
     app->session_wait_draw_s = 0xFFU;
+    mf_tlm_session(app);
+    mf_tlm_group(app);
     morse_flipper_view_dirty(app);
 }
 
@@ -405,6 +407,7 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
             app->session_result_hold = false;
             morse_flipper_begin_group_playback(app, now_ms);
         } else if(morse_trainer_next_session_group(&app->trainer)) {
+            mf_tlm_group(app);
             morse_flipper_begin_group_playback(app, now_ms);
         } else {
             morse_flipper_view_dirty(app);
@@ -415,7 +418,10 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
     if(morse_trainer_session_completed(&app->trainer) ||
        (morse_trainer_session_aborted(&app->trainer) &&
         morse_trainer_phase(&app->trainer) == MorseTrainerPhaseDone)) {
-        if(app->session_complete_at == 0U) app->session_complete_at = now_ms;
+        if(app->session_complete_at == 0U) {
+            app->session_complete_at = now_ms;
+            mf_tlm_done(app);
+        }
         if(now_ms - app->session_complete_at >= 1000U) {
             morse_flipper_scene_open(app, MorseFlipperSceneSessionEnd);
             return;
@@ -453,6 +459,7 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
             return;
 
         morse_trainer_score_repeat_text(&app->trainer, ans);
+        mf_tlm_answer(app, ans, !morse_trainer_last_failed(&app->trainer));
         morse_flipper_note_session_progress_group(app);
         morse_flipper_queue_session_feedback(app, now_ms);
         return;
@@ -464,6 +471,7 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
     if(now_ms - app->session_last_input_at < dt) return;
 
     morse_trainer_score_repeat_text(&app->trainer, ans);
+    mf_tlm_answer(app, ans, !morse_trainer_last_failed(&app->trainer));
     morse_flipper_note_session_progress_group(app);
     morse_flipper_queue_session_feedback(app, now_ms);
 }

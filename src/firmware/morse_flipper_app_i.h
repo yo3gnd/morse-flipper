@@ -40,6 +40,7 @@
 #include "morse_flipper_rf.h"
 #include "morse_flipper_straight_filter.h"
 #include "morse_flipper_straight_trainer.h"
+#include "morse_flipper_tlm.h"
 #include "morse_flipper_tx_groups.h"
 #include "pc_keys.h"
 #include "trainer.h"

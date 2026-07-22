@@ -57,6 +57,7 @@ App(
         "src/firmware/morse_flipper_runtime.c",
         "src/firmware/morse_flipper_progress.c",
         "src/firmware/morse_flipper_session.c",
+        "src/firmware/morse_flipper_tlm.c",
         "src/firmware/morse_flipper_rf_live.c",
         "src/firmware/morse_flipper_about.c",
         "src/firmware/morse_flipper_live_view.c",

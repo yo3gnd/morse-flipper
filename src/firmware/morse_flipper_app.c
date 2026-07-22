@@ -256,6 +256,7 @@ MorseFlipperApp* morse_flipper_boot(void) {
     morse_flipper_straight_trainer_set_seed(&app->straight_trainer, furi_hal_random_get());
     morse_flipper_tx_group_set_seed(&app->tx_group, furi_hal_random_get());
     morse_flipper_load_config(app);
+    mf_tlm_init(app);
     morse_trainer_ensure_custom_chars_file();
     app->onboarding_seen = morse_flipper_onboarding_seen();
     morse_flipper_apply_trainer_charset_choice(app);
@@ -368,6 +369,7 @@ void morse_flipper_shutdown(MorseFlipperApp* app) {
     morse_flipper_unload_custom_sets(app);
     morse_flipper_release_session_progress(app, false);
     morse_flipper_release_view_progress(app);
+    mf_tlm_deinit();
 
     morse_flipper_gpio_deinit();
     if(app->view_dispatcher) {

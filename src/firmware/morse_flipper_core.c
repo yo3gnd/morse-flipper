@@ -366,6 +366,7 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
     const char* group;
     uint16_t cw_code;
     uint32_t dit_ms;
+    uint32_t answer_timeout_ms;
     uint8_t marks;
 
     if(app == NULL || !app->trainer_playback_active || now_ms < app->trainer_next_at) {
@@ -410,6 +411,10 @@ void morse_flipper_tick_trainer_playback(MorseFlipperApp* app, uint32_t now_ms) 
             if(app->screen == MorseFlipperScreenSession) {
                 app->session_start_holdoff = true;
                 app->session_last_input_at = now_ms;
+                answer_timeout_ms = (uint32_t)app->trainer_answer_timeout_s * 1000U;
+                if(answer_timeout_ms == 0U)
+                    answer_timeout_ms = (uint32_t)MORSE_FLIPPER_TRAINER_TIMEOUT_DEFAULT_S * 1000U;
+                mf_tlm_open(app, now_ms + answer_timeout_ms);
             }
         }
         morse_flipper_update_sidetone(app);
