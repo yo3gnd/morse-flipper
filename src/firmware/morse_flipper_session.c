@@ -8,6 +8,10 @@
 #include "morse_flipper_app_i.h"
 #include "morse_flipper_cw_token.h"
 
+#define MORSE_FLIPPER_SESSION_DELETE_FLASH_STEP_MS 132U
+#define MORSE_FLIPPER_SESSION_DELETE_FLASH_DONE_MS 400U
+#define MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE    0xFFU
+
 static void morse_flipper_session_answer_text(
     const MorseFlipperApp* app,
     char* out,
@@ -56,10 +60,13 @@ void morse_flipper_reset_session_runtime(MorseFlipperApp* app) {
     app->session_start_holdoff = false;
     app->session_last_input_at = 0U;
     app->session_answer_complete_at = 0U;
+    app->session_answer_flash_started_ms = 0U;
     app->session_result_until = 0U;
     app->session_next_group_at = 0U;
     app->session_complete_at = 0U;
     app->session_wait_draw_s = 0xFFU;
+    app->session_answer_flash_phase = MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE;
+    app->session_deleted_text[0] = '\0';
 }
 
 void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now_ms) {
@@ -86,6 +93,139 @@ bool morse_flipper_session_repeat_active(const MorseFlipperApp* app) {
     return app && app->screen == MorseFlipperScreenSession && app->session_started &&
            !app->trainer_playback_active && app->session_next_group_at == 0U &&
            morse_trainer_phase(&app->trainer) == MorseTrainerPhaseRepeat;
+}
+
+static bool morse_flipper_session_decoder_has_answer(const MorseFlipperApp* app) {
+    if(app == NULL) return false;
+    if(morse_flipper_cw_decoder_output(&app->tx_decoder)[0] != '\0') return true;
+    return morse_flipper_cw_decoder_preview(&app->tx_decoder) != 0U;
+}
+
+static bool morse_flipper_session_pop_committed_answer(MorseFlipperApp* app) {
+    size_t len;
+
+    if(app == NULL) return false;
+
+    len = strlen(app->rf_tx_text);
+    while(len > 0U) {
+        len--;
+        if(app->rf_tx_text[len] != ' ' && app->rf_tx_text[len] != '|') {
+            app->rf_tx_text[len] = '\0';
+            return true;
+        }
+    }
+
+    if(app->rf_tx_text[0] == '\0') return false;
+    app->rf_tx_text[0] = '\0';
+    return true;
+}
+
+static uint8_t
+    morse_flipper_session_answer_flash_phase(const MorseFlipperApp* app, uint32_t now_ms) {
+    uint32_t elapsed;
+
+    if(app == NULL || app->session_answer_flash_started_ms == 0U) {
+        return MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE;
+    }
+
+    elapsed = now_ms - app->session_answer_flash_started_ms;
+    if(elapsed >= MORSE_FLIPPER_SESSION_DELETE_FLASH_DONE_MS) {
+        return MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE;
+    }
+
+    return (uint8_t)(elapsed / MORSE_FLIPPER_SESSION_DELETE_FLASH_STEP_MS);
+}
+
+static bool
+    morse_flipper_session_answer_flash_visible(const MorseFlipperApp* app, uint32_t now_ms) {
+    uint8_t phase = morse_flipper_session_answer_flash_phase(app, now_ms);
+    return phase == 0U || phase == 2U;
+}
+
+void morse_flipper_session_cancel_answer_flash(MorseFlipperApp* app) {
+    if(app == NULL || app->session_answer_flash_started_ms == 0U) return;
+
+    app->session_answer_flash_started_ms = 0U;
+    app->session_answer_flash_phase = MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE;
+    app->session_deleted_text[0] = '\0';
+    morse_flipper_view_dirty(app);
+}
+
+static void morse_flipper_session_start_answer_flash(
+    MorseFlipperApp* app,
+    const char* deleted_text,
+    uint32_t now_ms) {
+    if(app == NULL || deleted_text == NULL || deleted_text[0] == '\0') return;
+
+    strlcpy(app->session_deleted_text, deleted_text, sizeof(app->session_deleted_text));
+    app->session_answer_flash_started_ms = now_ms != 0U ? now_ms : 1U;
+    app->session_answer_flash_phase = 0U;
+}
+
+static void morse_flipper_session_tick_answer_flash(MorseFlipperApp* app, uint32_t now_ms) {
+    uint8_t phase;
+
+    if(app == NULL || app->session_answer_flash_started_ms == 0U) return;
+
+    phase = morse_flipper_session_answer_flash_phase(app, now_ms);
+    if(phase == MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE) {
+        app->session_answer_flash_started_ms = 0U;
+        app->session_answer_flash_phase = MORSE_FLIPPER_SESSION_DELETE_FLASH_IDLE;
+        app->session_deleted_text[0] = '\0';
+        morse_flipper_view_dirty(app);
+    } else if(phase != app->session_answer_flash_phase) {
+        app->session_answer_flash_phase = phase;
+        morse_flipper_view_dirty(app);
+    }
+}
+
+static void morse_flipper_session_note_answer_edit(
+    MorseFlipperApp* app,
+    const char* deleted_text,
+    uint32_t now_ms) {
+    app->session_last_input_at = now_ms;
+    app->session_answer_complete_at = 0U;
+    app->rf_tx_gap_flushed = true;
+    app->rf_tx_edge_at = now_ms;
+    morse_flipper_session_start_answer_flash(app, deleted_text, now_ms);
+    morse_flipper_view_dirty(app);
+}
+
+bool morse_flipper_session_backspace_answer(MorseFlipperApp* app, uint32_t now_ms) {
+    char deleted_text[MORSE_TRAINER_GROUP_CAP];
+    bool changed = false;
+
+    if(!morse_flipper_session_repeat_active(app)) return false;
+
+    morse_flipper_session_answer_text(
+        app, deleted_text, sizeof(deleted_text), MORSE_TRAINER_GROUP_CAP - 1U);
+    if(deleted_text[0] == '\0') return false;
+
+    if(morse_flipper_session_decoder_has_answer(app)) {
+        morse_flipper_cw_decoder_reset(&app->tx_decoder);
+        changed = true;
+    } else {
+        changed = morse_flipper_session_pop_committed_answer(app);
+    }
+
+    if(changed) morse_flipper_session_note_answer_edit(app, deleted_text, now_ms);
+    return changed;
+}
+
+bool morse_flipper_session_clear_answer(MorseFlipperApp* app, uint32_t now_ms) {
+    char deleted_text[MORSE_TRAINER_GROUP_CAP];
+    bool changed;
+
+    if(!morse_flipper_session_repeat_active(app)) return false;
+
+    morse_flipper_session_answer_text(
+        app, deleted_text, sizeof(deleted_text), MORSE_TRAINER_GROUP_CAP - 1U);
+    changed = deleted_text[0] != '\0';
+    app->rf_tx_text[0] = '\0';
+    morse_flipper_cw_decoder_reset(&app->tx_decoder);
+
+    if(changed) morse_flipper_session_note_answer_edit(app, deleted_text, now_ms);
+    return changed;
 }
 
 bool morse_flipper_session_idle_view(const MorseFlipperApp* app) {
@@ -240,6 +380,8 @@ void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms) {
         app->session_result_tone = false;
         morse_flipper_update_sidetone(app);
     }
+
+    morse_flipper_session_tick_answer_flash(app, now_ms);
 
     if(app->session_result_hold && app->session_next_group_at > now_ms) {
         if(morse_flipper_session_wait_key_down(app)) {
@@ -966,19 +1108,23 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
     uint8_t size = morse_trainer_group_size(&app->trainer);
     uint8_t centers[9];
     char answers[MORSE_TRAINER_GROUP_CAP];
+    char deleted[MORSE_TRAINER_GROUP_CAP];
     const char* group = morse_trainer_last_group(&app->trainer);
     uint8_t top_y;
     uint8_t bot_y;
     uint8_t text_h;
     uint8_t wrong_box_h;
     size_t ans_len;
+    size_t deleted_len = 0U;
     uint8_t prompt_count;
     uint8_t answer_count;
     Font row_font;
     uint8_t i;
     bool idle = morse_flipper_session_idle_view(app);
     bool rep = morse_flipper_session_repeat_active(app);
+    bool flash_deleted = false;
     bool done;
+    uint32_t now_ms;
 
     if(size < 1U) size = 1U;
     if(size > 9U) size = 9U;
@@ -1002,6 +1148,13 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
     wrong_box_h = (uint8_t)(text_h + 2U);
     morse_flipper_session_slot_centers(size, centers);
     morse_flipper_session_answer_text(app, answers, sizeof(answers), size);
+    deleted[0] = '\0';
+    now_ms = furi_get_tick();
+    if(morse_flipper_session_answer_flash_visible(app, now_ms)) {
+        strlcpy(deleted, app->session_deleted_text, sizeof(deleted));
+        deleted_len = strlen(deleted);
+        flash_deleted = true;
+    }
     ans_len = strlen(answers);
     prompt_count = morse_flipper_session_prompt_count(app);
     answer_count = morse_flipper_session_answer_count(answers);
@@ -1027,6 +1180,7 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
     for(i = 0U; i < size; i++) {
         char q = '\0';
         char a = '\0';
+        char flash = '\0';
         char top = '_';
         char bot = '_';
         bool have = i < ans_len;
@@ -1035,6 +1189,8 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
 
         if(group[i] != '\0') q = morse_flipper_upper_char(group[i]);
         if(have) a = morse_flipper_upper_char(answers[i]);
+        if(flash_deleted && i >= ans_len && i < deleted_len)
+            flash = morse_flipper_upper_char(deleted[i]);
         if(q != '\0' && a != '\0' && q == a) ok = true;
         if(done && q != '\0' && i < answer_count && !ok) bad = true;
 
@@ -1051,6 +1207,8 @@ void morse_flipper_draw_session_rows(Canvas* canvas, const MorseFlipperApp* app)
             }
             if(have && a != '\0') {
                 bot = a;
+            } else if(flash != '\0') {
+                bot = flash;
             }
 
             morse_flipper_session_draw_cell(canvas, centers[i], top_y, (uint8_t)top);

@@ -124,6 +124,8 @@ typedef enum {
     MorseFlipperAudioPathBuzzer = 0,
     MorseFlipperAudioPathGpioP2Hd = 1,
     MorseFlipperAudioPathVibration = 2,
+    MorseFlipperAudioPathSoftBuzz = 3,
+    MorseFlipperAudioPathCount,
 } MorseFlipperAudioPath;
 
 typedef enum {
@@ -283,6 +285,7 @@ typedef enum {
     MorseFlipperAudioSettingPath = 0,
     MorseFlipperAudioSettingTone,
     MorseFlipperAudioSettingP2Volume,
+    MorseFlipperAudioSettingWaveform,
 } MorseFlipperAudioSettingIndex;
 
 typedef enum {
@@ -349,7 +352,7 @@ typedef struct MorseFlipperApp {
     Submenu* submenu;
     TextInput* text_input;
     VariableItemList* settings_list;
-    VariableItem* audio_cfg_items[MorseFlipperAudioSettingP2Volume + 1U];
+    VariableItem* audio_cfg_items[MorseFlipperAudioSettingWaveform + 1U];
     VariableItem* trainer_items[MorseFlipperTrainerSettingChars + 1U];
     VariableItem* straight_cfg_items[3];
     View* live_view;
@@ -505,6 +508,7 @@ typedef struct MorseFlipperApp {
     uint32_t txg_sum_variance;
     uint32_t session_last_input_at;
     uint32_t session_answer_complete_at;
+    uint32_t session_answer_flash_started_ms;
     uint32_t session_result_until;
     uint32_t session_next_group_at;
     uint32_t session_complete_at;
@@ -558,6 +562,7 @@ typedef struct MorseFlipperApp {
     bool gpio_gap_flushed;
     uint8_t straight_mark_idx;
     uint8_t straight_next_draw_s;
+    uint8_t session_answer_flash_phase;
     uint8_t txg_repeated_timeouts;
     uint8_t txg_difficulty;
     uint8_t straight_return_screen;
@@ -572,6 +577,7 @@ typedef struct MorseFlipperApp {
     uint8_t rf_rx_wpm_hint;
     char rf_rx_text[64];
     char rf_tx_text[64];
+    char session_deleted_text[MORSE_TRAINER_GROUP_CAP];
     char gpio_text[64];
 
     /* Larger submodules held by value to keep lifetime boring and failure modes fewer. */
@@ -611,7 +617,7 @@ extern const GpioPin* morse_flipper_dah_pin;
 extern const GpioPin* morse_flipper_ground_pin;
 extern const GpioPin* morse_flipper_ptt_pin;
 extern const char* const morse_flipper_input_names[3];
-extern const char* const morse_flipper_audio_path_names[3];
+extern const char* const morse_flipper_audio_path_names[MorseFlipperAudioPathCount];
 extern const uint8_t morse_flipper_input_values[3];
 extern const uint8_t morse_flipper_keyer_values[7];
 extern const MorseFlipperTone morse_flipper_tones[31];
@@ -670,6 +676,7 @@ bool morse_flipper_local_buzzer_enabled(const MorseFlipperApp* app);
 bool morse_flipper_audio_output_is_pwm(const MorseFlipperApp* app);
 bool morse_flipper_use_pwm_buzzer(const MorseFlipperApp* app);
 bool morse_flipper_scene_supports_audio_pwm(uint8_t scene);
+bool morse_flipper_audio_path_is_sampled(uint8_t audio_path);
 bool morse_flipper_audio_wait_transition(
     const MorseFlipperApp* app,
     uint8_t old_scene,
@@ -710,6 +717,9 @@ void morse_flipper_start_session(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_reset_session_runtime(MorseFlipperApp* app);
 void morse_flipper_reset_session_state(MorseFlipperApp* app, uint32_t now_ms);
 bool morse_flipper_session_repeat_active(const MorseFlipperApp* app);
+void morse_flipper_session_cancel_answer_flash(MorseFlipperApp* app);
+bool morse_flipper_session_backspace_answer(MorseFlipperApp* app, uint32_t now_ms);
+bool morse_flipper_session_clear_answer(MorseFlipperApp* app, uint32_t now_ms);
 bool morse_flipper_session_idle_view(const MorseFlipperApp* app);
 void morse_flipper_tick_session(MorseFlipperApp* app, uint32_t now_ms);
 void morse_flipper_leave_session(MorseFlipperApp* app, uint32_t now_ms);

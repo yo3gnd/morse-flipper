@@ -31,6 +31,7 @@ const char* const morse_flipper_audio_path_names[] = {
     "Buzzer",
     "P2 (HD)",
     "Vibration",
+    "Soft Buzz",
 };
 
 const uint8_t morse_flipper_keyer_values[] = {

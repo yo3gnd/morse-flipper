@@ -628,8 +628,24 @@ static bool
     }
 
     if(morse_flipper_session_repeat_active(app)) {
+        bool edit_key = event->key == InputKeyDown || event->key == InputKeyUp;
+        bool delete_event = event->type == InputTypeShort && edit_key;
+
+        if(!edit_key) morse_flipper_session_cancel_answer_flash(app);
+
         if(event->key == InputKeyLeft && event->type == InputTypeLong) {
             morse_flipper_leave_session(app, now_ms);
+            return true;
+        }
+
+        if(delete_event) {
+            bool changed;
+            if(event->key == InputKeyDown) {
+                changed = morse_flipper_session_backspace_answer(app, now_ms);
+            } else {
+                changed = morse_flipper_session_clear_answer(app, now_ms);
+            }
+            if(!changed) morse_flipper_session_cancel_answer_flash(app);
             return true;
         }
 
@@ -1336,6 +1352,8 @@ void morse_flipper_handle_active_keying_event(MorseFlipperApp* app, const InputE
     bool btn_src = g.btn;
     bool btn_str = g.btn_str;
     bool btn_pad = g.btn_pad;
+
+    if(morse_flipper_session_repeat_active(app)) morse_flipper_session_cancel_answer_flash(app);
 
     /* Left is a key while held, but a short tap clears run text. Awkward, documented. */
     if((app->screen == MorseFlipperScreenRun || app->screen == MorseFlipperScreenRf) &&
