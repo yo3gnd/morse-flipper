@@ -70,8 +70,8 @@ This is the same help file that lives on the Flipper under Help: a gentle introd
 - Use Farnsworth to open up the gaps. The spacing should help you hear the rhythm, not tempt you back into counting.
 - You need to hear letters, not inventory. If you only copy shapes back as "three dots, one dash", you are practising parroting, not Morse. Doing this will not help you.
 - You can also use this app to sharpen straight key sending and practise five character sending groups competitively. Do not make those the main event too early. Copying characters by ear comes first. If you cannot hear the letters reliably, better sending just makes tidier nonsense.
-- Straight key sending is a skill of its own. The line between a recognisable personal fist and sloppy sending is subtle, and beginners usually cannot hear the difference yet. The Straight trainer grades your marks, gaps and dah/dit ratio. Groups of 5 has Easy, Medium and IARU HST scoring. Use Medium as the first serious target and start at 15 WPM. Drop to Easy if the timing feels impossible, but remember that Easy still permits sending that would sound rough on the air.
-- On the Straight trainer result line: The target ratio is dah/dit = 3. OK means that part was close enough. When you see a number, not OK, it is a percentage score. Higher is better. A low number means that your sending was far from the expected timing. Above 80%, you will only see OK.
+- Straight key sending is a skill of its own. The line between a recognisable personal fist and sloppy sending is subtle, and beginners usually cannot hear the difference yet. The Straight key trainer grades your marks, gaps and dah/dit ratio. Groups of 5 has Easy, Medium and IARU HST scoring. Use Medium as the first serious target and start at 15 WPM. Drop to Easy if the timing feels impossible, but remember that Easy still permits sending that would sound rough on the air.
+- On the Straight key trainer result line: The target ratio is dah/dit = 3. OK means that part was close enough. When you see a number, not OK, it is a percentage score. Higher is better. A low number means that your sending was far from the expected timing. Above 80%, you will only see OK.
   - S → spacing
   - di → dit length
   - da → dah length
@@ -88,7 +88,7 @@ This is the same help file that lives on the Flipper under Help: a gentle introd
 - The Titanic's operators kept transmitting long after all else failed. Morse was one of the last things still working, and the disaster proved ships needed proper backups with batteries on emergency radio.
 - People do in fact build and sell radios for exactly this sort of thing. Small CW QRP rigs, often sold to the prepper crowd, sometimes with decoders built in for when your ears are having an off day.
 - Low power CW on HF with a wire in the trees is hard to locate. A voice call on a fixed emergency frequency is not.
-- Pair CW with NVIS: a wire aimed almost straight up, bouncing signals off the ionosphere. Roughly 500 to 1500 km, two trees, one wire.
+- Pair CW with NVIS: a wire aimed almost straight up, bouncing signals off the ionosphere. Roughly 100 to 500 km, two trees, one wire.
 - Sort the plan out now, not during the emergency: time, frequency, fallback. For example: 7.030, daily at 20:00, listen two minutes, then try again tomorrow.
 - Your messages will be short. `ALL OK` is two words. `QTH DAMAGE NEED MED FER 3` is six. Plan them like you plan the rest of your kit.
 - Use voice for everyday chat. Use CW when power is barely available, conditions are bad, or you want low profile. Digital if you have the gear. Use the simplest thing that works. This is emergency radio, not surgery on nuclear rockets.
@@ -165,7 +165,7 @@ This is the same help file that lives on the Flipper under Help: a gentle introd
 
 ## USB & live practice
 
-- There are sites like https://vail.woozle.org, V-band or iCW let you practise with other people using a real paddle.
+- There are websites like iCW, [vail.woozle.net](http://vail.woozle.net/), [morse.halb.it](https://morse.halb.it/), and VBand that let you practise with other people using a real paddle.
 - To do this, you need a computer adapter for your SK or paddle. This app can emulate an adapter for CW practice sites. You can still use the Flipper's buttons if you must.
 - Most simple adapters lie to the computer and pretend to be a keyboard or mouse. That is how they get a key or paddle in. The fancy word for doing this is emulation.
 - The site reads those key presses, generates audio for your speakers, and sends your keypresses, as Morse, to the other participants.
