@@ -1,4 +1,5 @@
 .ufbt/
+.venv/
 build/
 dist/
 __pycache__/
